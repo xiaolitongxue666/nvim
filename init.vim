@@ -5,20 +5,6 @@
 " |_|  |_|\__, |    \_/  |___|_|  |_|_| \_\\____|
 "         |___/
 
-" Todos
-" - pylint reports error when doing `vim ~/Github/vim-calc/build-up/calc.py`
-"   instead of doing `cd ~/Github/vim-calc/build-up` and then do `vim calc.py`
-" - hotkey to switch between light theme and dark theme (in progress, still
-"   some bugs
-"
-"
-"   Testing
-"fnew
-"call nvim_win_float_set_pos(0,5,10,20,5)
-"hi Floating guibg=#00044
-"set withhl=Normal:Floating
-
-
 " ===
 " === Auto load for first time uses
 " ===
@@ -37,82 +23,89 @@
 " ===
 " copy form system clipboard
 set clipboard=unnamed
-
-" compatible with vi
-set nocompatible
-
-" automatic change working dir at now edit file's path
-set autochdir
-
 " let the color compatible to terminal
 let &t_ut=' '
-
-" file type identification
-filetype on
-filetype indent on
-filetype plugin on
-filetype plugin indent on
-
-" encoding format
-set encoding=utf-8
+" automatic change working dir at now edit file's path
+set autochdir
 
 " ===
 " === Editor behavior
 " ===
-"hight light syntax
-syntax on
-
 "show line number
 set number
-
 "show relative line number
 set relativenumber
-
 "show corsor line
 set cursorline
-
 " expand tab
 set expandtab
 set tabstop=4
 set shiftwidth=4
 set softtabstop=4
-
+" apply the indentation of the current line to the next
+set autoindent
 " show the space at the end of line
 set list
-
 " show the tab
 set listchars=tab:▸\ ,trail:▫
-
 " corsor distance form buffer edge some lines
-set scrolloff=5
-
+set scrolloff=4
+" allow for mappings includes 'Esc', while preserving zero timeout after pressing it manually
 set ttimeoutlen=0
-
+set notimeout
+" rember the cursor positon and other status when reopen file
 set viewoptions=cursor,folds,slash,unix
-
-"automatic line break
+" automatic line break
 set wrap
-
+" set text width
 set tw=0
-
+" expression whis is evaluated to obtain the proper indent for a line
 set indentexpr=
-
+" the kind of folding used for the current window
 set foldmethod=indent
-
+"
 set foldlevel=99
-
+set foldenable
 set formatoptions-=tc
-
+"
 set splitright
-
 set splitbelow
+" enable mouse in vim
+" set mouse=a
+" if in insert, replace  or visual mode put a message on the last lie swith to not show this lie
+set noshowmode
+"show type command
+set showcmd
+" open command line comletion in enhanced mode
+set wildmenu
+"ignore case the word during the search
+set ignorecase
+set smartcase
+" Some testing features
+set shortmess+=c
+"
+set inccommand=split
+"should make scrolling faster
+set ttyfast
+set lazyredraw
+"
+set visualbell
+"
+" silent !mkdir -p ~/.config/nvim/tmp/backup
+" silent !mkdir -p ~/.config/nvim/tmp/undo
+" set backupdir=~/.config/nvim/tmp/backup,.
+" set directory=~/.config/nvim/tmp/backup,.
+" if has('persistent_undo')
+" 	set undofile
+" 	set undodir=~/.config/nvim/tmp/undo,.
+" endif
+" set colorcolumn=80
+" set updatetime=1000
+"high light search
+set hlsearch
+"charter by charter high light the entered words during the search
+set incsearch 
 
-"enable mouse in vim
-set mouse=a
-
-let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-let &t_SR = "\<Esc>]50;CursorShape=2\x7"
-let &t_EI = "\<Esc>]50;CursorShape=0\x7"
 
 " open the fiel cursor at hte last edited position
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
@@ -120,41 +113,27 @@ au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g
 " ===
 " === Terminal Behavior
 " ===
+"
 let g:neoterm_autoscroll = 1
-
+"
 autocmd TermOpen term://* startinsert
-
-"tnoremap <C-N> <C-\><C-N>:q<CR>
-
-" ===
-" === Status bar behaviors
-" ===
-set noshowmode
-
-"show type command
-set showcmd
-
-" set wildignore=log/**,node_modules/**,target/**,tmp/**,*.rbc
-
-"open command line comletion in enhanced mode
-set wildmenu
-
-" Searching options
-"high light search
-set hlsearch
-"clear search high light whem use vim or nvim open a file
-exec "nohlsearch"
-"charter by charter high light the entered words during the search
-set incsearch 
-"ignore case the word during the search
-set ignorecase
-set smartcase
-"jump to search result next one
-noremap n nzz
-"jumo to search result last one
-noremap N Nzz
-"clear all search high light
-noremap <LEADER><CR> :nohlsearch<CR>
+" tnoremap <C-N> <C-\><C-N>
+" tnoremap <C-O> <C-\><C-N><C-O>
+let g:terminal_color_0  = '#000000'
+let g:terminal_color_1  = '#FF5555'
+let g:terminal_color_2  = '#50FA7B'
+let g:terminal_color_3  = '#F1FA8C'
+let g:terminal_color_4  = '#BD93F9'
+let g:terminal_color_5  = '#FF79C6'
+let g:terminal_color_6  = '#8BE9FD'
+let g:terminal_color_7  = '#BFBFBF'
+let g:terminal_color_8  = '#4D4D4D'
+let g:terminal_color_9  = '#FF6E67'
+let g:terminal_color_10 = '#5AF78E'
+let g:terminal_color_11 = '#F4F99D'
+let g:terminal_color_12 = '#CAA9FA'
+let g:terminal_color_13 = '#FF92D0'
+let g:terminal_color_14 = '#9AEDFE'
 
 " ===
 " === Basic Mappings
@@ -169,7 +148,7 @@ map S :w<CR>
 map Q :q<CR>
 
 " Reload config file
-map R :source $MYVIMRC<CR>
+map R :source ~/.config/nvim/init.vim<CR>
 
 " Open the vimrc file anytime
 map <LEADER>rc :e ~/.config/nvim/init.vim<CR>
@@ -189,14 +168,36 @@ noremap H I
 vnoremap h i
 vnoremap H I 
 
+" Make Y to copy till the end of the line
+nnoremap Y y$
+
 " Copy to system clipboard
 vnoremap Y :w !xclip -i -sel c<CR>
 
-" Duplicate words
-"map <LEADER>dw /\(\<\w\+\>\)\_s*\1
+" Indentation
+" nnoremap < <<
+" nnoremap > >>
+
+" Jump to search result next one
+noremap n nzz
+" Jumo to search result last one
+noremap N Nzz
+" Clear all search high light
+noremap <LEADER><CR> :nohlsearch<CR>
+
+" Adjacent duplicate words
+noremap <LEADER>dw /\(\<\w\+\>\)\_s*\1
+
+" Space to Tab
+" nnoremap <LEADER>tt :%s/    /\t/g
+" vnoremap <LEADER>tt :s/    /\t/g
 
 " Folding
 "map <silent> <LEADER>o za
+
+" Open up lazygit
+" noremap \g :term lazygit<CR>
+" noremap <c-g> :term lazygit<CR>
 
 " ===
 " === Cursor Movement
@@ -208,21 +209,21 @@ vnoremap Y :w !xclip -i -sel c<CR>
 " < j   l >
 "     k
 "     v
-noremap i k
-noremap k j 
-noremap j h
-noremap l l
+noremap <silent> i k
+noremap <silent> k j 
+noremap <silent> j h
+noremap <silent> l l
 
 " I/K keys for 5 times i/k (faster navigation)
-noremap I 5k
-noremap K 5j
+noremap <silent> I 5k
+noremap <silent> K 5j
 " J/L keys for 5 times j/l (faster navigation)
 "noremap J 5h
 "noremap L 5l
 " J key: go to the start of the line
-noremap J 0
+noremap <silent> J 0
 " L key: go to the end of the line
-noremap L $
+noremap <silent> L $
 
 " Faster in-line navigation
 "noremap W 5w
@@ -249,10 +250,15 @@ map <LEADER>l <C-w>l
 noremap s <nop>
 
 " split the screens to up (horizontal), down (horizontal), left (vertical), right (vertical)
-map sl :set splitright<CR>:vsplit<CR>
-map sj :set nosplitright<CR>:vsplit<CR>
-map si :set nosplitbelow<CR>:split<CR>
-map sk :set splitbelow<CR>:split<CR>
+" map sl :set splitright<CR>:vsplit<CR>
+" map si :set nosplitbelow<CR>:split<CR>
+" map sk :set splitbelow<CR>:split<CR>
+" map sj :set nosplitright<CR>:vsplit<CR>
+" map sl :set splitright<CR>:vsplit<CR>
+noremap si :set nosplitbelow<CR>:split<CR>:set splitbelow<CR>
+noremap sk :set splitbelow<CR>:split<CR>
+noremap sj :set nosplitright<CR>:vsplit<CR>:set splitright<CR>
+noremap sl :set splitright<CR>:vsplit<CR>
 
 " Resize splits with arrow keys
 map <up> :res +5<CR>
@@ -269,6 +275,9 @@ map sv <C-w>t<C-w>H
 noremap srh <C-w>b<C-w>K
 noremap srv <C-w>b<C-w>H
 
+" Press <SPACE> + q to close the window below the current window
+noremap <LEADER>q <C-w>j:q<CR>
+
 " ===
 " === Tab management
 " ===
@@ -282,25 +291,36 @@ map tmj :-tabmove<CR>
 map tml :+tabmove<CR>
 
 " ===
+" === Markdown Settings
+" ===
+" Snippets
+" source ~/.config/nvim/md-snippets.vim
+" " auto spell
+" autocmd BufRead,BufNewFile *.md setlocal spell
+
+" ===
 " === Other useful stuff
 " ===
+" \p to show the current buffer file path
+" nnoremap \p 1<C-G>
+
+" Move the next character to the end of the line with ctrl+9
+" inoremap <C-u> <ESC>lx$p
 
 " Opening a terminal window
-map <LEADER>/ :set splitbelow<CR>:sp<CR>:term<CR>
+" map <LEADER>/ :set splitbelow<CR>:sp<CR>:term<CR>
+noremap <LEADER>/ :term<CR>
 
 " Press space twice to jump to the next '<++>' and edit it
-"map <LEADER><LEADER> <Esc>/<++><CR>:nohlsearch<CR>c4i
+"noremap <LEADER><LEADER> <Esc>/<++><CR>:nohlsearch<CR>c4i
 
 " Spelling Check with <space>sc
-"map <LEADER>sc :set spell!<CR>
-"noremap <C-x> ea<C-x>s
-"inoremap <C-x> <Esc>ea<C-x>s
+"noremap <LEADER>sc :set spell!<CR>
 
 " Press ` to change case (instead of ~)
-"map ` ~
+"noremap ` ~
 
-"imap <C-c> <Esc>zza
-"nmap <C-c> zz
+"noremap <C-c> zz
 
 " Auto change directory to current dir
 "autocmd BufEnter * silent! lcd %:p:h
@@ -482,7 +502,7 @@ set termguicolors     " enable true colors support
 let g:space_vim_transp_bg = 1
 "set background=dark
 "colorscheme space_vim_theme
-let g:airline_theme='dracula'
+"let g:airline_theme='dracula'
 
 let g:lightline = {
   \     'active': {
@@ -562,6 +582,7 @@ let g:NERDTreeIndicatorMapCustom = {
 
 "Add by xiaoli
 "let g:python3_host_prog=/usr/bin/python3
+let g:ruby_host_prog = '/home/xiaoli/.gem/ruby/2.6.0/bin/neovim-ruby-host.ruby.2.6'
 
 "let ncm2#popup_delay = 5
 "let g:ncm2#matcher = "substrfuzzy"
@@ -577,9 +598,7 @@ let g:NERDTreeIndicatorMapCustom = {
 "let g:jedi#show_call_signatures = "1"
 
 
-" Some testing features
-set shortmess+=c
-set notimeout
+
 
 
 " ===
@@ -740,3 +759,13 @@ let g:user_emmet_leader_key='<C-f>'
 "if has_machine_specific_file == 0
 "  exec "e ~/.config/nvim/_machine_specific.vim"
 "endif
+
+
+" ===================== End of Plugin Settings =====================
+
+" ===
+" === Necessary Commands to Execute
+" ===
+"clear search high light whem use vim or nvim open a file
+exec "nohlsearch"
+
