@@ -1,9 +1,8 @@
-"  __  __        __     _____ __  __ ____   ____
-" |  \/  |_   _  \ \   / /_ _|  \/  |  _ \ / ___|
-" | |\/| | | | |  \ \ / / | || |\/| | |_) | |
-" | |  | | |_| |   \ V /  | || |  | |  _ <| |___
-" |_|  |_|\__, |    \_/  |___|_|  |_|_| \_\\____|
-"         |___/
+"   _  __ _                __    _    _   __                _
+"  | |/ /(_)___ _____     / /   (_)  / | / /__  ____ _   __(_)___ ___
+"  |   // / __ `/ __ \   / /   / /  /  |/ / _ \/ __ \ | / / / __ `__ \
+" /   |/ / /_/ / /_/ /  / /___/ /  / /|  /  __/ /_/ / |/ / / / / / / /
+"/_/|_/_/\__,_/\____/  /_____/_/  /_/ |_/\___/\____/|___/_/_/ /_/ /_/
 
 " ===
 " === Auto load for first time uses
@@ -27,6 +26,13 @@ set clipboard=unnamed
 let &t_ut=' '
 " automatic change working dir at now edit file's path
 set autochdir
+
+" ===
+" === Pyhton
+" ===
+let g:python_host_prog = '/usr/bin/python'
+let g:python3_host_prog = '/usr/local/bin/python3'
+
 
 " ===
 " === Editor behavior
@@ -489,7 +495,6 @@ call plug#end()
 
 "open transparent and color
 let g:SnazzyTransparent = 1
-color snazzy 
 
 " ===
 " === Dress up my vim
@@ -530,12 +535,13 @@ let NERDTreeMapPreview = ""
 let NERDTreeMapCloseDir = "n"
 let NERDTreeMapChangeRoot = "y"
 
+
 " ===
 " === coc
 " ===
 " fix the most annoying bug that coc has
 silent! au BufEnter,BufRead,BufNewFile * silent! unmap if
-let g:coc_global_extensions = ['coc-python', 'coc-vimlsp', 'coc-html', 'coc-json', 'coc-css', 'coc-tsserver', 'coc-yank', 'coc-lists', 'coc-gitignore', 'coc-vimlsp', 'coc-tailwindcss', 'coc-stylelint']
+let g:coc_global_extensions = ['coc-python', 'coc-vimlsp', 'coc-html', 'coc-json', 'coc-css', 'coc-tsserver', 'coc-yank', 'coc-lists', 'coc-gitignore', 'coc-vimlsp', 'coc-tailwindcss']
 set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 " use <tab> for trigger completion and navigate to the next complete item
 function! s:check_back_space() abort
@@ -555,6 +561,10 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
+
+" Change completion windows background
+hi Pmenu ctermfg=0 ctermbg=6 guibg=#444444
+hi PmenuSel ctermfg=7 ctermbg=4 guibg=#555555 guifg=#ffffff
 
 " ==
 " == NERDTree-git
@@ -582,7 +592,7 @@ let g:NERDTreeIndicatorMapCustom = {
 
 "Add by xiaoli
 "let g:python3_host_prog=/usr/bin/python3
-let g:ruby_host_prog = '/home/xiaoli/.gem/ruby/2.6.0/bin/neovim-ruby-host.ruby.2.6'
+"let g:ruby_host_prog = '/home/xiaoli/.gem/ruby/2.6.0/bin/neovim-ruby-host.ruby.2.6'
 
 "let ncm2#popup_delay = 5
 "let g:ncm2#matcher = "substrfuzzy"
