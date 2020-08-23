@@ -5,28 +5,20 @@
 "/_/|_/_/\__,_/\____/  /_____/_/  /_/ |_/\___/\____/|___/_/_/ /_/ /_/
 
 " ===
-" === Auto load for first time uses
+" === Auto download vim-plug, if you download fal, 
+" === copy plug.vim in this repository into right place
+" === 自动下载vim-plg插件管理软件,
+" === 如果下载失败，可以拷贝本仓库中的plug.vim文件到目标地址
 " ===
-"if empty(glob('~/.config/nvim/autoload/plug.vim'))
-"  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
-"    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-"  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC"
-"endif
+if empty(glob('~/.config/nvim/autoload/plug.vim'))
+        silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
+                \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+        autocmd VimEnter * PlugInstall --sync | source $MYVIMRC"
+endif
 
-" ====================
-" === Editor Setup ===
-" ====================
 
 " ===
-" === System 
-" ===
-" copy form system clipboard
-set clipboard=unnamed
-" let the color compatible to terminal
-let &t_ut=' '
-" automatic change working dir at now edit file's path
-set autochdir
-
+" === CheckHealth Resolve Solution(CheckHealth 报错解决办法)
 " ===
 " === Pyhton
 " ===
@@ -34,86 +26,89 @@ let g:python_host_prog = '/usr/bin/python'
 let g:python3_host_prog = '/usr/local/bin/python3'
 
 
+" ==============================
+" === Editor Setup(编辑设置) ===
+" ==============================
 " ===
-" === Editor behavior
+" === System(全局设置)
 " ===
-"show line number
+" copy form system clipboard(允许从系统剪切板拷贝数据)
+set clipboard=unnamed
+" let the color compatible to terminal(让陪着和终端兼容)
+let &t_ut=' '
+" automatic change working dir at now edit file's path(将工作目录自动跳转到编辑的文件路径)
+set autochdir
+
+
+" ===
+" === Editor behavior(编辑操作)
+" ===
+"show line number(显示行号)
 set number
-"show relative line number
+"show relative line number(显示相对行号)
 set relativenumber
-"show corsor line
+"show cursor(显示光标)
 set cursorline
-" expand tab
+" expand tab(扩展tab等价四个空格)
 set expandtab
 set tabstop=4
 set shiftwidth=4
 set softtabstop=4
-" apply the indentation of the current line to the next
+" apply the indentation of the current line to the next(当前行的缩进应用下一行)
 set autoindent
-" show the space at the end of line
+" show the space at the end of line(显示行尾空格)
 set list
-" show the tab
+" show the tab(显示tab符号，行首，行尾分别为以下符号)
 set listchars=tab:▸\ ,trail:▫
-" corsor distance form buffer edge some lines
+" corsor distance form buffer edge some lines(光标到缓冲区边缘的距离)
 set scrolloff=4
-" allow for mappings includes 'Esc', while preserving zero timeout after pressing it manually
+" allow for mappings includes 'Esc', while preserving zero timeout after pressing it manually(设置映射按键后的延迟)
 set ttimeoutlen=0
 set notimeout
-" rember the cursor positon and other status when reopen file
+" rember the cursor positon and other status when reopen file(在下一次打开文件的时候，记忆光标位置)
 set viewoptions=cursor,folds,slash,unix
-" automatic line break
+" automatic line break(自动换行)
 set wrap
-" set text width
+" set text width(设置文本宽度)
 set tw=0
 " expression whis is evaluated to obtain the proper indent for a line
 set indentexpr=
 " the kind of folding used for the current window
 set foldmethod=indent
-"
+
 set foldlevel=99
 set foldenable
 set formatoptions-=tc
-"
+
 set splitright
 set splitbelow
 " enable mouse in vim
 " set mouse=a
-" if in insert, replace  or visual mode put a message on the last lie swith to not show this lie
+" if in insert, replace  or visual mode put a message on the last line swith to not show this line(各种模状态显示在窗口最下方的状态栏中)
 set noshowmode
-"show type command
+"show typed command(显示输入的命令，一般在：command 场景下显示)
 set showcmd
-" open command line comletion in enhanced mode
+" open command line comletion in enhanced mode(增强模式下打开代码补全)
 set wildmenu
-"ignore case the word during the search
+"ignore case the word during the search(搜索过程中忽略大小写)
 set ignorecase
 set smartcase
 " Some testing features
-set shortmess+=c
-"
-set inccommand=split
-"should make scrolling faster
+" set shortmess+=c
+
+" set inccommand=split
+" should make scrolling faster(窗口滚动更快速)
 set ttyfast
 set lazyredraw
-"
+
 set visualbell
-"
-" silent !mkdir -p ~/.config/nvim/tmp/backup
-" silent !mkdir -p ~/.config/nvim/tmp/undo
-" set backupdir=~/.config/nvim/tmp/backup,.
-" set directory=~/.config/nvim/tmp/backup,.
-" if has('persistent_undo')
-" 	set undofile
-" 	set undodir=~/.config/nvim/tmp/undo,.
-" endif
-" set colorcolumn=80
-" set updatetime=1000
-"high light search
+
+" high light search(搜索操作时，高亮关键词)
 set hlsearch
-"charter by charter high light the entered words during the search
+"charter by charter high light the entered words during the search(搜索操作时，键入一个字符，高亮一个字符)
 set incsearch 
 
-
-" open the fiel cursor at hte last edited position
+" open the file cursor at the last edited position(重新打开文件，光标在上次编辑的位置
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
 " ===
@@ -142,31 +137,38 @@ let g:terminal_color_13 = '#FF92D0'
 let g:terminal_color_14 = '#9AEDFE'
 
 " ===
-" === Basic Mappings
+" === Basic Mappings(基础键位映射)
 " ===
 
+" 设置空格键为LEADER
 " Set <LEADER> as <SPACE>, ; as :
 let mapleader=" "
 "map ; :
 
+" S 保存当前文件，Q 退出nvim
 " Save & quit
 map S :w<CR>
 map Q :q<CR>
 
+" 重载nvim配置文件
 " Reload config file
 map R :source ~/.config/nvim/init.vim<CR>
 
+" 空格 + rc 打开nvim配置文件
 " Open the vimrc file anytime
 map <LEADER>rc :e ~/.config/nvim/init.vim<CR>
 
+" 使能nvim启动运行界面
+" https://github.com/mhinz/vim-startify
 " Open Startify
 map <LEADER>st :Startify<CR>
 
 " Undo operations
-"noremap l u
+" noremap l u
 " Undo in Insert mode
-"inoremap <C-l> <C-u>
+" inoremap <C-l> <C-u>
 
+" 普通模式和visual模式插入按键重映射
 " Insert Key
 noremap h i
 noremap H I 
@@ -174,9 +176,11 @@ noremap H I
 vnoremap h i
 vnoremap H I 
 
+" Y 拷贝光标当前位置到行尾的字符串
 " Make Y to copy till the end of the line
 nnoremap Y y$
 
+" Y 拷贝光标当前位置到行为的字符串到系统剪切板
 " Copy to system clipboard
 vnoremap Y :w !xclip -i -sel c<CR>
 
@@ -184,6 +188,9 @@ vnoremap Y :w !xclip -i -sel c<CR>
 " nnoremap < <<
 " nnoremap > >>
 
+" n 跳转到下一个搜索结果
+" N 跳转到上一个搜索结果
+" 空格+回车 取消搜索高亮显示
 " Jump to search result next one
 noremap n nzz
 " Jumo to search result last one
@@ -191,6 +198,7 @@ noremap N Nzz
 " Clear all search high light
 noremap <LEADER><CR> :nohlsearch<CR>
 
+" 显示相邻的重复字符或者单词
 " Adjacent duplicate words
 noremap <LEADER>dw /\(\<\w\+\>\)\_s*\1
 
@@ -206,7 +214,7 @@ noremap <LEADER>dw /\(\<\w\+\>\)\_s*\1
 " noremap <c-g> :term lazygit<CR>
 
 " ===
-" === Cursor Movement
+" === Cursor Movement(光标移动)
 " ===
 "
 " New cursor movement (the default arrow keys are used for resizing windows)
@@ -220,6 +228,7 @@ noremap <silent> k j
 noremap <silent> j h
 noremap <silent> l l
 
+" 光标快速移动
 " I/K keys for 5 times i/k (faster navigation)
 noremap <silent> I 5k
 noremap <silent> K 5j
@@ -244,8 +253,9 @@ noremap <C-K> 5<C-e>
 "inoremap <C-K> <Esc>5<C-e>a
 
 " ===
-" === Window management
+" === Window management(窗口管理)
 " ===
+" 空格+ i k j l 在不同分屏窗口之间移动
 " Use <space> + new arrow keys for moving the cursor around windows
 map <LEADER>i <C-w>k
 map <LEADER>k <C-w>j
@@ -261,38 +271,43 @@ noremap s <nop>
 " map sk :set splitbelow<CR>:split<CR>
 " map sj :set nosplitright<CR>:vsplit<CR>
 " map sl :set splitright<CR>:vsplit<CR>
+" s+ i/k/j/l 创建分屏窗口
 noremap si :set nosplitbelow<CR>:split<CR>:set splitbelow<CR>
 noremap sk :set splitbelow<CR>:split<CR>
 noremap sj :set nosplitright<CR>:vsplit<CR>:set splitright<CR>
 noremap sl :set splitright<CR>:vsplit<CR>
 
+"光标键调整分屏窗口大小
 " Resize splits with arrow keys
 map <up> :res +5<CR>
 map <down> :res -5<CR>
 map <left> :vertical resize+5<CR>
 map <right> :vertical resize-5<CR>
 
+" 纵向横向调整两个分屏窗口的布局
 " Place the two screens up and down
 map sh <C-w>t<C-w>K
 " Place the two screens side by side
 map sv <C-w>t<C-w>H
 
+" 旋转屏幕
 " Rotate screens
 noremap srh <C-w>b<C-w>K
 noremap srv <C-w>b<C-w>H
 
+" 空格+q 关闭当前使用的窗口
 " Press <SPACE> + q to close the window below the current window
 noremap <LEADER>q <C-w>j:q<CR>
 
 " ===
-" === Tab management
+" === Tab management(标签页管理)
 " ===
-" Create a new tab with tu
+" Create a new tab with tu(tu 新建一个标签页)
 map tu :tabe<CR>
-" Move around tabs with tj and tl
+" Move around tabs with tj and tl(tj tl 在标签页间左右移动)
 map tj :-tabnext<CR>
 map tl :+tabnext<CR>
-" Move the tabs with tmj and tml
+" Move the tabs with tmj and tml(tmj tml 左右移动标签页)
 map tmj :-tabmove<CR>
 map tml :+tabmove<CR>
 
@@ -313,7 +328,7 @@ map tml :+tabmove<CR>
 " Move the next character to the end of the line with ctrl+9
 " inoremap <C-u> <ESC>lx$p
 
-" Opening a terminal window
+" Opening a terminal window(打开一个终端窗口)
 " map <LEADER>/ :set splitbelow<CR>:sp<CR>:term<CR>
 noremap <LEADER>/ :term<CR>
 
@@ -373,7 +388,7 @@ noremap <LEADER>/ :term<CR>
 
 
 " ===
-" === Install Plugins with Vim-Plug
+" === Install Plugins with Vim-Plug(插件管理)
 " === In normal mode type "PlugInstall" to install plugs
 " ===
 "vim-plug begin
@@ -521,8 +536,8 @@ let g:lightline = {
 " set statusline+=%*
 
 " ===
-" === NERDTree
-" ===
+" === NERDTree(项目结构树)
+" === tt 显示项目结构树窗口
 map tt :NERDTreeToggle<CR>
 let NERDTreeMapOpenExpl = ""
 let NERDTreeMapUpdir = ""
@@ -606,9 +621,6 @@ let g:NERDTreeIndicatorMapCustom = {
 "let g:jedi#popup_on_dot = 1
 "let g:jedi#completion_command = ""
 "let g:jedi#show_call_signatures = "1"
-
-
-
 
 
 " ===
@@ -721,8 +733,8 @@ let g:SignatureMap = {
 " ===
 " === Undotree
 " ===
-let g:undotree_DiffAutoOpen = 0
-map L :UndotreeToggle<CR>
+" let g:undotree_DiffAutoOpen = 0
+" map L :UndotreeToggle<CR>
 
 " ==
 " == vim-multiple-cursor
