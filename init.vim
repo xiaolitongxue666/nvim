@@ -228,6 +228,9 @@ noremap <silent> k j
 noremap <silent> j h
 noremap <silent> l l
 
+" Change to next file buffer(切换到下一个已打开文件)
+noremap <C-w> :bn<CR>
+
 " 光标快速移动
 " I/K keys for 5 times i/k (faster navigation)
 noremap <silent> I 5k
@@ -536,19 +539,28 @@ let g:lightline = {
 " set statusline+=%*
 
 " ===
-" === NERDTree(项目结构树)
+" === NNERDTreeMapOpenExplERDTree(项目结构树)
 " === tt 显示项目结构树窗口
 map tt :NERDTreeToggle<CR>
-let NERDTreeMapOpenExpl = ""
-let NERDTreeMapUpdir = ""
-let NERDTreeMapUpdirKeepOpen = "l"
+map th :help NERDTree-t<CR>
+
+let NERDTreeMenuUp = "i"
+let NERDTreeMenuDown = "k"
 let NERDTreeMapOpenSplit = ""
-let NERDTreeOpenVSplit = ""
-let NERDTreeMapActivateNode = "i"
-let NERDTreeMapOpenInTab = "o"
-let NERDTreeMapPreview = ""
-let NERDTreeMapCloseDir = "n"
-let NERDTreeMapChangeRoot = "y"
+
+
+"let NERDTReeMenuUp = "i"
+"let NERDTreeMenuDown = "k"
+"let NERDTreeMapOpenExpl = ""
+"let NERDTreeMapUpdir = ""
+"let NERDTreeMapUpdirKeepOpen = "l"
+"let NERDTreeMapOpenSplit = ""
+"let NERDTreeOpenVSplit = ""
+"let NERDTreeMapActivateNode = ""
+"let NERDTreeMapOpenInTab = "o"
+"let NERDTreeMapPreview = ""
+"let NERDTreeMapCloseDir = "n"
+"let NERDTreeMapChangeRoot = "y"
 
 
 " ===
