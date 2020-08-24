@@ -171,10 +171,10 @@ map <LEADER>st :Startify<CR>
 " 普通模式和visual模式插入按键重映射
 " Insert Key
 noremap h i
-noremap H I 
+noremap H I
 " Visual mode key map
 vnoremap h i
-vnoremap H I 
+vnoremap H I
 
 " Y 拷贝光标当前位置到行尾的字符串
 " Make Y to copy till the end of the line
@@ -229,7 +229,10 @@ noremap <silent> j h
 noremap <silent> l l
 
 " Change to next file buffer(切换到下一个已打开文件)
-noremap <C-w> :bn<CR>
+noremap <C-q> :bn<CR>
+" Clone current buffer(关闭当前Buffer)
+noremap <C-w> :bd<CR>
+
 
 " 光标快速移动
 " I/K keys for 5 times i/k (faster navigation)
@@ -436,7 +439,9 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
     "\ }
 
 "" (Optional) Multi-entry selection UI.
-Plug 'junegunn/fzf'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+Plug 'Yggdroot/LeaderF', { 'do': './install.sh' }
 
 " Undo Tree
 Plug 'mbbill/undotree/'
@@ -561,6 +566,15 @@ let NERDTreeMapOpenSplit = ""
 "let NERDTreeMapPreview = ""
 "let NERDTreeMapCloseDir = "n"
 "let NERDTreeMapChangeRoot = "y"
+
+
+" ===
+" === FZF
+" ===
+"准确查找文件
+"noremap <silent> <C-N> :Files<CR>
+"LeaderF模糊查找文件
+noremap <silent> <C-N> :Leaderf file<CR>
 
 
 " ===
