@@ -503,6 +503,14 @@ Plug 'roxma/nvim-yarp'
 "color
 Plug 'connorholyday/vim-snazzy'
 
+"Rust
+Plug 'rust-lang/rust.vim'
+
+"Plug 'autozimu/LanguageClient-neovim', {
+"    \ 'branch': 'next',
+"    \ 'do': 'bash install.sh',
+"    \ }
+
 "vim-plag end
 call plug#end()
 
