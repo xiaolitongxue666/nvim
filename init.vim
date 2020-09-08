@@ -437,6 +437,10 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
     "\ 'branch': 'next',
     "\ 'do': 'bash install.sh',
     "\ }
+let g:LanguageClient_serverCommands = {
+\ 'rust': ['rust-analyzer'],
+\ }
+
 
 "" (Optional) Multi-entry selection UI.
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -610,6 +614,9 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
+" Rust analyzer
+nmap <leader>a v<Plug>(coc-codeaction-selected)
+
 
 " Change completion windows background
 hi Pmenu ctermfg=0 ctermbg=6 guibg=#444444
@@ -805,10 +812,10 @@ let g:startify_lists = [
 nnoremap <silent> <LEADER>f :F  %<left><left>
 
 " Testring my own plugin
-if !empty(glob('~/Github/vim-calc/vim-calc.vim'))
-  source ~/Github/vim-calc/vim-calc.vim
-endif
-map <LEADER>a :call Calc()<CR>
+"if !empty(glob('~/Github/vim-calc/vim-calc.vim'))
+"  source ~/Github/vim-calc/vim-calc.vim
+"endif
+"map <LEADER>a :call Calc()<CR>
 
 let g:user_emmet_leader_key='<C-f>'
 " Open the _machine_specific.vim file if it has just been created
