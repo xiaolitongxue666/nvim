@@ -23,7 +23,7 @@ endif
 " === Pyhton
 " ===
 let g:python_host_prog = '/usr/bin/python'
-let g:python3_host_prog = '/usr/local/bin/python3'
+let g:python3_host_prog = '/usr/bin/python3'
 
 
 " ==============================
@@ -164,9 +164,11 @@ map <LEADER>rc :e ~/.config/nvim/init.vim<CR>
 map <LEADER>st :Startify<CR>
 
 " Undo operations
-" noremap l u
-" Undo in Insert mode
-" inoremap <C-l> <C-u>
+" Just type 'u' do undo
+" Just type <C-u> do undo in Insert mode
+
+" Redo operations
+" Just type <C-r> do redo
 
 " 普通模式和visual模式插入按键重映射
 " Insert Key
@@ -202,12 +204,14 @@ noremap <LEADER><CR> :nohlsearch<CR>
 " Adjacent duplicate words
 noremap <LEADER>dw /\(\<\w\+\>\)\_s*\1
 
+" 将四个空格转换为制表符
 " Space to Tab
 " nnoremap <LEADER>tt :%s/    /\t/g
 " vnoremap <LEADER>tt :s/    /\t/g
 
+" 折叠代码
 " Folding
-"map <silent> <LEADER>o za
+map <silent> <LEADER>o za
 
 " Open up lazygit
 " noremap \g :term lazygit<CR>
@@ -229,10 +233,9 @@ noremap <silent> j h
 noremap <silent> l l
 
 " Change to next file buffer(切换到下一个已打开文件)
-noremap <C-q> :bn<CR>
+"noremap <C-q> :bn<CR>
 " Clone current buffer(关闭当前Buffer)
-noremap <C-w> :bd<CR>
-
+"noremap <C-w> :bd<CR>
 
 " 光标快速移动
 " I/K keys for 5 times i/k (faster navigation)
@@ -252,9 +255,10 @@ noremap <silent> L $
 " set h (same as n, cursor left) to 'end of word'
 "noremap h e
 
+" 将视角上下移动五行而不移动光标
 " Ctrl + I or K will move up/down the view port without moving the cursor
-noremap <C-I> 5<C-y>
-noremap <C-K> 5<C-e>
+noremap <LEADER>mi 5<C-y>
+noremap <LEADER>mk 5<C-e>
 "inoremap <C-I> <Esc>5<C-y>a
 "inoremap <C-K> <Esc>5<C-e>a
 
@@ -287,8 +291,8 @@ noremap sl :set splitright<CR>:vsplit<CR>
 " Resize splits with arrow keys
 map <up> :res +5<CR>
 map <down> :res -5<CR>
-map <left> :vertical resize+5<CR>
-map <right> :vertical resize-5<CR>
+map <left> :vertical resize-5<CR>
+map <right> :vertical resize+5<CR>
 
 " 纵向横向调整两个分屏窗口的布局
 " Place the two screens up and down
@@ -309,7 +313,7 @@ noremap <LEADER>q <C-w>j:q<CR>
 " === Tab management(标签页管理)
 " ===
 " Create a new tab with tu(tu 新建一个标签页)
-map tu :tabe<CR>
+map tn :tabe<CR>
 " Move around tabs with tj and tl(tj tl 在标签页间左右移动)
 map tj :-tabnext<CR>
 map tl :+tabnext<CR>
@@ -328,8 +332,8 @@ map tml :+tabmove<CR>
 " ===
 " === Other useful stuff
 " ===
-" \p to show the current buffer file path
-" nnoremap \p 1<C-G>
+" sp to show the current buffer file path
+nnoremap sp 1<C-G>
 
 " Move the next character to the end of the line with ctrl+9
 " inoremap <C-u> <ESC>lx$p
@@ -352,8 +356,8 @@ noremap <LEADER>/ :term<CR>
 " Auto change directory to current dir
 "autocmd BufEnter * silent! lcd %:p:h
 
-" Call figlet
-"map tx :r !figlet
+"" Call figlet
+""map tx :r !figlet
 
 " Compile function
 "map r :call CompileRunGcc()<CR>
@@ -425,8 +429,8 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 "Plug 'davidhalter/jedi-vim'
 "Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 "Plug 'ncm2/ncm2'
-"Plug 'ncm2/ncm2-jedi'
-"Plug 'ncm2/ncm2-github'
+""Plug 'ncm2/ncm2-jedi'
+""Plug 'ncm2/ncm2-github'
 "Plug 'ncm2/ncm2-bufword'
 "Plug 'ncm2/ncm2-path'
 "Plug 'ncm2/ncm2-match-highlight'
@@ -494,7 +498,7 @@ Plug 'godlygeek/tabular' " type ;Tabularize /= to align the =
 Plug 'gcmt/wildfire.vim' " in Visual mode, type i' to select all text in '', or type i) i] i} ip
 Plug 'scrooloose/nerdcommenter' " in <space>cc to comment a line
 "Plug 'yuttie/comfortable-motion.vim'
-Plug 'brooth/far.vim'
+" Plug 'brooth/far.vim'
 Plug 'tmhedberg/SimpylFold'
 Plug 'kassio/neoterm'
 Plug 'vim-scripts/restore_view.vim'
@@ -667,12 +671,12 @@ let g:NERDTreeIndicatorMapCustom = {
 " ===
 " === vim-indent-guide
 " ===
-let g:indent_guides_guide_size = 1
-let g:indent_guides_start_level = 2
-let g:indent_guides_enable_on_vim_startup = 1
-let g:indent_guides_color_change_percent = 1
-silent! unmap <LEADER>ig
-autocmd WinEnter * silent! unmap <LEADER>ig
+"let g:indent_guides_guide_size = 1
+"let g:indent_guides_start_level = 2
+"let g:indent_guides_enable_on_vim_startup = 1
+"let g:indent_guides_color_change_percent = 1
+"silent! unmap <LEADER>ig
+"autocmd WinEnter * silent! unmap <LEADER>ig
 
 
 " ===
@@ -691,13 +695,13 @@ autocmd WinEnter * silent! unmap <LEADER>ig
 "let g:mkdp_open_to_the_world = 0
 "let g:mkdp_open_ip = ''
 "let g:mkdp_browser = 'chromium'
-"let g:mkdp_echo_preview_url = 0
-"let g:mkdp_browserfunc = ''
+""let g:mkdp_echo_preview_url = 0
+""let g:mkdp_browserfunc = ''
 "let g:mkdp_preview_options = {
 "    \ 'mkit': {},
-"    \ 'katex': {},
-"    \ 'uml': {},
-"    \ 'maid': {},
+""    \ 'katex': {},
+"""    \ 'uml': {},
+""    \ 'maid': {},
 "    \ 'disable_sync_scroll': 0,
 "    \ 'sync_scroll_type': 'middle',
 "    \ 'hide_yaml_meta': 1
@@ -732,10 +736,10 @@ map <LEADER>tm :TableModeToggle<CR>
 " ===
 map <LEADER>gy :Goyo<CR>
 
-
-" ===
-" === CtrlP
-" ===
+"
+""" ===
+""" === CtrlP
+"" ===
 map <C-p> :CtrlP<CR>
 let g:ctrlp_prompt_mappings = {
   \ 'PrtSelectMove("j")':   ['<c-e>', '<down>'],
@@ -809,7 +813,7 @@ let g:startify_lists = [
       \ ]
 
 " Far.vim
-nnoremap <silent> <LEADER>f :F  %<left><left>
+" nnoremap <silent> <LEADER>f :F  %<left><left>
 
 " Testring my own plugin
 "if !empty(glob('~/Github/vim-calc/vim-calc.vim'))
