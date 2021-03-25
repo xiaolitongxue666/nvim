@@ -22,10 +22,12 @@ Plug 'bling/vim-bufferline'
 " File navigation
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
 Plug 'Xuyuanp/nerdtree-git-plugin'
-Plug 'ctrlpvim/ctrlp.vim', { 'on': 'CtrlP' }
+Plug 'ctrlpvim/ctrlp.vim', { 'on': 'CtrlP' } "Change hot key as ctrl + N like IDEA
 
-" Taglist
-Plug 'majutsushi/tagbar', { 'on': 'TagbarOpenAutoClose' }
+"Taglist
+"Plug 'majutsushi/tagbar', { 'on': 'TagbarOpenAutoClose' }
+Plug 'liuchengxu/vista.vim'
+
 
 " Error checking
 "Plug 'w0rp/ale'
@@ -166,6 +168,31 @@ let g:lightline = {
 " set statusline+=%#warningmsg#
 " set statusline+=%{SyntasticStatuslineFlag()}
 " set statusline+=%*
+
+
+" ===
+" === CtrlP plug change hot key
+" ===
+let g:ctrlp_map = '<c-N>'
+
+" ===
+" === Vista.vim
+" ===
+noremap <LEADER>v :Vista!!<CR>
+"noremap <c-t> :silent! Vista finder coc<CR>
+let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
+let g:vista_default_executive = 'coc'
+let g:vista_fzf_preview = ['right:50%']
+let g:vista#renderer#enable_icon = 1
+let g:vista#renderer#icons = {
+\   "function": "\uf794",
+\   "variable": "\uf71b",
+\  }
+" function! NearestMethodOrFunction() abort
+" 	return get(b:, 'vista_nearest_method_or_function', '')
+" endfunction
+" set statusline+=%{NearestMethodOrFunction()}
+" autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
 " ===
 " === NNERDTreeMapOpenExplERDTree(项目结构树)
