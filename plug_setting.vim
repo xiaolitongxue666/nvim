@@ -28,10 +28,6 @@ Plug 'ctrlpvim/ctrlp.vim', { 'on': 'CtrlP' } "Change hot key as ctrl + N like ID
 "Plug 'majutsushi/tagbar', { 'on': 'TagbarOpenAutoClose' }
 Plug 'liuchengxu/vista.vim'
 
-
-" Error checking
-"Plug 'w0rp/ale'
-
 " Auto Complete
 "Plug 'Valloric/YouCompleteMe'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
