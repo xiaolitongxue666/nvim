@@ -25,52 +25,26 @@ Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'ctrlpvim/ctrlp.vim', { 'on': 'CtrlP' } "Change hot key as ctrl + N like IDEA
 
 "Taglist
-"Plug 'majutsushi/tagbar', { 'on': 'TagbarOpenAutoClose' }
 Plug 'liuchengxu/vista.vim'
 
 " Auto Complete
-"Plug 'Valloric/YouCompleteMe'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-
-"Plug 'davidhalter/jedi-vim'
-"Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-"Plug 'ncm2/ncm2'
-""Plug 'ncm2/ncm2-jedi'
-""Plug 'ncm2/ncm2-github'
-"Plug 'ncm2/ncm2-bufword'
-"Plug 'ncm2/ncm2-path'
-"Plug 'ncm2/ncm2-match-highlight'
-"Plug 'ncm2/ncm2-markdown-subscope'
-
-" Language Server
-"Plug 'autozimu/LanguageClient-neovim', {
-    "\ 'branch': 'next',
-    "\ 'do': 'bash install.sh',
-    "\ }
-let g:LanguageClient_serverCommands = {
-\ 'rust': ['rust-analyzer'],
-\ }
-
 
 "" (Optional) Multi-entry selection UI.
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'Yggdroot/LeaderF', { 'do': './install.sh' }
 
-" Undo Tree
-Plug 'mbbill/undotree/'
-
 " Other visual enhancement
-Plug 'nathanaelkane/vim-indent-guides'
-"Plug 'itchyny/vim-cursorword'
-"Plug 'tmhedberg/SimpylFold'
+Plug 'itchyny/vim-cursorword'
+" 启动界面
 Plug 'mhinz/vim-startify'
 
 " Git
-Plug 'rhysd/conflict-marker.vim'
+"Plug 'rhysd/conflict-marker.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'mhinz/vim-signify'
-Plug 'gisphm/vim-gitignore', { 'for': ['gitignore', 'vim-plug'] }
+"Plug 'gisphm/vim-gitignore', { 'for': ['gitignore', 'vim-plug'] }
 
 " HTML, CSS, JavaScript, PHP, JSON, etc.
 Plug 'elzr/vim-json'
@@ -83,10 +57,6 @@ Plug 'mattn/emmet-vim'
 " Python
 Plug 'vim-scripts/indentpython.vim', { 'for' :['python', 'vim-plug'] }
 Plug 'numirias/semshi', { 'do': ':UpdateRemotePlugins' }
-
-" Markdown
-"Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install_sync() }, 'for' :['markdown', 'vim-plug'] }
-"Plug 'dhruvasagar/vim-table-mode', { 'on': 'TableModeToggle' }
 
 " For general writing
 Plug 'reedes/vim-wordy'
@@ -105,9 +75,8 @@ Plug 'gcmt/wildfire.vim' " in Visual mode, type i' to select all text in '', or 
 Plug 'scrooloose/nerdcommenter' " in <space>cc to comment a line
 "Plug 'yuttie/comfortable-motion.vim'
 " Plug 'brooth/far.vim'
-Plug 'tmhedberg/SimpylFold'
 Plug 'kassio/neoterm'
-Plug 'vim-scripts/restore_view.vim'
+Plug 'vim-scrkshenoy/vim-signatureipts/restore_view.vim'
 
 " Dependencies
 Plug 'MarcWeber/vim-addon-mw-utils'
@@ -128,15 +97,6 @@ Plug 'rust-lang/rust.vim'
 "vim-plag end
 call plug#end()
 
-" ===
-" === Create a _machine_specific.vim file to adjust machine specific stuff, like python interpreter location
-" ===
-"let has_machine_specific_file = 1
-"if empty(glob('~/.config/nvim/_machine_specific.vim'))
-"  let has_machine_specific_file = 0
-"  silent! exec "!cp ~/.config/nvim/default_configs/_machine_specific_default.vim ~/.config/nvim/_machine_specific.vim"
-"endif
-"source ~/.config/nvim/_machine_specific.vim
 
 "open transparent and color
 let g:SnazzyTransparent = 1
@@ -144,15 +104,8 @@ let g:SnazzyTransparent = 1
 " ===
 " === Dress up my vim
 " ===
-"map <LEADER>c1 :set background=dark<CR>:colorscheme snazzy<CR>:AirlineTheme dracula<CR>
-"map <LEADER>c2 :set background=light<CR>:colorscheme ayu<CR>:AirlineTheme ayu_light<CR>
-
 set termguicolors     " enable true colors support
-"colorscheme snazzy
 let g:space_vim_transp_bg = 1
-"set background=dark
-"colorscheme space_vim_theme
-"let g:airline_theme='dracula'
 
 let g:lightline = {
   \     'active': {
@@ -160,10 +113,6 @@ let g:lightline = {
   \         'right': [['lineinfo'], ['percent'], ['fileformat', 'fileencoding']]
   \     }
   \ }
-
-" set statusline+=%#warningmsg#
-" set statusline+=%{SyntasticStatuslineFlag()}
-" set statusline+=%*
 
 
 " ===
@@ -184,11 +133,6 @@ let g:vista#renderer#icons = {
 \   "function": "\uf794",
 \   "variable": "\uf71b",
 \  }
-" function! NearestMethodOrFunction() abort
-" 	return get(b:, 'vista_nearest_method_or_function', '')
-" endfunction
-" set statusline+=%{NearestMethodOrFunction()}
-" autocmd VimEnter * call vista#RunForNearestMethodOrFunction()
 
 " ===
 " === NNERDTreeMapOpenExplERDTree(项目结构树)
@@ -199,20 +143,6 @@ map th :help NERDTree-t<CR>
 let NERDTreeMenuUp = "i"
 let NERDTreeMenuDown = "k"
 let NERDTreeMapOpenSplit = ""
-
-
-"let NERDTReeMenuUp = "i"
-"let NERDTreeMenuDown = "k"
-"let NERDTreeMapOpenExpl = ""
-"let NERDTreeMapUpdir = ""
-"let NERDTreeMapUpdirKeepOpen = "l"
-"let NERDTreeMapOpenSplit = ""
-"let NERDTreeOpenVSplit = ""
-"let NERDTreeMapActivateNode = ""
-"let NERDTreeMapOpenInTab = "o"
-"let NERDTreeMapPreview = ""
-"let NERDTreeMapCloseDir = "n"
-"let NERDTreeMapChangeRoot = "y"
 
 
 " ===
@@ -229,25 +159,31 @@ noremap <silent> <C-N> :Leaderf file<CR>
 " ===
 " fix the most annoying bug that coc has
 silent! au BufEnter,BufRead,BufNewFile * silent! unmap if
-let g:coc_global_extensions = ['coc-python', 'coc-vimlsp', 'coc-html', 'coc-json', 'coc-css', 'coc-tsserver', 'coc-yank', 'coc-lists', 'coc-gitignore', 'coc-vimlsp', 'coc-tailwindcss']
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
-" use <tab> for trigger completion and navigate to the next complete item
-function! s:check_back_space() abort
-	let col = col('.') - 1
-	return !col || getline('.')[col - 1]	=~ '\s'
-endfunction
-inoremap <silent><expr> <Tab>
-			\ pumvisible() ? "\<C-n>" :
-			\ <SID>check_back_space() ? "\<Tab>" :
-			\ coc#refresh()
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <silent><expr> <c-space> coc#refresh()
+let g:coc_global_extensions = [
+        \ 'coc-python', 
+        \ 'coc-vimlsp', 
+        \ 'coc-html', 
+        \ 'coc-json', 
+        \ 'coc-css', 
+        \ 'coc-tsserver', 
+        \ 'coc-yank', 
+        \ 'coc-lists', 
+        \ 'coc-gitignore', 
+        \ 'coc-rls', 
+        \ 'coc-rust-analyzer', 
+        \ 'coc-tailwindcss']
 " Useful commands
+" 打开剪切板历史
 nnoremap <silent> <space>y :<C-u>CocList -A --normal yank<cr>
+" 列出定义列表
 nmap <silent> gd <Plug>(coc-definition)
+" 转至类型定义
 nmap <silent> gy <Plug>(coc-type-definition)
+" 代办事项清单
 nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
+" 列出参考列表
+nmap <silent> gr <Plug>(coc-references)h
+" 重命名变量名
 nmap <leader>rn <Plug>(coc-rename)
 " Rust analyzer
 nmap <leader>a v<Plug>(coc-codeaction-selected)
@@ -272,77 +208,6 @@ let g:NERDTreeIndicatorMapCustom = {
     \ "Unknown"   : "?"
     \ }
 
-" ===
-" === NCM2
-" ===
-"inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
-"inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-"inoremap <expr> <CR> (pumvisible() ? "\<c-y>\<cr>": "\<CR>")
-"autocmd BufEnter * call ncm2#enable_for_buffer()
-"set completeopt=noinsert,menuone,noselect
-
-"Add by xiaoli
-"let g:python3_host_prog=/usr/bin/python3
-"let g:ruby_host_prog = '/home/xiaoli/.gem/ruby/2.6.0/bin/neovim-ruby-host.ruby.2.6'
-
-"let ncm2#popup_delay = 5
-"let g:ncm2#matcher = "substrfuzzy"
-"let g:ncm2_jedi#python_version = 3
-"let g:ncm2#match_highlight = 'bold'
-
-"let g:jedi#auto_initialization = 1
-""let g:jedi#completion_enabled = 0
-""let g:jedi#auto_vim_configuration = 0
-""let g:jedi#smart_auto_mapping = 0
-"let g:jedi#popup_on_dot = 1
-"let g:jedi#completion_command = ""
-"let g:jedi#show_call_signatures = "1"
-
-
-" ===
-" === vim-indent-guide
-" ===
-"let g:indent_guides_guide_size = 1
-"let g:indent_guides_start_level = 2
-"let g:indent_guides_enable_on_vim_startup = 1
-"let g:indent_guides_color_change_percent = 1
-"silent! unmap <LEADER>ig
-"autocmd WinEnter * silent! unmap <LEADER>ig
-
-
-" ===
-" === some error checking
-" ===
-
-
-
-" ===
-" === MarkdownPreview
-" ===
-"let g:mkdp_auto_start = 0
-"let g:mkdp_auto_close = 1
-"let g:mkdp_refresh_slow = 0
-"let g:mkdp_command_for_global = 0
-"let g:mkdp_open_to_the_world = 0
-"let g:mkdp_open_ip = ''
-"let g:mkdp_browser = 'chromium'
-""let g:mkdp_echo_preview_url = 0
-""let g:mkdp_browserfunc = ''
-"let g:mkdp_preview_options = {
-"    \ 'mkit': {},
-""    \ 'katex': {},
-"""    \ 'uml': {},
-""    \ 'maid': {},
-"    \ 'disable_sync_scroll': 0,
-"    \ 'sync_scroll_type': 'middle',
-"    \ 'hide_yaml_meta': 1
-"    \ }
-"let g:mkdp_markdown_css = ''
-"let g:mkdp_highlight_css = ''
-"let g:mkdp_port = ''
-"let g:mkdp_page_title = '?${name}?'
-"
-"
 " ===
 " === Python-syntax
 " ===
@@ -406,12 +271,6 @@ let g:SignatureMap = {
         \ }
 
 
-" ===
-" === Undotree
-" ===
-" let g:undotree_DiffAutoOpen = 0
-" map L :UndotreeToggle<CR>
-
 " ==
 " == vim-multiple-cursor
 " ==
@@ -445,18 +304,6 @@ let g:startify_lists = [
 
 " Far.vim
 " nnoremap <silent> <LEADER>f :F  %<left><left>
-
-" Testring my own plugin
-"if !empty(glob('~/Github/vim-calc/vim-calc.vim'))
-"  source ~/Github/vim-calc/vim-calc.vim
-"endif
-"map <LEADER>a :call Calc()<CR>
-
-let g:user_emmet_leader_key='<C-f>'
-" Open the _machine_specific.vim file if it has just been created
-"if has_machine_specific_file == 0
-"  exec "e ~/.config/nvim/_machine_specific.vim"
-"endif
 
 
 " ===================== End of Plugin Settings =====================
