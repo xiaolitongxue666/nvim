@@ -18,6 +18,9 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 "show the list of buffers in the command bar
 Plug 'bling/vim-bufferline'
+" Theme 
+Plug 'sheerun/vim-polyglot'
+Plug 'pineapplegiant/spaceduck', { 'branch': 'main' }
 
 " File navigation
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
@@ -76,7 +79,7 @@ Plug 'scrooloose/nerdcommenter' " in <space>cc to comment a line
 "Plug 'yuttie/comfortable-motion.vim'
 " Plug 'brooth/far.vim'
 Plug 'kassio/neoterm'
-Plug 'vim-scrkshenoy/vim-signatureipts/restore_view.vim'
+"Plug 'vim-scrkshenoy/vim-signatureipts/restore_view.vim'
 
 " Dependencies
 Plug 'MarcWeber/vim-addon-mw-utils'
@@ -113,6 +116,20 @@ let g:lightline = {
   \         'right': [['lineinfo'], ['percent'], ['fileformat', 'fileencoding']]
   \     }
   \ }
+
+
+" ===
+" === Spaceduck theme
+" ===
+if exists('+termguicolors')
+  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+  set termguicolors
+endif
+
+colorscheme spaceduck
+
+let g:airline_theme = 'spaceduck'
 
 
 " ===
