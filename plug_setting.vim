@@ -32,6 +32,7 @@ Plug 'liuchengxu/vista.vim'
 
 " Auto Complete
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'racer-rust/vim-racer'
 
 "" (Optional) Multi-entry selection UI.
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -204,6 +205,13 @@ nmap <silent> gr <Plug>(coc-references)h
 nmap <leader>rn <Plug>(coc-rename)
 " Rust analyzer
 nmap <leader>a v<Plug>(coc-codeaction-selected)
+
+
+" ===
+" === vim-racer
+" ===
+set hidden
+let g:racer_cmd = "/home/user/.cargo/bin/racer"
 
 
 " Change completion windows background
