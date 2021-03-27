@@ -212,6 +212,23 @@ nmap <leader>a v<Plug>(coc-codeaction-selected)
 " ===
 set hidden
 let g:racer_cmd = "/home/user/.cargo/bin/racer"
+"augroup Racer
+    "autocmd!
+    "autocmd FileType rust nmap <buffer> gd         <Plug>(rust-def)
+    "autocmd FileType rust nmap <buffer> gs         <Plug>(rust-def-split)
+    "autocmd FileType rust nmap <buffer> gx         <Plug>(rust-def-vertical)
+    "autocmd FileType rust nmap <buffer> gt         <Plug>(rust-def-tab)
+    "autocmd FileType rust nmap <buffer> <leader>gd <Plug>(rust-doc)
+    "autocmd FileType rust nmap <buffer> <leader>gD <Plug>(rust-doc-tab)
+"augroup END
+
+" ===
+" === nerdcommenter 注释插件
+" ===
+" [count]<leader>cc |NERDCommenterComment|
+" Comment out the current line or text selected in visual mode.
+" [count]<leader>cu |NERDCommenterUncomment|
+" Uncomments the selected line(s).
 
 
 " Change completion windows background
