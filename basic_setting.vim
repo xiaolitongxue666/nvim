@@ -222,6 +222,12 @@ noremap <silent> L $
 noremap <LEADER>mi 5<C-y>
 noremap <LEADER>mk 5<C-e>
 
+" Move as page
+" Ctrl + i up page
+" Ctrl + k down page
+" noremap <silent> <C-i> <C-u>
+" noremap <silent> <C-k> <C-d>
+
 " ===
 " === Window management(窗口管理)
 " ===
