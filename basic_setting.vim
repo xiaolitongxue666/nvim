@@ -10,7 +10,8 @@ set clipboard=unnamed
 let &t_ut=' '
 " automatic change working dir at now edit file's path(将工作目录自动跳转到编辑的文件路径)
 set autochdir
-
+" auto reload file
+" set autoread
 
 " ===
 " === Editor behavior(编辑操作)
