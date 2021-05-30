@@ -281,6 +281,12 @@ nnoremap sp 1<C-G>
 " map <LEADER>/ :set splitbelow<CR>:sp<CR>:term<CR>
 noremap <LEADER>/ :term<CR>
 
+" Close a terminal windows(关闭一个终端窗口)
+" 退出终端模式
+tnoremap <C-N> <C-\><C-N> 
+" 关闭终端
+tnoremap <C-O> <C-\><C-N><C-O>
+
 " Press ` to change case (instead of ~)
 noremap <LEADER>sc ~
 
