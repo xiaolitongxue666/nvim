@@ -279,7 +279,8 @@ nnoremap sp 1<C-G>
 
 " Opening a terminal window(打开一个终端窗口)
 " map <LEADER>/ :set splitbelow<CR>:sp<CR>:term<CR>
-noremap <LEADER>/ :term<CR>
+" noremap <LEADER>/ :term<CR>
+noremap <LEADER>/ :set splitbelow<CR>:split<CR>:res +10<CR>:term<CR>
 
 " Close a terminal windows(关闭一个终端窗口)
 " 退出终端模式
