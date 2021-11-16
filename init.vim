@@ -18,5 +18,5 @@ endif
 
 " Include sub vim/nvim config files
 source ~/.config/nvim/basic_setting.vim
-source ~/.config/nvim/plug_setting.vim
+"source ~/.config/nvim/plug_setting.vim
 
