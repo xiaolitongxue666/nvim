@@ -1,12 +1,12 @@
 " ==============================
-" === Editor Setup(编辑设置) ===
+" === Editor Setup(编辑器设置) ===
 " ==============================
 " ===
 " === System(全局设置)
 " ===
 " copy form system clipboard(允许从系统剪切板拷贝数据)
-set clipboard=unnamed
-" let the color compatible to terminal(让陪着和终端兼容)
+" set clipboard=unnamed
+" let the color compatible to terminal(让配色和终端兼容)
 let &t_ut=' '
 " automatic change working dir at now edit file's path(将工作目录自动跳转到编辑的文件路径)
 set autochdir
@@ -57,7 +57,7 @@ set splitright
 set splitbelow
 " enable mouse in vim
 " set mouse=a
-" if in insert, replace  or visual mode put a message on the last line swith to not show this line(各种模状态显示在窗口最下方的状态栏中)
+" if in insert, replace  or visual mode put a message on the last line swith to not show this line(各种模式状态显示在窗口最下方的状态栏中)
 set noshowmode
 "show typed command(显示输入的命令，一般在：command 场景下显示)
 set showcmd
@@ -152,7 +152,7 @@ noremap H I
 vnoremap h i
 vnoremap H I
 
-" Y 拷贝光标当前位置到行尾的字符串
+" Y 拷贝光标当前位置到行尾的字符串,也可以直接使用yy拷贝当前行
 " Make Y to copy till the end of the line
 nnoremap Y y$
 
@@ -161,6 +161,7 @@ nnoremap Y y$
 vnoremap Y :w !xclip -i -sel c<CR>
 
 " Indentation
+" <<减少当前行缩进 | >> 增加当前行缩进
 " nnoremap < <<
 " nnoremap > >>
 
@@ -187,7 +188,7 @@ noremap <LEADER>dw /\(\<\w\+\>\)\_s*\1
 " Folding
 map <silent> <LEADER>o za
 
-" Open up lazygit
+" Open up lazygit (TODO: May replace with gitui)
 " noremap \g :term lazygit<CR>
 " noremap <c-g> :term lazygit<CR>
 
