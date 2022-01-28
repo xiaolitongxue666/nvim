@@ -17,8 +17,10 @@
 lua require('basic')
 " Packer插件管理
 lua require('plugins')
-" 快捷键映射
-lua require('keybindings')
+" 基础快捷键映射
+lua require('basic_keybindings')
+" 插件快捷键映射
+lua require('plugins_keybindings')
 " 皮肤设置
 " https://github.com/ellisonleao/gruvbox.nvim
 set background=dark " or light if you want light mode

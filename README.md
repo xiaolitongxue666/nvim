@@ -12,3 +12,10 @@ curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs  https://raw.
 
 # lua
 ./lua/
+
+# Plug
+```bash
+# 安装 Packer.nvim插件管理器
+git clone --depth 1 https://github.com/wbthomason/packer.nvim\
+ ~/.local/share/nvim/site/pack/packer/start/packer.nvim 
+```
