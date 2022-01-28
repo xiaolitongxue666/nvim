@@ -2,6 +2,8 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- 基础快捷键配置
+
 -- 本地变量 lua 特性, 类似C的宏用于简写默认函数
 local map = vim.api.nvim_set_keymap
 local opt = {
@@ -92,7 +94,6 @@ map("n", "<LEADER>q", "<C-w>j:q<CR>", opt)
 -- 显示当前编辑的buffer的文件路径
 map("n", "sp", "1<C-G>", opt)
 
-
 -- 打开一个终端窗口
 map("n", "<LEADER>/", ":set splitbelow<CR>:split<CR>:res +10<CR>:term<CR>", opt)
 -- 退出终端模式
@@ -103,7 +104,17 @@ map("t", "<C-O>", "<C-\\><C-N><C-O>", opt) -- 注意这里使用了 \ 转义符
 -- 切换字符大小写
 map("n", "<LEADER>sc", "~", opt)
 
-
+-- 插件快捷键配置
+-- nvimTree
+--tt 打开nvimTree菜单
+--o 打开关闭文件夹
+--a 创建文件
+--r 重命名
+--x 剪切
+--c 拷贝
+--p 粘贴
+--d 删除
+map('n', 'tt', ':NvimTreeToggle<CR>', opt)
 
 
 
