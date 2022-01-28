@@ -28,10 +28,10 @@ colorscheme zephyr
 lua require('plugin-config/nvim-tree')
 lua require('plugin-config/bufferline')
 lua require('plugin-config/nvim-treesitter')
-lua require('plugin-config/telescope')
-lua require('plugin-config/nvim-autopairs')
+" lua require('plugin-config/telescope')
+" lua require('plugin-config/nvim-autopairs')
 " lua require('plugin-config/surround')
-lua require('plugin-config/comment')
+" lua require('plugin-config/comment')
 " lua require('plugin-config/nvim-colorizer')
 " lua require('plugin-config/rust-tools')
 
@@ -39,7 +39,7 @@ lua require('plugin-config/comment')
 " lsp
 lua require('lsp/setup')
 lua require('lsp/nvim-cmp')
-lua require('lsp/ui')
+" lua require('lsp/ui')
 
 " windows problems
 
