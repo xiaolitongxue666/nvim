@@ -10,6 +10,9 @@
 "source ~/.config/nvim/plug_setting.vim
 
 " Lua 版本
+"   https://github.com/nshen/learn-neovim-lua
+"   https://github.com/nanotee/nvim-lua-guide#defining-mappings
+
 " 基础设置
 lua require('basic')
 " Packer插件管理
