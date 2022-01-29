@@ -51,6 +51,12 @@ map("n", "k", "j", opt)
 map("n", "j", "h", opt)
 map("n", "l", "l", opt)
 
+-- v 模式下光标常规移动
+map("v", "i", "k", opt)
+map("v", "k", "j", opt)
+map("v", "j", "h", opt)
+map("v", "l", "l", opt)
+
 -- 光标快速移动
 -- 光标上移5行
 map("n", "I", "5k", opt)
@@ -60,6 +66,16 @@ map("n", "K", "5j", opt)
 map("n", "J", "0", opt)
 -- 光标右移到行尾
 map("n", "L", "$", opt)
+
+-- v 模式下光标快速移动
+-- 光标上移5行
+map("v", "I", "5k", opt)
+-- 光标下移5行
+map("v", "K", "5j", opt)
+-- 光标左移到行首
+map("v", "J", "0", opt)
+-- 光标右移到行尾
+map("v", "L", "$", opt)
 
 -- 窗口管理
 -- s+ i/k/j/l 创建分屏窗口
