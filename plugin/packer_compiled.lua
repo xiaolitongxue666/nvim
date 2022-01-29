@@ -104,25 +104,10 @@ _G.packer_plugins = {
     path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/friendly-snippets",
     url = "https://github.com/rafamadriz/friendly-snippets"
   },
-  ["gruvbox.nvim"] = {
-    loaded = true,
-    path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/gruvbox.nvim",
-    url = "https://github.com/ellisonleao/gruvbox.nvim"
-  },
   ["lspkind-nvim"] = {
     loaded = true,
     path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/lspkind-nvim",
     url = "https://github.com/onsails/lspkind-nvim"
-  },
-  ["lush.nvim"] = {
-    loaded = true,
-    path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/lush.nvim",
-    url = "https://github.com/rktjmp/lush.nvim"
-  },
-  ["nord.nvim"] = {
-    loaded = true,
-    path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/nord.nvim",
-    url = "https://github.com/shaunsingh/nord.nvim"
   },
   ["nvim-cmp"] = {
     loaded = true,
@@ -154,11 +139,6 @@ _G.packer_plugins = {
     path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/nvim-web-devicons",
     url = "https://github.com/kyazdani42/nvim-web-devicons"
   },
-  ["onedark.nvim"] = {
-    loaded = true,
-    path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/onedark.nvim",
-    url = "https://github.com/ful1e5/onedark.nvim"
-  },
   ["packer.nvim"] = {
     loaded = true,
     path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/packer.nvim",
@@ -168,11 +148,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/vim-vsnip",
     url = "https://github.com/hrsh7th/vim-vsnip"
-  },
-  ["zephyr-nvim"] = {
-    loaded = true,
-    path = "/Users/liyong/.local/share/nvim/site/pack/packer/start/zephyr-nvim",
-    url = "https://github.com/glepnir/zephyr-nvim"
   }
 }
 
