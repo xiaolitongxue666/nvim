@@ -5,6 +5,9 @@ return require('packer').startup(function()
 
     -------------------------- plugins -------------------------------------------
 
+
+    -------------------------- normal -----------------------------------------------
+
     -- nvim-tree
     use {
         'kyazdani42/nvim-tree.lua',
@@ -27,6 +30,14 @@ return require('packer').startup(function()
 
     -- Comment
     use 'numToStr/Comment.nvim'
+
+    -------------------------- edit -----------------------------------------------
+
+    -- telescope
+    use {
+        'nvim-telescope/telescope.nvim',
+        requires = {{'nvim-lua/plenary.nvim'}}
+  }
 
     -------------------------- lsp -----------------------------------------------
 

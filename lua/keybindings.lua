@@ -136,6 +136,11 @@ map('n', 'tt', ':NvimTreeToggle<CR>', opt)
 map("n", "<C-j>", ":BufferLineCyclePrev<CR>", opt)
 map("n", "<C-l>", ":BufferLineCycleNext<CR>", opt)
 
+-- telescope
+map("n", "<C-p>", ":Telescope find_files<CR>", opt)
+-- map("n", "<leader>f", ":Telescope find_files<CR>", opt)
+map("n", "<leader>g", ":Telescope live_grep<CR>", opt)
+
 -- lsp快捷键配置
 local pluginKeys = {}
 
