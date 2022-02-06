@@ -10,6 +10,7 @@
 "source ~/.config/nvim/plug_setting.vim
 
 " Lua 版本
+"   https://neovim.io/doc/user/index.html
 "   https://github.com/nshen/learn-neovim-lua
 "   https://github.com/nanotee/nvim-lua-guide#defining-mappings
 
@@ -31,7 +32,7 @@ lua require('plugin-config/nvim-treesitter')
 " lua require('plugin-config/telescope')
 " lua require('plugin-config/nvim-autopairs')
 " lua require('plugin-config/surround')
-" lua require('plugin-config/comment')
+lua require('plugin-config/comment')
 " lua require('plugin-config/nvim-colorizer')
 " lua require('plugin-config/rust-tools')
 

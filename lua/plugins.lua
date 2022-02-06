@@ -25,6 +25,9 @@ return require('packer').startup(function()
         run = ':TSUpdate'
     }
 
+    -- Comment
+    use 'numToStr/Comment.nvim'
+
     -------------------------- lsp -----------------------------------------------
 
     -- lspconfig

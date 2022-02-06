@@ -139,6 +139,23 @@ map("n", "<C-l>", ":BufferLineCycleNext<CR>", opt)
 -- lsp快捷键配置
 local pluginKeys = {}
 
+-- 代码注释插件
+-- see ./lua/plugin-config/comment.lua
+pluginKeys.comment = {
+  toggler = {
+    line = 'gcc',
+    block = 'gbc',
+  },
+  opleader = {
+    line = 'gc',
+    bock = 'gb'
+  }
+}
+
+-- ctrl + _
+map("n", "<C-_>", "gcc", {noremap = false})
+map("v", "<C-_>", "gcc", {noremap = false})
+
 -- lsp 回调函数快捷键设置
 pluginKeys.maplsp = function(mapbuf)
     -- rename
@@ -170,9 +187,9 @@ end
 pluginKeys.cmp = function(cmp)
     return {
         -- 上一个
-        ['<C-k>'] = cmp.mapping.select_prev_item(),
+        ['<C-i>'] = cmp.mapping.select_prev_item(),
         -- 下一个
-        ['<C-j>'] = cmp.mapping.select_next_item(),
+        ['<C-k>'] = cmp.mapping.select_next_item(),
         -- 出现补全
         ['<A-.>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
         -- 取消
