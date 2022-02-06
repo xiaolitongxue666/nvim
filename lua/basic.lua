@@ -41,11 +41,6 @@ vim.o.cmdheight = 2
 -- 当文件被外部程序修改时，自动加载
 vim.o.autoread = true
 vim.bo.autoread = true
--- 在下次打开文件的时候光标位置
--- vim.api.nvim_command('set viewoptions=cursor,folds,slash,unix')
--- vim.api.nvim_set_option('viewoptions','cursor,folds,slash,unix')
--- vim.o.viewoptions = "cursor,folds,slash,unix"
--- vim.g.viewoptions = "cursor,folds,slash,unix"
 -- 自动换行
 vim.o.wrap = true
 vim.wo.wrap = false
@@ -83,3 +78,5 @@ vim.o.shortmess = vim.o.shortmess .. 'c'
 vim.o.pumheight = 10
 -- always show tabline
 vim.o.showtabline = 2
+-- 在下次打开文件的时候光标位置
+vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif ]])
