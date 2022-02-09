@@ -107,6 +107,9 @@ map("n", "srv", "<C-w>b<C-w>H", opt)
 -- 空格+q 关闭当前使用的窗口
 map("n", "<LEADER>q", "<C-w>j:q<CR>", opt)
 
+-- 空格+b 关闭当前使用的buffer
+map("n", "<LEADER>b", ":b #<CR>:bd #<CR>", opt)
+
 -- 显示当前编辑的buffer的文件路径
 map("n", "sp", "1<C-G>", opt)
 
@@ -116,6 +119,7 @@ map("n", "<LEADER>/", ":set splitbelow<CR>:split<CR>:res +10<CR>:term<CR>", opt)
 map("t", "<C-N>", "<C-\\><C-N>", opt) -- 注意这里使用了 \ 转义符
 -- 关闭终端
 map("t", "<C-O>", "<C-\\><C-N><C-O>", opt) -- 注意这里使用了 \ 转义符
+-- 或者 直接在 终端模式下 输入 Ctrl + d 关闭终端
 
 -- 切换字符大小写
 map("n", "<LEADER>sc", "~", opt)
