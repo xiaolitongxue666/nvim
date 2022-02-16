@@ -5,6 +5,13 @@ return require('packer').startup(function()
 
     -------------------------- plugins -------------------------------------------
 
+    -------------------------- start screen -----------------------------------------
+    use {
+        'goolord/alpha-nvim',
+        config = function ()
+            require'alpha'.setup(require'alpha.themes.dashboard'.config)
+        end
+    }
 
     -------------------------- normal -----------------------------------------------
 

@@ -42,6 +42,9 @@ lua require('lsp/setup')
 lua require('lsp/nvim-cmp')
 " lua require('lsp/ui')
 
+" start screen
+lua require('plugin-config/alpha')
+
 " windows problems
 
 " 复制到windows剪贴板
