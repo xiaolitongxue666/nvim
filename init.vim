@@ -45,6 +45,9 @@ lua require('lsp/nvim-cmp')
 " start screen
 lua require('plugin-config/alpha')
 
+" indent blankline
+lua require('plugin-config/indent_blankline')
+
 " windows problems
 
 " 复制到windows剪贴板
