@@ -66,11 +66,17 @@ return require('packer').startup(function()
     --    "ellisonleao/gruvbox.nvim",
     --    requires = { "rktjmp/lush.nvim" }
     --}
+
     -- zephyr
     --use 'glepnir/zephyr-nvim'
+    
     -- nord
     --use 'shaunsingh/nord.nvim'
+    
     -- onedark
     --use 'ful1e5/onedark.nvim'
+
+    --nightfly
+    use 'bluz71/vim-nightfly-guicolors'
 
 end)
