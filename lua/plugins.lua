@@ -5,6 +5,13 @@ return require('packer').startup(function()
 
     -------------------------- plugins -------------------------------------------
 
+    -------------------------- start screen -----------------------------------------
+    use {
+        'goolord/alpha-nvim',
+        config = function ()
+            require'alpha'.setup(require'alpha.themes.dashboard'.config)
+        end
+    }
 
     -------------------------- normal -----------------------------------------------
 
@@ -37,7 +44,10 @@ return require('packer').startup(function()
     use {
         'nvim-telescope/telescope.nvim',
         requires = {{'nvim-lua/plenary.nvim'}}
-  }
+    }
+
+    -- indent-blankline
+    use "lukas-reineke/indent-blankline.nvim"
 
     -------------------------- lsp -----------------------------------------------
 
@@ -66,11 +76,17 @@ return require('packer').startup(function()
     --    "ellisonleao/gruvbox.nvim",
     --    requires = { "rktjmp/lush.nvim" }
     --}
+
     -- zephyr
     --use 'glepnir/zephyr-nvim'
+    
     -- nord
     --use 'shaunsingh/nord.nvim'
+    
     -- onedark
     --use 'ful1e5/onedark.nvim'
+
+    --nightfly
+    use 'bluz71/vim-nightfly-guicolors'
 
 end)
