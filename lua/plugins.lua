@@ -28,6 +28,11 @@ return require('packer').startup(function()
         run = ':TSUpdate'
     }
 
+    -- copilot
+    use {
+        'github/copilot.vim', branch = 'release'
+    }
+
     -- Comment
     use 'numToStr/Comment.nvim'
 
