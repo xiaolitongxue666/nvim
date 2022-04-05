@@ -80,3 +80,8 @@ vim.o.pumheight = 10
 vim.o.showtabline = 2
 -- 在下次打开文件的时候光标位置
 vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif ]])
+-- coloe theme (nightfly)
+vim.cmd [[colorscheme nightfly]]
+
+
+
