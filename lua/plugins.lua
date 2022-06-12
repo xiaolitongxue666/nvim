@@ -5,7 +5,7 @@ return require('packer').startup(function()
 
     -------------------------- plugins -------------------------------------------
 
-    -------------------------- start screen -----------------------------------------
+    -- alpha-nvim : 启动界面
     use {
         'goolord/alpha-nvim',
         config = function ()
@@ -13,34 +13,52 @@ return require('packer').startup(function()
         end
     }
 
-    -------------------------- normal -----------------------------------------------
-
-    -- nvim-tree
-    use {
+    -- nvim-tree : 文件目录树
+    -- Usage:
+    -- o 打开关闭文件夹
+    -- a 创建文件
+    -- r 重命名
+    -- x 剪切
+    -- c 拷贝
+    -- p 粘贴
+    -- d 删除
+    use { 
         'kyazdani42/nvim-tree.lua',
-        requires = 'kyazdani42/nvim-web-devicons'
+        requires = {
+            'kyazdani42/nvim-web-devicons'
+        },
+        tag = 'nightly'
     }
 
-    -- bufferline
+    -- bufferline : Tab UI
     use {
         'akinsho/bufferline.nvim',
+        tag = "v2.*",
         requires = 'kyazdani42/nvim-web-devicons'
     }
 
-    -- treesitter
+    -- treesitter : 语法包
+    -- Usage:
     -- :TSInstallInfo -- 查看已经安装的Language parser
     -- :TSInstall <language> -- 安装语言的parser
+    -- zc 折叠代码
+    -- zo 展开代码
     use {
         'nvim-treesitter/nvim-treesitter',
         run = ':TSUpdate'
     }
 
-    -- Comment
+    -- Comment : 注释
+    -- Usage:
+    -- Normal 模式快捷键
+    --   gcc 行注释
+    --   gbc 块注释
+    -- Visual 模式快捷键
+    --   gc 行注释
+    --   gb 块注释
     use 'numToStr/Comment.nvim'
 
-    -------------------------- edit -----------------------------------------------
-
-    -- telescope
+    -- telescope : 查找 过滤 预览
     use {
         'nvim-telescope/telescope.nvim',
         requires = {{'nvim-lua/plenary.nvim'}}
