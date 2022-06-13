@@ -59,6 +59,9 @@ return require('packer').startup(function()
     use 'numToStr/Comment.nvim'
 
     -- telescope : 查找 过滤 预览
+    -- Ctrl + p : 文件查找
+    -- <leader> + g : 在线查找
+    -- <leader> + f : buffer查找
     use {
         'nvim-telescope/telescope.nvim',
         requires = {{'nvim-lua/plenary.nvim'}}

@@ -141,9 +141,13 @@ map("n", "<C-j>", ":BufferLineCyclePrev<CR>", opt)
 map("n", "<C-l>", ":BufferLineCycleNext<CR>", opt)
 
 -- telescope
+-- Ctrl + p : 文件查找
 map("n", "<C-p>", ":Telescope find_files<CR>", opt)
 -- map("n", "<leader>f", ":Telescope find_files<CR>", opt)
+-- <leader> + g : 在线查找
 map("n", "<leader>g", ":Telescope live_grep<CR>", opt)
+-- <leader> + f : buffer查找
+map("n", "<leader>f", ":Telescope buffers<CR>", opt)
 
 -- lsp快捷键配置
 local pluginKeys = {}

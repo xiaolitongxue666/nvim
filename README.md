@@ -36,6 +36,11 @@
  :Copilot signout
  ```
     
+# Install telescope
+ - External dependencies
+    riggrep : https://github.com/BurntSushi/ripgrep
+    fd      : https://github.com/sharkdp/fd
+
 # Tricks
 - R 刷新文件树
 
