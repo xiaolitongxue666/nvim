@@ -19,6 +19,8 @@
  ```
  
 # Install Copilot
+ https://github.com/github/copilot.vim
+
  - Install
  ```
  git clone https://github.com/github/copilot.vim.git \
