@@ -1,9 +1,9 @@
 return require('packer').startup(function()
-    -- Packer can manage itself
-    use 'wbthomason/packer.nvim'
-
 
     -------------------------- plugins -------------------------------------------
+
+    -- Packer can manage itself
+    use 'wbthomason/packer.nvim'
 
     -- alpha-nvim : 启动界面
     use {
@@ -67,28 +67,42 @@ return require('packer').startup(function()
         requires = {{'nvim-lua/plenary.nvim'}}
     }
 
-    -- indent-blankline
+    -- indent-blankline ： 缩进符号 scope边界
     use "lukas-reineke/indent-blankline.nvim"
 
     -------------------------- lsp -----------------------------------------------
 
-    -- lspconfig
+    -- lspconfig ： neovim LSP 客户端的配置
     use {
         'neovim/nvim-lspconfig',
         'williamboman/nvim-lsp-installer'
     }
-    -- nvim-cmp
+    -- nvim-cmp : 自动补全
+    use 'hrsh7th/nvim-cmp' -- vsnip : 补全引擎
+    -- 补全源
     use 'hrsh7th/cmp-nvim-lsp' -- { name = nvim_lsp }
     use 'hrsh7th/cmp-buffer'   -- { name = 'buffer' },
     use 'hrsh7th/cmp-path'     -- { name = 'path' }
     use 'hrsh7th/cmp-cmdline'  -- { name = 'cmdline' }
-    use 'hrsh7th/nvim-cmp'
-    -- vsnip
+    use("hrsh7th/cmp-nvim-lsp-signature-help") -- { name = 'nvim_lsp_signature_help' }
     use 'hrsh7th/cmp-vsnip'    -- { name = 'vsnip' }
-    use 'hrsh7th/vim-vsnip'
+
+    -- Snippet 引擎
+    use("hrsh7th/vim-vsnip")
+    -- 常见编程语言代码段
     use 'rafamadriz/friendly-snippets'
-    -- lspkind
+    -- lspkind : UI增强
     use 'onsails/lspkind-nvim'
+    use("tami5/lspsaga.nvim")
+    -- 代码格式化
+    use("mhartington/formatter.nvim")
+    use({ "jose-elias-alvarez/null-ls.nvim", requires = "nvim-lua/plenary.nvim" })
+    -- Lua 增强
+    use("folke/lua-dev.nvim")
+    -- JSON 增强
+    use("b0o/schemastore.nvim")
+    -- Rust 增强
+    use("simrat39/rust-tools.nvim")
 
     -------------------------- colorscheme ---------------------------------------
 
