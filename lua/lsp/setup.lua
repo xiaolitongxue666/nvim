@@ -4,7 +4,21 @@ local lsp_installer = require "nvim-lsp-installer"
 -- https://github.com/williamboman/nvim-lsp-installer#available-lsps
 -- { key: 语言 value: 配置文件 }
 local servers = {
-  sumneko_lua = require "lsp.lua", -- /lua/lsp/lua.lua
+    bashls = require "lsp.bash",
+    ccls = require "lsp.json",
+    cmake = require "lsp.cmake",
+    cssls = require "lsp.c",
+    html = require "lsp.html",
+    -- jsonls = require "lsp.lua",
+    quick_lint_js = require "lsp.javascript",
+    sumneko_lua = require "lsp.lua", -- require "lsp.lua" 表示加载 lua/lsp/lua.lua
+    marksman = require "lsp.marktown",
+    pyright = require "lsp.python",
+    rust_analyzer = require "lsp.rust",
+    sqlls = require "lsp.sql",
+    taplo = require "lsp.toml",
+    lemminx = require "lsp.xml",
+    yamlls = require "lsp.yaml",
 }
 
 -- 自动安装 LanguageServers
