@@ -125,6 +125,7 @@ map("t", "<C-O>", "<C-\\><C-N><C-O>", opt) -- 注意这里使用了 \ 转义符
 map("n", "<LEADER>sc", "~", opt)
 
 -- 插件快捷键配置
+
 -- nvimTree
 --tt 打开nvimTree菜单
 --o 打开关闭文件夹

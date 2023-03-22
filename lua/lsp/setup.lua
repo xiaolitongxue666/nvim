@@ -5,9 +5,10 @@ local lsp_installer = require "nvim-lsp-installer"
 -- { key: 语言 value: 配置文件 }
 local servers = {
     bashls = require "lsp.bash",
-    ccls = require "lsp.json",
+    -- ccls = require "lsp.json",
+    clangd = require "lsp.json",
     cmake = require "lsp.cmake",
-    cssls = require "lsp.c",
+    -- cssls = require "lsp.c",
     html = require "lsp.html",
     -- jsonls = require "lsp.lua",
     quick_lint_js = require "lsp.javascript",
@@ -16,7 +17,7 @@ local servers = {
     pyright = require "lsp.python",
     rust_analyzer = require "lsp.rust",
     sqlls = require "lsp.sql",
-    taplo = require "lsp.toml",
+    -- taplo = require "lsp.toml",
     lemminx = require "lsp.xml",
     yamlls = require "lsp.yaml",
 }

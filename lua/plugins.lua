@@ -41,8 +41,8 @@ return require('packer').startup(function()
     -- Usage:
     -- :TSInstallInfo -- 查看已经安装的Language parser
     -- :TSInstall <language> -- 安装语言的parser
-    -- zc 折叠代码
-    -- zo 展开代码
+    -- zc 折叠代码 
+    -- zo 展开代码 在keybindngs.lua中 map("", "<LEADER>o", "za", opt)
     use {
         'nvim-treesitter/nvim-treesitter',
         run = ':TSUpdate'

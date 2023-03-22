@@ -6,19 +6,19 @@
 
 " Vimrc 版本
 " Include sub vim/nvim config files
-"source ~/.config/nvim/basic_setting.vim
-"source ~/.config/nvim/plug_setting.vim
+"   source ~/.config/nvim/basic_setting.vim
+"   source ~/.config/nvim/plug_setting.vim
 
 " Lua 版本
 "   https://neovim.io/doc/user/index.html
 "   https://github.com/nshen/learn-neovim-lua
 "   https://github.com/nanotee/nvim-lua-guide#defining-mappings
 
-" 基础设置
+" 整体基础设置
 lua require('basic')
 " Packer插件管理
 lua require('plugins')
-" 基础快捷键映射
+" 整体快捷键映射 & 插件快捷键配置
 lua require('keybindings')
 " 皮肤设置
 " https://github.com/ellisonleao/gruvbox.nvim
@@ -28,7 +28,7 @@ lua require('keybindings')
 " 插件配置
 lua require('plugin-config/nvim-tree')
 lua require('plugin-config/bufferline')
-lua require('plugin-config/nvim-treesitter')
+" lua require('plugin-config/nvim-treesitter')
 lua require('plugin-config/telescope')
 " lua require('plugin-config/nvim-autopairs')
 " lua require('plugin-config/surround')
