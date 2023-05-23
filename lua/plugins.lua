@@ -124,4 +124,10 @@ return require('packer').startup(function()
     --nightfly
     use 'bluz71/vim-nightfly-guicolors'
 
+    -------------------------- code ai ---------------------------------------
+    
+    -- codeium
+    use 'Exafunction/codeium.vim'
+
+
 end)
