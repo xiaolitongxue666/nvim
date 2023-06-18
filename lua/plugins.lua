@@ -127,7 +127,7 @@ return require('packer').startup(function()
     -------------------------- code ai ---------------------------------------
     
     -- codeium
-    use 'Exafunction/codeium.vim'
+    -- use 'Exafunction/codeium.vim'
 
 
 end)
