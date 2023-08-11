@@ -7,6 +7,8 @@ vim.o.sidescrolloff = 8
 -- 是否使用相对行号
 vim.wo.number = true
 vim.wo.relativenumber = true
+-- 同时显示行号和相对行号
+vim.o.statuscolumn = "%s %l %r"
 -- 高亮所在行
 vim.wo.cursorline = true
 -- 显示左侧图标指示列
@@ -80,8 +82,16 @@ vim.o.pumheight = 10
 vim.o.showtabline = 2
 -- 在下次打开文件的时候光标位置
 vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif ]])
--- coloe theme (nightfly)
---vim.cmd [[colorscheme nightfly]]
-
+-- 拷贝到剪切板
+vim.o.clipboard = "unnamed"
+-- 在 copy 后高亮
+vim.api.nvim_create_autocmd({ "TextYankPost" }, {
+    pattern = { "*" },
+    callback = function()
+        vim.highlight.on_yank({
+            timeout = 300,
+        })
+    end,
+})
 
 
