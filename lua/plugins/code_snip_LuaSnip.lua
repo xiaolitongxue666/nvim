@@ -4,7 +4,9 @@ return {
         -- follow latest release.
         version = "2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
         -- install jsregexp (optional!).
-        build = "make install_jsregexp",
+        build = (not jit.os:find("Windows"))
+        and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build'; make install_jsregexp"
+      or "make install_jsregexp",        
         dependencies = {
             "rafamadriz/friendly-snippets",
             config = function()
