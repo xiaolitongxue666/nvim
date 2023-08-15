@@ -1,6 +1,12 @@
-#include <studio.h>
+#include <stdio.h>
+
+
+void funtion_a(void){
+    printf("This is function a \n");
+}
+
 
 int main(void) {
 
-    printf("Hello world");
+    funtion_a();
 }

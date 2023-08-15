@@ -18,3 +18,5 @@ require("basic")
 require("keybindings")
 -- lazy.nvim插件管理
 require("lazynvim")
+-- lspconfig
+require("lsp_config")
