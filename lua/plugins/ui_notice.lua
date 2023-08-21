@@ -1,7 +1,16 @@
+-- folke/noice.nvim
+
+-- Highly experimental plugin that completely replaces the UI for messages, cmdline and the popupmenu.
+
+-- https://github.com/folke/noice.nvim
+
 return {
     {
+        -- Plug name
         "folke/noice.nvim",
+        -- Config is executed when the plugin loads.
         event = "VeryLazy",
+        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
         opts = {
             lsp = {
                 override = {
@@ -30,7 +39,7 @@ return {
                 inc_rename = true,
             },
         },
-        -- stylua: ignore
+        -- Lazy-load on key mapping
         keys = {
             { "<S-Enter>", function() require("noice").redirect(vim.fn.getcmdline()) end, mode = "c", desc = "Redirect Cmdline" },
             { "<leader>snl", function() require("noice").cmd("last") end, desc = "Noice Last Message" },

@@ -1,6 +1,9 @@
 -- lazy.nvim
--- plugin manager
+
+-- A modern plugin manager for Neovim
+
 -- https://github.com/folke/lazy.nvim
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
     vim.fn.system({

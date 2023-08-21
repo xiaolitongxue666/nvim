@@ -1,7 +1,18 @@
+-- mason-lspconfig.nvim
+
+-- Extension to mason.nvim that makes it easier to use lspconfig with mason.nvim.
+
+-- https://github.com/williamboman/mason-lspconfig.nvim
+-- https://github.com/williamboman/mason-lspconfig.nvim#available-lsp-servers
+
 return {
     {
-        event = "VeryLazy",
-        "neovim/nvim-lspconfig",
-        dependencies = { "williamboman/mason-lspconfig.nvim" },
+        -- Plug name
+        "williamboman/mason-lspconfig.nvim",
+        -- Config is executed when the plugin loads.
+        config = function()
+            require("mason").setup()
+            require("mason-lspconfig").setup()
+        end
     },
 }

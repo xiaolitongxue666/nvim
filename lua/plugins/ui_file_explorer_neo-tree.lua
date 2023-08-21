@@ -1,15 +1,18 @@
 -- neo-tree.nvim
+
 -- Neo-tree is a Neovim plugin to browse the file system
+
 -- https://github.com/nvim-neo-tree/neo-tree.nvim
+
 return {
     {
-        -- lazy.nvim property : : plug name
+        -- Plug name
         "nvim-neo-tree/neo-tree.nvim",
-        -- lazy.nvim property : branch : branch of plug repository
+        -- Branch of plug repository
         branch = "v3.x",
-        -- lazy.nvim property : cmd : lazy-load on command
+        -- Lazy-load on command
         cmd = "Neotree",
-        -- -- lazy.nvim property : keys : lazy-load on key mapping
+        -- Lazy-load on key mapping
         keys = {
             --{
             --    "<leader>fe",
@@ -31,7 +34,7 @@ return {
         deactivate = function()
             vim.cmd([[Neotree close]])
         end,
-        -- lazy.nvim property : init : functions are always executed during startup
+        -- Init functions are always executed during startup
         init = function()
             -- neovim builtin function : argc([{winid}])
             -- If {winid} is not supplied, the argument list of the current window is used.
@@ -44,6 +47,7 @@ return {
                 end
             end
         end,
+        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
         opts = {
             sources = { "filesystem", "buffers", "git_status", "document_symbols" },
             open_files_do_not_replace_types = { "terminal", "Trouble", "qf", "Outline" },
@@ -66,6 +70,7 @@ return {
                 },
             },
         },
+        -- Config is executed when the plugin loads.
         config = function(_, opts)
             require("neo-tree").setup(opts)
             vim.api.nvim_create_autocmd("TermClose", {

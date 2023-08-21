@@ -4,8 +4,8 @@ services:
     image: ubuntu-neovim:latest
     container_name: ubuntu-neovim
     tty: true
-#    volumes:
-#      - .:/ubuntu-neovim
+    volumes:
+      - .:/root/.config/nvim
 
 # docker-compose up -d --force-recreate
 # docker-compose exec ubuntu-neovim /bin/bash

@@ -1,13 +1,25 @@
+-- nvim-treesitter/nvim-treesitter
+
+-- Nvim Treesitter configurations and abstraction layer
+
+-- https://github.com/nvim-treesitter/nvim-treesitter
+
 return {
     {
+        -- Plug name
         "nvim-treesitter/nvim-treesitter",
+        -- Build is executed when a plugin is installed or updated
         build = ":TSUpdate",
+        -- Lazy-load on event
         event = { "BufReadPost", "BufNewFile" },
+        -- Lazy-load on command
         cmd = { "TSUpdateSync" },
+        -- Lazy-load on key mapping
         keys = {
             { "<c-space>", desc = "Increment selection" },
             { "<bs>", desc = "Decrement selection", mode = "x" },
         },
+        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
         opts = {
             highlight = { enable = true },
             indent = { enable = true },
@@ -42,6 +54,7 @@ return {
                 },
             },
         },
+        -- Config is executed when the plugin loads.
         config = function(_, opts)
             if type(opts.ensure_installed) == "table" then
                 ---@type table<string, boolean>

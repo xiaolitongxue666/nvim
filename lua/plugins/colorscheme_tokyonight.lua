@@ -1,10 +1,20 @@
+-- folke/tokyonight.nvim
+
+-- A clean, dark Neovim theme written in Lua
+
 -- https://github.com/folke/tokyonight.nvim#storm
+
 return {
     {
+        -- Plug name
         "folke/tokyonight.nvim",
+        -- When true, the plugin will only be loaded when needed.
         lazy = false,
+        -- Only useful for start plugins (lazy=false) to force loading certain plugins first
         priority = 1000,
+        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
         opts = {},
+        -- Config is executed when the plugin loads.
         config = function()
             require("tokyonight").setup({
                 -- your configuration comes here
@@ -41,6 +51,7 @@ return {
                 ---@param colors ColorScheme
                 on_highlights = function(highlights, colors) end,
             })
+            -- Setup colorscheme
             vim.cmd[[colorscheme tokyonight]]
         end
     },

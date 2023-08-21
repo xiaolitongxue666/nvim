@@ -1,20 +1,33 @@
+-- lukas-reineke/indent-blankline.nvim
+
+-- Indent guides for Neovim
+
+-- https://github.com/lukas-reineke/indent-blankline.nvim
+
 return {
     {
+        -- Plug name
         "lukas-reineke/indent-blankline.nvim",
-        event = "VeryLazy",
-        config = function()
-            require("indent_blankline").setup {
-                space_char_blankline = " ",
-                char_highlight_list = {
-                    "IndentBlanklineIndent1",
-                    "IndentBlanklineIndent2",
-                    "IndentBlanklineIndent3",
-                    "IndentBlanklineIndent4",
-                    "IndentBlanklineIndent5",
-                    "IndentBlanklineIndent6",
-                },
-            }
-
-        end,
+        -- Lazy-load on event
+        event = { "BufReadPost", "BufNewFile" },
+        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
+        opts = {
+            -- char = "▏",
+            char = "│",
+            filetype_exclude = {
+                "help",
+                "alpha",
+                "dashboard",
+                "neo-tree",
+                "Trouble",
+                "lazy",
+                "mason",
+                "notify",
+                "toggleterm",
+                "lazyterm",
+            },
+            show_trailing_blankline_indent = false,
+            show_current_context = false,
+        },
     },
 }

@@ -1,7 +1,16 @@
+-- lewis6991/gitsigns.nvim
+
+-- Git integration for buffers
+
+-- https://github.com/lewis6991/gitsigns.nvim
+
 return {
     {
+        -- Plug name
         "lewis6991/gitsigns.nvim",
+        -- Lazy-load on event
         event = { "BufReadPre", "BufNewFile" },
+        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
         opts = {
             signs = {
                 add = { text = "▎" },

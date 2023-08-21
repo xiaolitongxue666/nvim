@@ -1,6 +1,15 @@
+-- goolord/alpha-nvim
+
+-- A lua powered greeter like vim-startify / dashboard-nvim
+
+-- https://github.com/goolord/alpha-nvim
+
 return {
+    -- Plug name
     "goolord/alpha-nvim",
+    -- Lazy-load on event
     event = "VimEnter",
+    -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
     opts = function()
         local dashboard = require("alpha.themes.dashboard")
         local logo = [[
@@ -34,6 +43,7 @@ return {
         dashboard.opts.layout[1].val = 8
         return dashboard
     end,
+    -- Config is executed when the plugin loads.
     config = function(_, dashboard)
         -- close Lazy and re-open when the dashboard is ready
         if vim.o.filetype == "lazy" then

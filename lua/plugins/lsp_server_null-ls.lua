@@ -1,10 +1,19 @@
+-- jose-elias-alvarez/null-ls.nvim
+
+-- Use Neovim as a language server to inject LSP diagnostics,
+-- code actions, and more via Lua.
+
+-- https://github.com/jose-elias-alvarez/null-ls.nvim
+
 return {
     {
-        event = "VeryLazy",
+        -- Plug name
         "jose-elias-alvarez/null-ls.nvim",
+        -- Lazy-load on event
+        event = { "BufReadPre", "BufNewFile" },
+        -- Config is executed when the plugin loads.
         config = function()
             local null_ls = require("null-ls")
-
             local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
             null_ls.setup({
                 sources = {

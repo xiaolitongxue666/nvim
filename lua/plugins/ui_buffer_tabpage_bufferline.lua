@@ -1,7 +1,16 @@
+-- akinsho/bufferline.nvim
+
+-- A snazzy bufferline for Neovim
+
+-- https://github.com/akinsho/bufferline.nvim
+
 return {
     {
+        -- Plu name
         "akinsho/bufferline.nvim",
+        -- This is mainly useful for Neovim distros, to allow setting options on plugins that may/may not be part of the user's plugins
         optional = true,
+        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
         opts = function()
             local Offset = require("bufferline.offset")
             if not Offset.edgy then
