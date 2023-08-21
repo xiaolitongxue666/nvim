@@ -108,18 +108,56 @@ return {
             { "<leader>dw", function() require("dap.ui.widgets").hover() end, desc = "Widgets" },
         },
 
-        ---- Config is executed when the plugin loads.
-        --config = function()
-        --    local Config = require("lazyvim.config")
-        --    vim.api.nvim_set_hl(0, "DapStoppedLine", { default = true, link = "Visual" })
-        --
-        --    for name, sign in pairs(Config.icons.dap) do
-        --        sign = type(sign) == "table" and sign or { sign }
-        --        vim.fn.sign_define(
-        --                "Dap" .. name,
-        --                { text = sign[1], texthl = sign[2] or "DiagnosticInfo", linehl = sign[3], numhl = sign[3] }
-        --        )
-        --    end
-        --end,
+        ---- Config languages
+        config = function()
+            local dap = require("dap")
+            dap.adapters.lldb = {
+                type = 'executable',
+                command = '/usr/bin/lldb-vscode', -- adjust as needed, must be absolute path
+                name = "lldb"
+            }
+            dap.configurations.cpp = {
+                {
+                    name = "Launch",
+                    type = "lldb",
+                    request = "launch",
+                    program = function()
+                        return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+                    end,
+                    cwd = '${workspaceFolder}',
+                    stopOnEntry = false,
+                    args = {},
+                    runInTerminal = true,
+                },
+            }
+            dap.configurations.rust = {
+                {
+                    -- ... the previous config goes here ...,
+                    initCommands = function()
+                        -- Find out where to look for the pretty printer Python module
+                        local rustc_sysroot = vim.fn.trim(vim.fn.system('rustc --print sysroot'))
+
+                        local script_import = 'command script import "' .. rustc_sysroot .. '/lib/rustlib/etc/lldb_lookup.py"'
+                        local commands_file = rustc_sysroot .. '/lib/rustlib/etc/lldb_commands'
+
+                        local commands = {}
+                        local file = io.open(commands_file, 'r')
+                        if file then
+                            for line in file:lines() do
+                                table.insert(commands, line)
+                            end
+                            file:close()
+                        end
+                        table.insert(commands, 1, script_import)
+
+                        return commands
+                    end,
+                    -- ...,
+                }
+            }
+
+            dap.configurations.c = dap.configurations.cpp
+            dap.configurations.rust = dap.configurations.cpp
+        end,
     },
 }

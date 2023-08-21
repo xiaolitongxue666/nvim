@@ -7,11 +7,6 @@
 return {
     -- Plug name
     "jbyuki/one-small-step-for-vimkind",
-    -- A list of plugin names or plugin specs that should be loaded when the plugin loads.
-    dependencies = {
-        "williamboman/mason.nvim",
-        "williamboman/mason-lspconfig.nvim",
-    },
     -- Config is executed when the plugin loads.
     config = function()
         local dap = require("dap")
