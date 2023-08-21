@@ -39,30 +39,53 @@ RUN dpkg --remove --force-remove-reinstreq libnode-dev \
 RUN apt install ruby-full golang-go -y \
     && gem install neovim
 
-#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y \
-#    && echo 'source $HOME/.cargo/env' >> $HOME/.bashrc \
-#    && source $HOME/.bashrc \
-#    && cargo install tree-sitter-cli \
-#    && cargo install stylua \
-#    && apt install luarocks default-jre default-jdk python3-pip black -y
-#
-#RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.2-linux-x86_64.tar.gz \
-#    && tar -zxvf julia-1.9.2-linux-x86_64.tar.gz \
-#    && rm -rf /usr/bin/julia \
-#    && cd /usr/bin \
-#    && ln -sf ~/julia-1.9.2/bin/julia julia
-#
-#RUN cd ~ \
-#    && curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php \
-#    && chmod 777 /tmp/composer-setup.php \
-#    && HASH=`curl -sS https://composer.github.io/installer.sig` \
-#    && echo $HASH \
-#    && php -r "if (hash_file('SHA384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
-#    && sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
-#
-#RUN pip3 install --upgrade pynvim \
-#    && npm install -g neovim
-#
-## Get neovim config
-#RUN mkdir -p ~/.config \
-#    && git clone https://github.com/xiaolitongxue666/nvim.git ~/.config/nvim
+# Install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
+
+# Add .cargo/bin to PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Update rust tools
+RUN rustup update \
+    && rustup upgrade \
+    && rustup default stable
+
+RUN cargo install tree-sitter-cli
+
+RUN cd ~ \
+    && wget https://github.com/JohnnyMorganz/StyLua/releases/download/v0.18.1/stylua-linux-x86_64.zip \
+    && unzip stylua-linux-x86_64.zip \
+    && cd /usr/bin \
+    && rm -rf /usr/bin/stylua \
+    && ln -sf ~/stylua stylua
+
+RUN apt install luarocks default-jre default-jdk python3-pip black -y
+
+RUN cd ~ \
+    && wget https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.2-linux-x86_64.tar.gz \
+    && tar -zxvf julia-1.9.2-linux-x86_64.tar.gz \
+    && rm -rf /usr/bin/julia \
+    && cd /usr/bin \
+    && ln -sf ~/julia-1.9.2/bin/julia julia
+
+RUN cd ~ \
+    && apt install software-properties-common -y \
+    && add-apt-repository ppa:ondrej/php \
+    && apt update \
+    && apt-get install php8.1 php8.1-fpm -y \
+    && curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php \
+    && chmod 777 /tmp/composer-setup.php \
+    && HASH=`curl -sS https://composer.github.io/installer.sig` \
+    && echo $HASH \
+    && php -r "if (hash_file('SHA384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
+    && sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+RUN pip3 install --upgrade pynvim \
+    && npm install -g neovim
+
+# Get neovim config
+RUN mkdir -p ~/.config \
+    && git clone https://github.com/xiaolitongxue666/nvim.git ~/.config/nvim
+
+# Update and instlal plugs
+RUN nvim -c "Lazy update" +qall
