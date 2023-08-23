@@ -1,6 +1,6 @@
 -- 文件以utf8格式加载
 vim.g.encoding = "UTF-8"
-vim.o.fileencoding = 'utf-8'
+vim.o.fileencoding = "utf-8"
 -- jk移动时光标下上方保留8行
 vim.o.scrolloff = 8
 vim.o.sidescrolloff = 8
@@ -47,7 +47,7 @@ vim.bo.autoread = true
 vim.o.wrap = true
 vim.wo.wrap = false
 -- 行结尾可以跳到下一行
-vim.o.whichwrap = 'b,s,<,>,[,],h,l'
+vim.o.whichwrap = "b,s,<,>,[,],h,l"
 -- 允许隐藏被修改过的buffer
 vim.o.hidden = true
 -- 鼠标支持
@@ -72,11 +72,16 @@ vim.o.termguicolors = true
 vim.opt.termguicolors = true
 -- 不可见字符的显示，这里只把空格显示为一个点
 vim.o.list = true
-vim.o.listchars = 'space:_,tab:>~'
+-- vim.o.listchars = "space:-,tab:>~,eol:↵"
+vim.opt.listchars = {
+	eol = "↵",
+	-- space = "●",
+	tab = "|.",
+}
 -- 补全增强
 vim.o.wildmenu = true
 -- Dont' pass messages to |ins-completin menu|
-vim.o.shortmess = vim.o.shortmess .. 'c'
+vim.o.shortmess = vim.o.shortmess .. "c"
 vim.o.pumheight = 10
 -- always show tabline
 vim.o.showtabline = 2
@@ -86,12 +91,10 @@ vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") 
 vim.o.clipboard = "unnamed"
 -- 在 copy 后高亮
 vim.api.nvim_create_autocmd({ "TextYankPost" }, {
-    pattern = { "*" },
-    callback = function()
-        vim.highlight.on_yank({
-            timeout = 300,
-        })
-    end,
+	pattern = { "*" },
+	callback = function()
+		vim.highlight.on_yank({
+			timeout = 300,
+		})
+	end,
 })
-
-
