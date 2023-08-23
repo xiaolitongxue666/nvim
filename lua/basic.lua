@@ -76,7 +76,8 @@ vim.o.list = true
 vim.opt.listchars = {
 	eol = "↵",
 	-- space = "●",
-	tab = "|.",
+	-- tab = "|.",
+	tab = ">~",
 }
 -- 补全增强
 vim.o.wildmenu = true
