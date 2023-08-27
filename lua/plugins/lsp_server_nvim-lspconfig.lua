@@ -18,6 +18,7 @@ return {
         lspconfig.luau_lsp.setup {}
         lspconfig.bashls.setup {}
         lspconfig.clangd.setup {}
+        lspconfig.lua_ls.setup {}
         lspconfig.pyright.setup {}
         lspconfig.rust_analyzer.setup {
             -- Server-specific settings. See `:help lspconfig-setup`
