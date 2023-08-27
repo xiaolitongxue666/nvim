@@ -23,7 +23,6 @@ return {
                 "stylua", -- lua
                 "shfmt",  -- sh/bash/mksh
                 "clangd", -- c/c++
-                "lua_ls", -- lua
                 "pyright", -- python
                 "rust-analyzer", -- rust
             },
