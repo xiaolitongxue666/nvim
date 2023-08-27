@@ -13,6 +13,7 @@ return {
         "williamboman/mason-lspconfig.nvim",
     },
     -- Config is executed when the plugin loads.
+    -- All language grammer check and suggest config at here
     config = function()
         local lspconfig = require('lspconfig')
         lspconfig.luau_lsp.setup {}
