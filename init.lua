@@ -17,4 +17,4 @@ require("basic")
 -- 整体快捷键映射 & 插件快捷键配置
 require("keybindings")
 -- lazy.nvim插件管理
-require("lazynvim")
+require("config.lazy")
