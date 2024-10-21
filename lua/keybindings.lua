@@ -141,12 +141,12 @@ map("n", "<A-]>", "<C-o>", opt)
 ----c 拷贝
 ----p 粘贴
 ----d 删除
---map('n', 'tt', ':NvimTreeToggle<CR>', opt)
---
----- bufferline 左右Tab切换
---map("n", "<C-j>", ":BufferLineCyclePrev<CR>", opt)
---map("n", "<C-l>", ":BufferLineCycleNext<CR>", opt)
---
+map('n', 'tt', ':NvimTreeToggle<CR>', opt)
+
+-- bufferline 左右Tab切换
+map("n", "<C-j>", ":BufferLineCyclePrev<CR>", opt)
+map("n", "<C-l>", ":BufferLineCycleNext<CR>", opt)
+
 ---- telescope
 ---- Ctrl + p : 文件查找
 --map("n", "<C-p>", ":Telescope find_files<CR>", opt)
