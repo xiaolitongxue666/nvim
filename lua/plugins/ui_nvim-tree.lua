@@ -1,3 +1,9 @@
+-- nvim-tree/nvim-tree.lua
+
+-- A file explorer tree for neovim written in lua
+
+-- https://github.com/nvim-tree/nvim-tree.lua
+
 return {
     {
         -- Plug name
