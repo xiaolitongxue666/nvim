@@ -1,3 +1,5 @@
+# This repo is no longer maintained.
+
 # Neovim config
 
 ## Install and config neovim
