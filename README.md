@@ -1,4 +1,8 @@
 # This repo is no longer maintained.
+# 注意：此项目已不再维护
+
+> **警告**: 此项目已不再维护。请勿提交问题或拉取请求。
+
 
 # Neovim config
 
