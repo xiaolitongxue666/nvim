@@ -1,50 +1,34 @@
 -- williamboman/mason.nvim
 
--- Portable package manager for Neovim
--- that runs everywhere Neovim runs.
--- Easily install and manage LSP servers, DAP servers, linters, and formatters
+-- Neovim 的便携式包管理器
+-- 可在 Neovim 运行的任何地方运行。
+-- 轻松安装和管理 LSP 服务器、DAP 服务器、代码检查器和格式化工具
 
 -- https://github.com/williamboman/mason.nvim
 
 return {
     {
-        -- Plug name
+        -- 插件名称
         "williamboman/mason.nvim",
-        -- Lazy-load on command
+        -- 基于命令的懒加载
         cmd = "Mason",
-        -- Lazy-load on key mapping
+        -- 基于按键映射的懒加载
         keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
-        -- Build is executed when a plugin is installed or updated
-        build = ":MasonUpdate", -- :MasonUpdate updates registry contents
-        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
+        -- 插件安装或更新时执行的构建命令
+        build = ":MasonUpdate", -- :MasonUpdate 更新注册表内容
+        -- Opts 是一个将传递给 Plugin.config() 函数的表。设置此值将隐含 Plugin.config()
         opts = {
-            ensure_installed = {
-            -- For a list of all available packages, see https://mason-registry.dev/registry/list.
-                "stylua", -- lua
-                "shfmt",  -- sh/bash/mksh
-                "clangd", -- c/c++
-                "pyright", -- python
-                "rust-analyzer", -- rust
-            },
+            ui = {
+                icons = {
+                    package_installed = "✓",
+                    package_pending = "➜",
+                    package_uninstalled = "✗"
+                }
+            }
         },
-        -- Config is executed when the plugin loads.
+        -- 插件加载时执行的配置函数
         config = function(_, opts)
             require("mason").setup(opts)
-            local mr = require("mason-registry")
-            local function ensure_installed()
-                for _, tool in ipairs(opts.ensure_installed) do
-                    local p = mr.get_package(tool)
-                    if not p:is_installed() then
-                        p:install()
-                    end
-                end
-            end
-            if mr.refresh then
-                mr.refresh(ensure_installed)
-            else
-                ensure_installed()
-            end
-
         end,
     },
 }

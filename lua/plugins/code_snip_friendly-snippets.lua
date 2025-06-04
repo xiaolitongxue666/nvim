@@ -1,6 +1,6 @@
 -- rafamadriz/friendly-snippets
 
--- Set of preconfigured snippets for different languages
+-- 为不同语言预配置的代码片段集合
 
 -- https://github.com/rafamadriz/friendly-snippets
 

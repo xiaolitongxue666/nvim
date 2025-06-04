@@ -1,10 +1,10 @@
 -- lazy.nvim
 
--- A modern plugin manager for Neovim
+-- Neovim 的现代插件管理器
 
 -- https://github.com/folke/lazy.nvim
 
--- Bootstrap lazy.nvim
+-- 引导 lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -21,21 +21,21 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Make sure to setup `mapleader` and `maplocalleader` before
--- loading lazy.nvim so that mappings are correct.
--- This is also a good place to setup other settings (vim.opt)
+-- 确保在加载 lazy.nvim 之前设置 `mapleader` 和 `maplocalleader`
+-- 以便映射正确。
+-- 这也是设置其他配置 (vim.opt) 的好地方
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- Setup lazy.nvim
+-- 设置 lazy.nvim
 require("lazy").setup({
     spec = {
-        -- import your plugins
+        -- 导入你的插件
         { import = "plugins" },
     },
-    -- Configure any other settings here. See the documentation for more details.
-    -- colorscheme that will be used when installing plugins.
+    -- 在这里配置任何其他设置。查看文档了解更多详情。
+    -- 安装插件时使用的配色方案。
     install = { colorscheme = { "habamax" } },
-    -- automatically check for plugin updates
+    -- 自动检查插件更新
     checker = { enabled = true },
 })

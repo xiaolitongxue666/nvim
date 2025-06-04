@@ -1,18 +1,13 @@
--- nvim-telescope/telescope.nvim
-
--- Find, Filter, Preview, Pick. All lua, all the time.
-
+-- telescope
 -- https://github.com/nvim-telescope/telescope.nvim
 
 return {
     {
         -- Plug name
-        'nvim-telescope/telescope.nvim', tag = '0.1.2',
-        -- or                              , branch = '0.1.x',
+        'nvim-telescope/telescope.nvim', tag = "0.1.5", -- 或者                              , branch = '0.1.x',
         -- A list of plugin names or plugin specs that should be loaded when the plugin loads.
         dependencies = { 'nvim-lua/plenary.nvim' },
-        ---- Lazy-load on command
-        cmd = "Telescope",
+        cmd = "Telescope", -- 在命令时懒加载
         -- Lazy-load on key mapping
         keys = {
             { "<leader>p", ":Telescope find_files<CR>", desc = "find files" },

@@ -56,12 +56,12 @@ vim.o.mouse = "a"
 vim.o.backup = false
 vim.o.writebackup = false
 vim.o.swapfile = false
--- smaller updatetime
+-- 更小的更新时间
 vim.o.updatetime = 300
 -- 设置 timeoutlen 为等待键盘快捷键连击时间200毫秒，可根据需要设置
 -- 遇到问题详见：https://github.com/nshen/learn-neovim-lua/issues/1
 -- vim.o.timeoutlen = 200
--- split window 从下边和右边出现
+-- 分屏窗口从下边和右边出现
 vim.o.splitbelow = true
 vim.o.splitright = true
 -- 自动补全不自动选中
@@ -76,15 +76,15 @@ vim.o.list = true
 vim.opt.listchars = {
 	eol = "↵",
 	-- space = "●",
-	-- tab = "|.",
+	-- tab = "|",
 	tab = ">~",
 }
 -- 补全增强
 vim.o.wildmenu = true
--- Dont' pass messages to |ins-completin menu|
+-- 不向插入补全菜单传递消息
 vim.o.shortmess = vim.o.shortmess .. "c"
 vim.o.pumheight = 10
--- always show tabline
+-- 始终显示标签栏
 vim.o.showtabline = 2
 -- 在下次打开文件的时候光标位置
 vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif ]])

@@ -1,14 +1,14 @@
 -- nvim-tree/nvim-web-devicons
 
--- lua `fork` of vim-web-devicons for neovim
+-- neovim 的 vim-web-devicons 的 lua `fork`
 
 -- https://github.com/nvim-tree/nvim-web-devicons
 
 return {
     {
-        -- Plug name
+        -- 插件名称
         "nvim-tree/nvim-web-devicons",
-        -- When true, the plugin will only be loaded when needed.
+        -- 当为 true 时，插件只在需要时加载
         lazy = true
     },
 }

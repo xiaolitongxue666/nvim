@@ -1,23 +1,23 @@
 -- numToStr/Comment.nvim
 
--- Smart and powerful comment plugin for neovim.
+-- neovim 的智能且强大的注释插件
 
 -- https://github.com/numToStr/Comment.nvim
 
 return {
     {
-        -- Plug name
+        -- 插件名称
         "numToStr/Comment.nvim",
-        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
+        -- Opts 是一个将传递给 Plugin.config() 函数的表。设置此值将隐含 Plugin.config()
         opts = {
-            -- add any options here
+            -- 在此处添加任何选项
         },
-        -- When true, the plugin will only be loaded when needed.
+        -- 当为 true 时，插件只在需要时加载
         lazy = false,
-        -- Config is executed when the plugin loads.
+        -- 插件加载时执行配置
         config = function()
             require("Comment").setup()
-            -- Default key map
+            -- 默认按键映射
             -- https://github.com/numToStr/Comment.nvim#configuration-optional
         end
     },

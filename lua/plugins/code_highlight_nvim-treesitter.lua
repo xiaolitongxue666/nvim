@@ -1,25 +1,25 @@
 -- nvim-treesitter/nvim-treesitter
 
--- Nvim Treesitter configurations and abstraction layer
+-- Nvim Treesitter 配置和抽象层
 
 -- https://github.com/nvim-treesitter/nvim-treesitter
 
 return {
     {
-        -- Plug name
+        -- 插件名称
         "nvim-treesitter/nvim-treesitter",
-        -- Build is executed when a plugin is installed or updated
+        -- 插件安装或更新时执行的构建命令
         build = ":TSUpdate",
-        -- Lazy-load on event
+        -- 基于事件的懒加载
         event = { "BufReadPost", "BufNewFile" },
-        -- Lazy-load on command
+        -- 基于命令的懒加载
         cmd = { "TSUpdateSync" },
-        -- Lazy-load on key mapping
+        -- 基于按键映射的懒加载
         keys = {
             { "<c-space>", desc = "Increment selection" },
             { "<bs>", desc = "Decrement selection", mode = "x" },
         },
-        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
+        -- Opts 是一个将传递给 Plugin.config() 函数的表。设置此值将隐含 Plugin.config()
         opts = {
             highlight = { enable = true },
             indent = { enable = true },
@@ -54,7 +54,7 @@ return {
                 },
             },
         },
-        -- Config is executed when the plugin loads.
+        -- 插件加载时执行的配置函数
         config = function(_, opts)
             if type(opts.ensure_installed) == "table" then
                 ---@type table<string, boolean>

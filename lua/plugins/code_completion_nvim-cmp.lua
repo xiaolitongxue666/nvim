@@ -13,7 +13,7 @@ return {
         },
         config = function()
             -- nvim cmp
-            -- Set up nvim-cmp.
+            -- 设置 nvim-cmp
             local has_words_before = function()
                 unpack = unpack or table.unpack
                 local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -27,11 +27,11 @@ return {
             cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
             cmp.setup({
                 snippet = {
-                    -- REQUIRED - you must specify a snippet engine
+                    -- 必需 - 你必须指定一个代码片段引擎
                     expand = function(args)
-                        require("luasnip").lsp_expand(args.body) -- For `luasnip` users.
-                        -- require('snippy').expand_snippet(args.body) -- For `snippy` users.
-                        -- vim.fn["UltiSnips#Anon"](args.body) -- For `ultisnips` users.
+                        require("luasnip").lsp_expand(args.body) -- 适用于 `luasnip` 用户
+                        -- require('snippy').expand_snippet(args.body) -- 适用于 `snippy` 用户
+                        -- vim.fn["UltiSnips#Anon"](args.body) -- 适用于 `ultisnips` 用户
                     end,
                 },
                 window = {
@@ -42,8 +42,8 @@ return {
                     ["<Tab>"] = cmp.mapping(function(fallback)
                         if cmp.visible() then
                             cmp.select_next_item()
-                            -- You could replace the expand_or_jumpable() calls with expand_or_locally_jumpable()
-                            -- they way you will only jump inside the snippet region
+                            -- 你可以用 expand_or_locally_jumpable() 替换 expand_or_jumpable() 调用
+                            -- 这样你只会在代码片段区域内跳转
                         elseif luasnip.expand_or_jumpable() then
                             luasnip.expand_or_jump()
                         elseif has_words_before() then
@@ -66,28 +66,28 @@ return {
                     ["<C-f>"] = cmp.mapping.scroll_docs(4),
                     ["<C-Space>"] = cmp.mapping.complete(),
                     ["<C-c>"] = cmp.mapping.abort(),
-                    ["<CR>"] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+                    ["<CR>"] = cmp.mapping.confirm({ select = true }), -- 接受当前选中的项目。设置 `select` 为 `false` 只确认明确选中的项目
                 }),
                 sources = cmp.config.sources({
                     { name = "nvim_lsp" },
-                    { name = "luasnip" }, -- For luasnip users.
-                    -- { name = 'ultisnips' }, -- For ultisnips users.
-                    -- { name = 'snippy' }, -- For snippy users.
+                    { name = "luasnip" }, -- 适用于 luasnip 用户
+                    -- { name = 'ultisnips' }, -- 适用于 ultisnips 用户
+                    -- { name = 'snippy' }, -- 适用于 snippy 用户
                 }, {
                     { name = "buffer" },
                 }),
             })
 
-            -- Set configuration for specific filetype.
+            -- 为特定文件类型设置配置
             cmp.setup.filetype("gitcommit", {
                 sources = cmp.config.sources({
-                    { name = "cmp_git" }, -- You can specify the `cmp_git` source if you were installed it.
+                    { name = "cmp_git" }, -- 如果你安装了 `cmp_git` 源，可以指定它
                 }, {
                     { name = "buffer" },
                 }),
             })
 
-            -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
+            -- 为 `/` 和 `?` 使用缓冲区源（如果你启用了 `native_menu`，这将不再工作）
             cmp.setup.cmdline({ "/", "?" }, {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = {
@@ -95,7 +95,7 @@ return {
                 },
             })
 
-            -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
+            -- 为 `:` 使用命令行和路径源（如果你启用了 `native_menu`，这将不再工作）
             cmp.setup.cmdline(":", {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = cmp.config.sources({
