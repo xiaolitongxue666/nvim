@@ -1,6 +1,14 @@
+-- hrsh7th/nvim-cmp
+-- 一个功能强大的 Neovim 自动补全引擎
+-- 用 Lua 编写的 Neovim 补全插件，支持多种补全源
+-- 需要 Neovim 0.7 或更高版本
+
+-- 官方文档: https://github.com/hrsh7th/nvim-cmp
+
 return {
     {
-        event = "VeryLazy",
+        -- 在插入模式时加载，提升性能
+        event = "InsertEnter",
         "hrsh7th/nvim-cmp",
         dependencies = {
             "neovim/nvim-lspconfig",
@@ -8,8 +16,8 @@ return {
             "hrsh7th/cmp-buffer",
             "hrsh7th/cmp-path",
             "hrsh7th/cmp-cmdline",
-            "hrsh7th/nvim-cmp",
             "L3MON4D3/LuaSnip",
+            "saadparwaiz1/cmp_luasnip", -- LuaSnip 的 cmp 源
         },
         config = function()
             -- nvim cmp
@@ -34,9 +42,49 @@ return {
                         -- vim.fn["UltiSnips#Anon"](args.body) -- 适用于 `ultisnips` 用户
                     end,
                 },
+                
+                -- 窗口样式配置
                 window = {
-                    -- completion = cmp.config.window.bordered(),
-                    -- documentation = cmp.config.window.bordered(),
+                    completion = cmp.config.window.bordered(),
+                    documentation = cmp.config.window.bordered(),
+                },
+                
+                -- 性能优化配置
+                performance = {
+                    debounce = 60,
+                    throttle = 30,
+                    fetching_timeout = 500,
+                },
+                
+                -- 补全行为配置
+                completion = {
+                    completeopt = 'menu,menuone,noinsert',
+                },
+                
+                -- 确认行为配置
+                confirm_opts = {
+                    behavior = cmp.ConfirmBehavior.Replace,
+                    select = false,
+                },
+                
+                -- 实验性功能
+                experimental = {
+                    ghost_text = true,
+                },
+                
+                -- 格式化配置
+                formatting = {
+                    format = function(entry, vim_item)
+                        -- 设置补全项的来源标识
+                        vim_item.menu = ({
+                            nvim_lsp = "[LSP]",
+                            luasnip = "[LuaSnip]",
+                            buffer = "[Buffer]",
+                            path = "[Path]",
+                            cmdline = "[CMD]",
+                        })[entry.source.name]
+                        return vim_item
+                    end,
                 },
                 mapping = cmp.mapping.preset.insert({
                     ["<Tab>"] = cmp.mapping(function(fallback)
@@ -69,12 +117,12 @@ return {
                     ["<CR>"] = cmp.mapping.confirm({ select = true }), -- 接受当前选中的项目。设置 `select` 为 `false` 只确认明确选中的项目
                 }),
                 sources = cmp.config.sources({
-                    { name = "nvim_lsp" },
-                    { name = "luasnip" }, -- 适用于 luasnip 用户
+                    { name = "nvim_lsp", priority = 1000 },
+                    { name = "luasnip", priority = 750 }, -- LuaSnip 代码片段
+                    { name = "buffer", priority = 500, keyword_length = 3 },
+                    { name = "path", priority = 250 },
                     -- { name = 'ultisnips' }, -- 适用于 ultisnips 用户
                     -- { name = 'snippy' }, -- 适用于 snippy 用户
-                }, {
-                    { name = "buffer" },
                 }),
             })
 
