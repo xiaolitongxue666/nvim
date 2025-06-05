@@ -10,6 +10,11 @@ return {
         "akinsho/bufferline.nvim",
         -- This is mainly useful for Neovim distros, to allow setting options on plugins that may/may not be part of the user's plugins
         optional = true,
+        -- Lazy-load on key mapping
+        keys = {
+            { "<C-j>", ":BufferLineCyclePrev<CR>", desc = "Previous buffer" },
+            { "<C-l>", ":BufferLineCycleNext<CR>", desc = "Next buffer" },
+        },
         -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
         opts = function()
             local Offset = require("bufferline.offset")

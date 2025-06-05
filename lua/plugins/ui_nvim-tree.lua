@@ -9,6 +9,12 @@ return {
         -- Plug name
         "nvim-tree/nvim-tree.lua",
         dependencies = { "nvim-tree/nvim-web-devicons" },
+        -- Lazy-load on command
+        cmd = "NvimTreeToggle",
+        -- Lazy-load on key mapping
+        keys = {
+            { "tt", ":NvimTreeToggle<CR>", desc = "Toggle NvimTree" },
+        },
         config = function()
             require("nvim-tree").setup({
                 filters = {
