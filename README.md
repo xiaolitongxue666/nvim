@@ -52,6 +52,111 @@
     └── test.py
 ```
 
+## 启动流程
+
+以下是 Neovim 配置的启动流程图，展示了各个模块的加载顺序和依赖关系：
+
+```mermaid
+flowchart TD
+    A["启动 Neovim"] --> B["加载 init.lua"]
+    B --> C["require('basic')"]
+    B --> D["require('keybindings')"]
+    B --> E["require('config.lazy')"]
+    
+    C --> C1["设置编码 UTF-8"]
+    C --> C2["配置行号显示"]
+    C --> C3["设置缩进和Tab"]
+    C --> C4["配置搜索选项"]
+    C --> C5["设置界面选项"]
+    
+    D --> D1["设置 Leader 键"]
+    D --> D2["基础按键映射"]
+    D --> D3["光标移动重映射"]
+    D --> D4["窗口管理快捷键"]
+    D --> D5["插件快捷键预设"]
+    
+    E --> E1["检查 lazy.nvim 安装"]
+    E1 --> E2{"lazy.nvim 存在？"}
+    E2 -->|否| E3["克隆 lazy.nvim"]
+    E2 -->|是| E4["设置 runtimepath"]
+    E3 --> E4
+    E4 --> E5["设置 mapleader"]
+    E5 --> E6["调用 lazy.setup()"]
+    
+    E6 --> F["扫描 plugins/ 目录"]
+    F --> G["加载插件配置"]
+    
+    G --> H1["优先级插件"]
+    G --> H2["依赖插件"]
+    G --> H3["懒加载插件"]
+    
+    H1 --> I1["tokyonight 主题<br/>(priority=1000)"]
+    I1 --> I2["应用配色方案"]
+    
+    H2 --> J1["mason.nvim<br/>(LSP 管理器)"]
+    J1 --> J2["mason-lspconfig.nvim<br/>(LSP 配置桥接)"]
+    J2 --> J3["nvim-lspconfig<br/>(LSP 客户端)"]
+    J3 --> J4["配置语言服务器"]
+    
+    H2 --> K1["nvim-treesitter<br/>(语法高亮)"]
+    K1 --> K2["安装语言解析器"]
+    
+    H2 --> L1["nvim-cmp<br/>(代码补全)"]
+    L1 --> L2["LuaSnip<br/>(代码片段)"]
+    L1 --> L3["cmp-nvim-lsp<br/>(LSP 补全源)"]
+    
+    H3 --> M1["telescope.nvim<br/>(cmd: Telescope)"]
+    H3 --> M2["nvim-tree.lua<br/>(按键触发)"]
+    H3 --> M3["which-key.nvim<br/>(VeryLazy)"]
+    H3 --> M4["其他 UI 插件"]
+    
+    I2 --> N["配置完成"]
+    J4 --> N
+    K2 --> N
+    L3 --> N
+    M1 --> N
+    M2 --> N
+    M3 --> N
+    M4 --> N
+    
+    N --> O["Neovim 就绪"]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+    style O fill:#e0f2f1
+```
+
+### 启动阶段说明
+
+1. **初始化阶段**: 加载核心配置文件
+   - `init.lua` 作为入口点
+   - 按顺序加载基础设置、按键绑定和插件管理器
+
+2. **基础配置阶段**: 设置 Neovim 基本行为
+   - 编码和界面设置
+   - 编辑器行为配置
+   - 搜索和导航选项
+
+3. **按键绑定阶段**: 配置快捷键
+   - 设置 Leader 键
+   - 重映射基础操作
+   - 预设插件快捷键
+
+4. **插件管理器初始化**: 准备插件环境
+   - 检查并安装 lazy.nvim
+   - 设置插件加载路径
+   - 扫描插件配置
+
+5. **插件加载阶段**: 按优先级和依赖关系加载
+   - **优先级插件**: 主题等需要早期加载的插件
+   - **依赖插件**: LSP、语法高亮、代码补全等核心功能
+   - **懒加载插件**: 按需加载的 UI 和工具插件
+
+6. **完成阶段**: 所有配置就绪，Neovim 可以正常使用
+
 ## 核心模块说明
 
 ### 基础配置
