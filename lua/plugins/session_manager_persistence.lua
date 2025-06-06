@@ -1,29 +1,63 @@
--- folke/persistence.nvim
-
--- Simple session management for Neovim
+-- 简单的 Neovim 会话管理插件
+-- 自动保存和恢复编辑会话，支持多项目会话管理
 
 -- https://github.com/folke/persistence.nvim
 
 return {
     {
-        -- Plug name
         "folke/persistence.nvim",
-        -- Config is executed when the plugin loads.
-        event = "BufReadPre", -- this will only start session saving when an actual file was opened
-        -- Config is executed when the plugin loads.
-        config = function()
-            require("persistence").setup()
-        end,
-        -- Opts is a table will be passed to the Plugin.config() function. Setting this value will imply Plugin.config()
-        opts = { options = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" } },
-        -- Lazy-load on key mapping
+        -- 在文件读取事件时懒加载
+        event = "BufReadPre",
+        -- 按键映射时懒加载
         keys = {
-            -- Restore Session
-            { "<leader>ws", function() require("persistence").load() end, desc = "Restore Session" },
-            -- Restore Last Session
-            { "<leader>wl", function() require("persistence").load({ last = true }) end, desc = "Restore Last Session" },
-            -- Don't Save Current Session
-            { "<leader>wd", function() require("persistence").stop() end, desc = "Don't Save Current Session" },
+            { "<leader>qs", function() require("persistence").save() end, desc = "保存会话" },
+            { "<leader>ql", function() require("persistence").load() end, desc = "加载会话" },
+            { "<leader>qL", function() require("persistence").load({ last = true }) end, desc = "加载最后一个会话" },
+            { "<leader>qd", function() require("persistence").stop() end, desc = "停止会话记录" },
         },
+        -- 插件配置选项
+        opts = {
+            -- 会话保存目录
+            dir = vim.fn.stdpath("state") .. "/sessions/",
+            -- 会话选项
+            options = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" },
+            -- 预保存钩子函数
+            pre_save = nil,
+            -- 保存空会话
+            save_empty = false,
+        },
+        -- 插件配置函数
+        config = function(_, opts)
+            require("persistence").setup(opts)
+            
+            -- 自动加载会话
+            local function auto_load_session()
+                -- 只有在没有参数启动 Neovim 时才自动加载会话
+                if vim.fn.argc(-1) == 0 then
+                    require("persistence").load()
+                end
+            end
+            
+            -- 在 VimEnter 事件后自动加载会话
+            vim.api.nvim_create_autocmd("VimEnter", {
+                group = vim.api.nvim_create_augroup("persistence_auto_load", { clear = true }),
+                callback = function()
+                    -- 延迟执行以确保其他插件已加载
+                    vim.defer_fn(auto_load_session, 100)
+                end,
+                nested = true,
+            })
+            
+            -- 在退出时自动保存会话
+            vim.api.nvim_create_autocmd("VimLeavePre", {
+                group = vim.api.nvim_create_augroup("persistence_auto_save", { clear = true }),
+                callback = function()
+                    -- 只有在有缓冲区时才保存会话
+                    if #vim.api.nvim_list_bufs() > 1 then
+                        require("persistence").save()
+                    end
+                end,
+            })
+        end,
     },
 }
