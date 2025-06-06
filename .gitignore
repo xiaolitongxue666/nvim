@@ -4,6 +4,7 @@
 
 # User define
 .idea/
+.vscode/
 plugin/
 
 # Copilot
