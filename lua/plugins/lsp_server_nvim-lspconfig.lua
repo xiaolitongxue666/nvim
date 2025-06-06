@@ -1,19 +1,19 @@
 -- neovim/nvim-lspconfig
 
--- Quickstart configs for Nvim LSP
+-- Neovim LSP 快速配置
 
 -- https://github.com/neovim/nvim-lspconfig
 
 return {
-    -- Plug name
+    -- 插件名称
     "neovim/nvim-lspconfig",
-    -- A list of plugin names or plugin specs that should be loaded when the plugin loads.
+    -- 插件加载时需要加载的依赖插件列表
     dependencies = {
         "williamboman/mason.nvim",
         "williamboman/mason-lspconfig.nvim",
     },
-    -- Config is executed when the plugin loads.
-    -- All language grammer check and suggest config at here
+    -- 插件加载时执行的配置
+    -- 所有语言的语法检查和建议配置都在这里
     config = function()
         local lspconfig = require('lspconfig')
         lspconfig.luau_lsp.setup {}
@@ -22,15 +22,15 @@ return {
         lspconfig.lua_ls.setup {}
         lspconfig.pyright.setup {}
         lspconfig.rust_analyzer.setup {
-            -- Server-specific settings. See `:help lspconfig-setup`
+            -- 服务器特定设置。查看 `:help lspconfig-setup`
             settings = {
                 ['rust-analyzer'] = {},
             },
         }
     end,
-    -- Lazy-load on key mapping
+    -- 按键映射时懒加载
     keys = {
-        { "gD", vim.lsp.buf.declaration, desc = "go declaration" },
-        { "gd", vim.lsp.buf.definition, desc = "go definition" },
+        { "gD", vim.lsp.buf.declaration, desc = "跳转到声明" },
+        { "gd", vim.lsp.buf.definition, desc = "跳转到定义" },
     },
 }
