@@ -169,40 +169,222 @@ flowchart TD
 ### 插件配置
 
 #### 代码编辑增强
-- **code_completion_nvim-cmp.lua**: 智能代码补全系统
-- **code_completion_nvim-autopairs.lua**: 自动括号、引号配对
-- **code_snip_LuaSnip.lua**: 代码片段引擎
-- **comment.lua**: 智能代码注释插件
-- **code_highlight_nvim-treesitter.lua**: 基于 Tree-sitter 的语法高亮
+
+##### nvim-cmp (code_completion_nvim-cmp.lua)
+**功能**: 智能代码补全系统，支持多种补全源
+**快捷键**:
+- `Tab` - 选择下一个补全项或展开代码片段
+- `Shift+Tab` - 选择上一个补全项
+- `Ctrl+Space` - 手动触发补全
+- `Enter` - 确认选择
+- `Ctrl+e` - 关闭补全菜单
+
+##### nvim-autopairs (code_completion_nvim-autopairs.lua)
+**功能**: 自动括号、引号配对，智能处理各种配对字符
+**特性**: 自动在输入左括号时添加右括号，支持多种文件类型的智能配对
+
+##### LuaSnip (code_snip_LuaSnip.lua)
+**功能**: 代码片段引擎，提供快速代码模板插入
+**快捷键**: 与 nvim-cmp 集成，通过 Tab 键展开和跳转
+
+##### Comment.nvim (comment.lua)
+**功能**: 智能代码注释插件，支持多种注释格式
+**快捷键**:
+- `gcc` - 切换当前行注释
+- `gbc` - 切换当前行块注释
+- `gc` + 动作 - 注释指定范围（如 `gcap` 注释段落）
+- `gb` + 动作 - 块注释指定范围
+- `gcO` - 在上方添加注释
+- `gco` - 在下方添加注释
+- `gcA` - 在行尾添加注释
+
+##### nvim-treesitter (code_highlight_nvim-treesitter.lua)
+**功能**: 基于 Tree-sitter 的语法高亮和代码解析
+**快捷键**:
+- `Ctrl+Space` - 初始化选择
+- `Ctrl+Space` - 扩展选择到下一个节点
+- `Backspace` - 缩小选择范围
+**特性**: 支持增量选择、智能缩进、语法感知的文本对象
 
 #### LSP 和开发工具
-- **lsp_server_nvim-lspconfig.lua**: LSP 客户端配置
-- **lsp_server_manager_mason.lua**: LSP 服务器包管理器
-- **lsp_server_manager_mason-lspconfig.lua**: Mason 和 LSP 配置的桥接
-- **help_document_neodev.lua**: Neovim Lua API 开发支持
+
+##### nvim-lspconfig (lsp_server_nvim-lspconfig.lua)
+**功能**: LSP 客户端配置，提供语言服务器支持
+**快捷键**: 通过 LSP 提供的功能（定义跳转、引用查找等）
+**支持语言**: Lua, Python, Rust, TypeScript, JavaScript, JSON, YAML 等
+
+##### Mason (lsp_server_manager_mason.lua)
+**功能**: LSP 服务器包管理器，便携式工具安装
+**快捷键**:
+- `<leader>cm` - 打开 Mason 包管理器
+- `<leader>cM` - 更新 Mason 注册表
+**Mason UI 快捷键**:
+- `i` - 安装包
+- `u` - 更新包
+- `X` - 卸载包
+- `Enter` - 展开包详情
+
+##### mason-lspconfig (lsp_server_manager_mason-lspconfig.lua)
+**功能**: Mason 和 LSP 配置的桥接，自动安装和配置 LSP 服务器
+
+##### lazydev.nvim (help_document_lazydev.lua)
+**功能**: Neovim Lua API 开发支持，提供完整的类型定义和补全
+**特性**: 替代 neodev.nvim，支持 Neovim >= 0.10
+
+##### none-ls (lsp_server_null-ls.lua)
+**功能**: 使用 Neovim 作为语言服务器，注入 LSP 诊断和代码格式化
+**支持工具**: stylua (Lua 格式化), black (Python 格式化)
 
 #### 调试工具
-- **dap_nvim-dap.lua**: 调试适配器协议支持
-- **dap_lua_one-small-step-for-vimkind.lua**: Lua 脚本调试
+
+##### nvim-dap (dap_nvim-dap.lua)
+**功能**: 调试适配器协议支持，提供完整的调试功能
+**快捷键**: 通过调试适配器提供断点、单步执行等功能
+
+##### one-small-step-for-vimkind (dap_lua_one-small-step-for-vimkind.lua)
+**功能**: Lua 脚本调试，专门用于调试 Neovim 插件
+**快捷键**:
+- `<leader>daL` - 启动 Lua 调试服务器
+- `<leader>dal` - 调试当前 Lua 文件
 
 #### 用户界面
-- **ui_status_line_lualine.lua**: 现代化状态栏
-- **ui_buffer_tabpage_bufferline.lua**: 缓冲区标签页
-- **ui_nvim-tree.lua**: 文件浏览器树形视图
-- **ui_icons_nvim-web-devicons.lua**: 文件类型图标
-- **ui_dressing.lua**: 改进默认 UI 界面
-- **ui_notice.lua**: 消息、命令行和弹出菜单替换
-- **ui_component_lib_nui.lua**: UI 组件库
+
+##### lualine.nvim (ui_status_line_lualine.lua)
+**功能**: 现代化状态栏，显示模式、分支、诊断等信息
+**显示内容**: 编辑模式、Git 分支、文件差异、LSP 诊断、文件信息、光标位置
+
+##### bufferline.nvim (ui_buffer_tabpage_bufferline.lua)
+**功能**: 缓冲区标签页，提供类似现代编辑器的标签体验
+**快捷键**:
+- `Shift+h` / `[b` - 上一个缓冲区
+- `Shift+l` / `]b` - 下一个缓冲区
+- `<leader>bp` - 固定缓冲区
+- `<leader>bo` - 删除其他缓冲区
+- `<leader>br` - 删除右侧缓冲区
+- `<leader>bl` - 删除左侧缓冲区
+
+##### nvim-tree (ui_nvim-tree.lua)
+**功能**: 文件浏览器树形视图
+**快捷键**:
+- `tt` - 切换文件浏览器
+
+##### neo-tree (ui_file_explorer_neo-tree.lua)
+**功能**: 现代化文件浏览器，支持文件系统、缓冲区、Git 状态浏览
+**快捷键**:
+- `<leader>fe` / `<leader>e` - 文件浏览器（根目录）
+- `<leader>fE` / `<leader>E` - 文件浏览器（当前文件目录）
+- `<leader>be` - 缓冲区浏览器
+- `<leader>ge` - Git 状态浏览器
+
+##### nvim-web-devicons (ui_icons_nvim-web-devicons.lua)
+**功能**: 文件类型图标，为文件和目录提供美观的图标显示
+**特性**: 支持多种文件类型的图标识别
+
+##### dressing.nvim (ui_dressing.lua)
+**功能**: 改进默认 UI 界面，提供更美观的选择和输入界面
+**特性**: 美化 vim.ui.select 和 vim.ui.input 界面
+
+##### noice.nvim (ui_notice.lua)
+**功能**: 消息、命令行和弹出菜单的现代化替换
+**特性**: 完全替换 Neovim 的默认 UI 组件
+
+##### nui.nvim (ui_component_lib_nui.lua)
+**功能**: UI 组件库，为其他插件提供 UI 组件支持
+
+##### nvim-notify (ui_notification_manager_nvim-notify.lua)
+**功能**: 通知管理器，提供美观的通知显示
+**快捷键**:
+- `<leader>un` - 关闭所有通知
 
 #### 导航和查找
-- **finder_telescope.lua**: 模糊查找器（文件、内容、符号等）
-- **keytips_which-key.lua**: 按键绑定提示
+
+##### telescope.nvim (finder_telescope.lua)
+**功能**: 模糊查找器，支持文件、内容、符号等多种搜索
+**快捷键**:
+- `<leader>ff` - 查找文件
+- `<leader>fg` - 实时搜索文本
+- `<leader>fb` - 缓冲区列表
+- `<leader>fh` - 帮助标签
+- `<leader>fr` - 最近文件
+- `<leader>fc` - 命令列表
+- `<leader>fk` - 键位映射
+- `<leader>fs` - 搜索当前单词
+- `<leader>fd` - 诊断信息
+- `<leader>ft` - Treesitter 符号
+- `<leader>fz` - 当前缓冲区模糊搜索
+- `<leader>rs` - 恢复上次搜索
+
+**Git 相关搜索**:
+- `<leader>gf` - Git 文件
+- `<leader>gc` - Git 提交
+- `<leader>gb` - Git 分支
+- `<leader>gs` - Git 状态
+
+**LSP 相关搜索**:
+- `<leader>lr` - LSP 引用
+- `<leader>ld` - LSP 定义
+- `<leader>li` - LSP 实现
+- `<leader>ls` - 文档符号
+- `<leader>lw` - 工作区符号
+
+##### which-key.nvim (keytips_which-key.lua)
+**功能**: 按键绑定提示，显示可用的快捷键组合
+**特性**: 在按下 Leader 键后显示可用的快捷键选项
+
+##### nvim-spectre (search_and_replace_nvim-spectre.lua)
+**功能**: 强大的搜索和替换工具，支持正则表达式和多文件操作
+**快捷键**:
+- `<leader>sr` - 打开替换面板
+- `<leader>sw` - 搜索当前单词
+- `<leader>sp` - 在当前文件中搜索
+
+#### 会话管理
+
+##### persistence.nvim (session_manager_persistence.lua)
+**功能**: 自动保存和恢复编辑会话，支持多项目会话管理
+**快捷键**:
+- `<leader>qs` - 保存会话
+- `<leader>ql` - 加载会话
+- `<leader>qL` - 加载最后一个会话
+- `<leader>qd` - 停止会话记录
 
 #### 视觉增强
-- **colorscheme_tokyonight.lua**: Tokyo Night 主题配色
-- **indent_guides_indent-blankline.lua**: 缩进指示线
-- **code_git_decorations_gitsigns.lua**: Git 状态装饰
-- **greeter_dashboard_alpha-nvim.lua**: 启动欢迎页面
+
+##### tokyonight.nvim (colorscheme_tokyonight.lua)
+**功能**: Tokyo Night 主题配色，提供深色现代化主题
+**特性**: 支持透明背景、多种样式（storm、moon、night、day）
+
+##### indent-blankline.nvim (indent_guides_indent-blankline.lua)
+**功能**: 缩进指示线，显示代码缩进层级
+**特性**: 支持作用域高亮、智能缩进检测
+
+##### gitsigns.nvim (code_git_decorations_gitsigns.lua)
+**功能**: Git 状态装饰，在编辑器中显示 Git 变更信息
+**快捷键**:
+- `]c` - 下一个 Git 变更
+- `[c` - 上一个 Git 变更
+- `<leader>hs` - 暂存当前 hunk
+- `<leader>hr` - 重置当前 hunk
+- `<leader>hS` - 暂存整个缓冲区
+- `<leader>hu` - 撤销暂存 hunk
+- `<leader>hR` - 重置整个缓冲区
+- `<leader>hp` - 预览 hunk
+- `<leader>hb` - 显示当前行 blame
+- `<leader>tb` - 切换当前行 blame 显示
+- `<leader>hd` - 显示删除的内容
+- `<leader>td` - 切换删除内容显示
+
+##### mini.starter (greeter_dashboard_mini-starter.lua)
+**功能**: 启动欢迎页面，提供快速访问常用功能的入口
+**启动项**:
+- `f` - 查找文件
+- `n` - 新建文件
+- `r` - 最近文件
+- `g` - 文本搜索
+- `c` - 配置文件
+- `s` - 恢复会话
+- `l` - Lazy 插件管理
+- `q` - 退出
 
 ## 安装和使用
 
@@ -253,6 +435,8 @@ flowchart TD
 - `K` - 向下移动5行
 - `J` - 移动到行首
 - `L` - 移动到行尾
+- `<C-u>` - 向上滚动半页
+- `<C-d>` - 向下滚动半页
 
 ### 编辑模式
 - `h` - 进入插入模式 (替代 i)
@@ -266,6 +450,7 @@ flowchart TD
 - `<leader>i/k/j/l` - 在窗口间移动
 - `<leader>q` - 关闭当前窗口
 - `<leader>b` - 关闭当前 buffer
+- `<C-i>/<C-k>/<C-j>/<C-l>` - 调整窗口大小
 
 ### 文件和项目
 - `tt` - 切换文件浏览器
@@ -275,10 +460,24 @@ flowchart TD
 ### 搜索和导航
 - `n/N` - 下一个/上一个搜索结果
 - `<leader><CR>` - 取消搜索高亮
+- `*/#` - 搜索当前单词 (向前/向后)
 
 ### 代码操作
 - `<leader>o` - 折叠/展开代码
 - `<leader>sc` - 切换字符大小写
+- `<Tab>` - 增加缩进 (可视模式)
+- `<S-Tab>` - 减少缩进 (可视模式)
+- `<` / `>` - 减少/增加缩进并保持选择
+
+### 复制粘贴
+- `<leader>y` - 复制到系统剪贴板
+- `<leader>p` - 从系统剪贴板粘贴
+- `<leader>P` - 在上方粘贴
+
+### 文本操作
+- `<leader>d` - 删除不进入寄存器
+- `<leader>c` - 修改不进入寄存器
+- `<leader>x` - 剪切不进入寄存器
 
 ## 维护说明
 
