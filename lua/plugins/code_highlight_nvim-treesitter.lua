@@ -8,17 +8,12 @@ return {
     {
         -- 插件名称
         "nvim-treesitter/nvim-treesitter",
+        -- 指定master分支，官方要求
+        branch = 'master',
+        -- 禁用懒加载，官方不支持懒加载
+        lazy = false,
         -- 插件安装或更新时执行的构建命令
         build = ":TSUpdate",
-        -- 基于事件的懒加载
-        event = { "BufReadPost", "BufNewFile" },
-        -- 基于命令的懒加载
-        cmd = { "TSUpdateSync" },
-        -- 基于按键映射的懒加载
-        keys = {
-            { "<c-space>", desc = "Increment selection" },
-            { "<bs>", desc = "Decrement selection", mode = "x" },
-        },
         -- Opts 是一个将传递给 Plugin.config() 函数的表。设置此值将隐含 Plugin.config()
         opts = {
             highlight = { enable = true },
