@@ -2,4 +2,5 @@
     "makefile.configureOnOpen": true,
     "explorer.confirmDelete": false,
     "vscode-neovim.neovimInitVimPaths.win32": "c:\\Users\\Administrator\\AppData\\Local\\nvim\\vscode_neovim\\vscode_neovim_init.lua",
+    "vscode-neovim.neovimInitVimPaths.darwin": "/Users/liyong/.config/nvim/vscode_neovim/vscode_neovim_init.lua"
 }
