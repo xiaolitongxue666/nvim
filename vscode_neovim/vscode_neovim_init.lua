@@ -214,6 +214,9 @@ if vim.g.vscode then
     vim.o.showtabline = 0  -- VSCode 有自己的标签页
     vim.wo.signcolumn = "no"  -- VSCode 有自己的符号列
     vim.wo.colorcolumn = ""  -- VSCode 有自己的参考线
+    -- 定义键映射
+    ---- 定义 t t 键序列，始终聚焦切换侧边栏
+    vim.keymap.set('n', 'tt', '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', { silent = true })
 else
     -- 非 VSCode 环境的设置
     vim.o.showtabline = 2
