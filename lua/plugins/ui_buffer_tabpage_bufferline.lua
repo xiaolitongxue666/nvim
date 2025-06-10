@@ -137,15 +137,6 @@ return {
         -- 插件配置函数
         config = function(_, opts)
             require("bufferline").setup(opts)
-            
-            -- 修复删除缓冲区后的行为
-            vim.api.nvim_create_autocmd("BufDelete", {
-                callback = function()
-                    vim.schedule(function()
-                        pcall(require("bufferline.api").set_offset, 0)
-                    end)
-                end,
-            })
         end,
     },
 }
