@@ -4,6 +4,7 @@
 
 -- https://github.com/nvim-tree/nvim-tree.lua
 
+--[[
 return {
     {
         -- Plug name
@@ -24,3 +25,7 @@ return {
         end,
     },
 }
+--]]
+
+-- 插件已暂时注释，如需重新启用请移除 --[[ 和 --]] 注释符号
+return {}

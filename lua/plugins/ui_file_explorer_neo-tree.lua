@@ -188,7 +188,8 @@ return {
                     ["?"] = "show_help",
                     ["<"] = "prev_source",
                     [">"] = "next_source",
-                    ["i"] = "show_file_details",
+                    ["i"] = "noop",  -- 禁用 i 键
+                    ["gd"] = "show_file_details",  -- 使用 gd 显示文件详情
                 },
             },
             -- 嵌套文件配置

@@ -12,8 +12,8 @@ return {
         dependencies = "nvim-tree/nvim-web-devicons",
         -- 按键映射时懒加载
         keys = {
-            { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "上一个缓冲区" },
-            { "<S-l>", "<cmd>BufferLineCycleNext<cr>", desc = "下一个缓冲区" },
+            { "<leader>]", "<cmd>BufferLineCycleNext<cr>", desc = "下一个缓冲区" },
+            { "<leader>[", "<cmd>BufferLineCyclePrev<cr>", desc = "上一个缓冲区" },
             { "[b", "<cmd>BufferLineCyclePrev<cr>", desc = "上一个缓冲区" },
             { "]b", "<cmd>BufferLineCycleNext<cr>", desc = "下一个缓冲区" },
             { "<leader>bp", "<cmd>BufferLineTogglePin<cr>", desc = "固定缓冲区" },
