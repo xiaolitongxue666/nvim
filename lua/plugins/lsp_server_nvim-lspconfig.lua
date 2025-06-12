@@ -209,7 +209,7 @@ return {
                 vim.keymap.set("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", keymap_opts, { desc = "查找引用" }))
                 vim.keymap.set("n", "gI", vim.lsp.buf.implementation, vim.tbl_extend("force", keymap_opts, { desc = "跳转到实现" }))
                 vim.keymap.set("n", "gy", vim.lsp.buf.type_definition, vim.tbl_extend("force", keymap_opts, { desc = "跳转到类型定义" }))
-                vim.keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", keymap_opts, { desc = "悬停文档" }))
+                vim.keymap.set("n", "D", vim.lsp.buf.hover, vim.tbl_extend("force", keymap_opts, { desc = "悬停文档" }))
                 vim.keymap.set("n", "gK", vim.lsp.buf.signature_help, vim.tbl_extend("force", keymap_opts, { desc = "签名帮助" }))
                 vim.keymap.set("i", "<c-k>", vim.lsp.buf.signature_help, vim.tbl_extend("force", keymap_opts, { desc = "签名帮助" }))
                 vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, vim.tbl_extend("force", keymap_opts, { desc = "重命名" }))

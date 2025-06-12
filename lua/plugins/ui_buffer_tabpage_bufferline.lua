@@ -49,8 +49,8 @@ return {
                 right_trunc_marker = "",
                 -- 名称格式化
                 name_formatter = function(buf)
-                    -- 移除文件扩展名
-                    return vim.fn.fnamemodify(buf.name, ":t:r")
+                    -- 显示完整文件名（包括扩展名）
+                    return vim.fn.fnamemodify(buf.name, ":t")
                 end,
                 -- 最大名称长度
                 max_name_length = 18,
