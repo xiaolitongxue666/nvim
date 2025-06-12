@@ -105,7 +105,7 @@ map("n", "srh", "<C-w>b<C-w>K", opt)
 map("n", "srv", "<C-w>b<C-w>H", opt)
 
 -- 空格+q 关闭当前使用的窗口
-map("n", "<LEADER>q", "<C-w>j:q<CR>", opt)
+map("n", "<LEADER>q", ":q<CR>", opt)
 
 -- 空格+b 关闭当前使用的buffer
 map("n", "<LEADER>b", ":b #<CR>:bd #<CR>", opt)
