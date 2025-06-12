@@ -256,12 +256,16 @@ flowchart TD
 ##### bufferline.nvim (ui_buffer_tabpage_bufferline.lua)
 **功能**: 缓冲区标签页，提供类似现代编辑器的标签体验
 **快捷键**:
-- `Shift+h` / `[b` - 上一个缓冲区
-- `Shift+l` / `]b` - 下一个缓冲区
+- `<leader>[` / `[b` - 上一个缓冲区
+- `<leader>]` / `]b` - 下一个缓冲区
 - `<leader>bp` - 固定缓冲区
+- `<leader>bP` - 删除非固定缓冲区
 - `<leader>bo` - 删除其他缓冲区
 - `<leader>br` - 删除右侧缓冲区
 - `<leader>bl` - 删除左侧缓冲区
+- `<leader>b` - 关闭当前缓冲区
+- **鼠标右键点击** - 关闭对应的缓冲区
+- **点击关闭图标** - 关闭对应的缓冲区（如果显示）
 
 ##### nvim-tree (ui_nvim-tree.lua)
 **功能**: 文件浏览器树形视图
