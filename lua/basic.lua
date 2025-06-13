@@ -99,3 +99,18 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
 		})
 	end,
 })
+
+-- 根据操作系统设置shell
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+	-- Windows 系统使用 Git Bash
+	-- 设置正确的 Git Bash 路径
+	vim.opt.shell = "\"D:\\Program Files\\Git\\bin\\bash.exe\""
+	vim.opt.shellcmdflag = "-c"
+	vim.opt.shellquote = ""
+	vim.opt.shellxquote = ""
+	vim.opt.shellpipe = "|"
+	vim.opt.shellredir = ">"
+else
+	-- macOS 和 Linux 使用默认 shell
+	-- 不需要特殊设置，使用系统默认
+end
