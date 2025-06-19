@@ -202,6 +202,10 @@ map("n", "sp", "1<C-G>", opt)
 -- 字符大小写切换
 map("n", "<LEADER>sc", "~", opt)
 
+-- 撤销和重做操作
+map("n", "u", "u", opt)  -- 撤销
+map("n", "<C-r>", "<C-r>", opt)  -- 重做
+
 -- 位置导航
 map("n", "<A-[>", "<C-i>", opt)
 map("n", "<A-]>", "<C-o>", opt)
@@ -236,6 +240,35 @@ if vim.g.vscode then
     
     -- 关闭当前缓冲区
     vim.keymap.set('n', '<leader>b', '<Cmd>call VSCodeNotify("workbench.action.closeActiveEditor")<CR>', { silent = true })
+    
+    -- ============================================================================
+    -- 从 keybindings.lua 添加的快捷键 (使用 VSCode 命令实现)
+    -- ============================================================================
+    
+    -- 文件保存 (S 键)
+    vim.keymap.set('', 'S', '<Cmd>call VSCodeNotify("workbench.action.files.save")<CR>', { silent = true })
+    
+    -- 窗口管理 - 分屏创建
+    vim.keymap.set('', 'si', '<Cmd>call VSCodeNotify("workbench.action.splitEditorUp")<CR>', { silent = true })  -- 上方分屏
+    vim.keymap.set('', 'sk', '<Cmd>call VSCodeNotify("workbench.action.splitEditorDown")<CR>', { silent = true })  -- 下方分屏
+    vim.keymap.set('', 'sj', '<Cmd>call VSCodeNotify("workbench.action.splitEditorLeft")<CR>', { silent = true })  -- 左侧分屏
+    vim.keymap.set('', 'sl', '<Cmd>call VSCodeNotify("workbench.action.splitEditorRight")<CR>', { silent = true })  -- 右侧分屏
+    
+    -- 窗口间移动
+    vim.keymap.set('n', '<leader>i', '<Cmd>call VSCodeNotify("workbench.action.focusAboveGroup")<CR>', { silent = true })  -- 移动到上方窗口
+    vim.keymap.set('n', '<leader>k', '<Cmd>call VSCodeNotify("workbench.action.focusBelowGroup")<CR>', { silent = true })  -- 移动到下方窗口
+    vim.keymap.set('n', '<leader>j', '<Cmd>call VSCodeNotify("workbench.action.focusLeftGroup")<CR>', { silent = true })  -- 移动到左侧窗口
+    vim.keymap.set('n', '<leader>l', '<Cmd>call VSCodeNotify("workbench.action.focusRightGroup")<CR>', { silent = true })  -- 移动到右侧窗口
+    
+    -- 窗口关闭
+    vim.keymap.set('n', '<leader>q', '<Cmd>call VSCodeNotify("workbench.action.closeActiveEditor")<CR>', { silent = true })  -- 关闭当前窗口
+    
+    -- Buffer 关闭 (切换到上一个 buffer 并关闭当前)
+    vim.keymap.set('n', '<leader>bd', '<Cmd>call VSCodeNotify("workbench.action.closeActiveEditor")<CR>', { silent = true })  -- 关闭当前 buffer
+    
+    -- 打开终端窗口
+    vim.keymap.set('n', '<leader>/', '<Cmd>call VSCodeNotify("workbench.action.terminal.toggleTerminal")<CR>', { silent = true })  -- 打开/关闭终端
+    vim.keymap.set('n', '<leader>t', '<Cmd>call VSCodeNotify("workbench.action.terminal.new")<CR>', { silent = true })  -- 新建终端
     
     -- Neo-tree 文件浏览器快捷键
     vim.keymap.set('n', '<leader>fe', '<Cmd>call VSCodeNotify("workbench.view.explorer")<CR>', { silent = true })
@@ -277,8 +310,8 @@ if vim.g.vscode then
     vim.keymap.set('n', '<leader>rs', '<Cmd>call VSCodeNotify("workbench.action.findInFiles")<CR>', { silent = true })
     
     -- Telescope 导航快捷键 (在快速打开、搜索等对话框中使用)
-    vim.keymap.set('n', '<C-i>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenSelectPrevious")<CR>', { silent = true })  -- 向上移动选择
-    vim.keymap.set('n', '<C-k>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenSelectNext")<CR>', { silent = true })  -- 向下移动选择
+    -- vim.keymap.set('n', '<C-i>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenSelectPrevious")<CR>', { silent = true })  -- 向上移动选择
+    -- vim.keymap.set('n', '<C-k>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenSelectNext")<CR>', { silent = true })  -- 向下移动选择
     vim.keymap.set('n', '<C-n>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenNavigateNext")<CR>', { silent = true })  -- 历史记录下一个
     vim.keymap.set('n', '<C-p>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenNavigatePrevious")<CR>', { silent = true })  -- 历史记录上一个
     
