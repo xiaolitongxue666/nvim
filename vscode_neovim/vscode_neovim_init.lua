@@ -151,6 +151,9 @@ map("n", "K", "5j", opt)
 map("n", "J", "b", opt)   -- 按单词向左移动
 map("n", "L", "w", opt)   -- 按单词向右移动
 
+-- 跳转到行尾
+map("n", "E", "$", opt)
+
 -- 可视模式下的快速移动
 map("v", "I", "5k", opt)
 map("v", "K", "5j", opt)
@@ -215,7 +218,76 @@ if vim.g.vscode then
     vim.wo.signcolumn = "no"  -- VSCode 有自己的符号列
     vim.wo.colorcolumn = ""  -- VSCode 有自己的参考线
     -- 定义键映射
-    ---- 定义 t t 键序列，始终聚焦切换侧边栏
+    
+    -- Comment.nvim 快捷键 - 代码注释功能
+    vim.keymap.set('n', 'gcc', '<Cmd>call VSCodeNotify("editor.action.commentLine")<CR>', { silent = true })
+    vim.keymap.set('n', 'gbc', '<Cmd>call VSCodeNotify("editor.action.blockComment")<CR>', { silent = true })
+    vim.keymap.set('v', 'gc', '<Cmd>call VSCodeNotify("editor.action.commentLine")<CR>', { silent = true })
+    vim.keymap.set('v', 'gb', '<Cmd>call VSCodeNotify("editor.action.blockComment")<CR>', { silent = true })
+    vim.keymap.set('n', 'gcO', '<Cmd>call VSCodeNotify("editor.action.addCommentLine")<CR>', { silent = true })
+    vim.keymap.set('n', 'gco', '<Cmd>call VSCodeNotify("editor.action.addCommentLine")<CR>', { silent = true })
+    vim.keymap.set('n', 'gcA', '<Cmd>call VSCodeNotify("editor.action.addCommentLine")<CR>', { silent = true })
+    
+    -- Buffer 操作快捷键
+    vim.keymap.set('n', '<leader>[', '<Cmd>call VSCodeNotify("workbench.action.previousEditor")<CR>', { silent = true })
+    vim.keymap.set('n', '[b', '<Cmd>call VSCodeNotify("workbench.action.previousEditor")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>]', '<Cmd>call VSCodeNotify("workbench.action.nextEditor")<CR>', { silent = true })
+    vim.keymap.set('n', ']b', '<Cmd>call VSCodeNotify("workbench.action.nextEditor")<CR>', { silent = true })
+    
+    -- 关闭当前缓冲区
+    vim.keymap.set('n', '<leader>b', '<Cmd>call VSCodeNotify("workbench.action.closeActiveEditor")<CR>', { silent = true })
+    
+    -- Neo-tree 文件浏览器快捷键
+    vim.keymap.set('n', '<leader>fe', '<Cmd>call VSCodeNotify("workbench.view.explorer")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>e', '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fE', '<Cmd>call VSCodeNotify("revealFileInOS")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>E', '<Cmd>call VSCodeNotify("revealFileInOS")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>be', '<Cmd>call VSCodeNotify("workbench.action.showAllEditors")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>ge', '<Cmd>call VSCodeNotify("workbench.view.scm")<CR>', { silent = true })
+    
+    -- 文件资源管理器内部导航快捷键 (参考 neo-tree 配置)
+    -- 这些快捷键在文件资源管理器获得焦点时生效
+    vim.keymap.set('n', '<space>', '<Cmd>call VSCodeNotify("list.toggleExpand")<CR>', { silent = true })  -- 切换节点展开/折叠
+    vim.keymap.set('n', '<cr>', '<Cmd>call VSCodeNotify("list.select")<CR>', { silent = true })  -- 打开文件/目录
+    vim.keymap.set('n', '<esc>', '<Cmd>call VSCodeNotify("workbench.action.focusActiveEditorGroup")<CR>', { silent = true })  -- 返回编辑器焦点
+    
+    -- 文件操作快捷键 (在资源管理器中)
+    vim.keymap.set('n', 'a', '<Cmd>call VSCodeNotify("explorer.newFile")<CR>', { silent = true })  -- 新建文件
+    vim.keymap.set('n', 'A', '<Cmd>call VSCodeNotify("explorer.newFolder")<CR>', { silent = true })  -- 新建文件夹
+    vim.keymap.set('n', 'd', '<Cmd>call VSCodeNotify("deleteFile")<CR>', { silent = true })  -- 删除文件
+    vim.keymap.set('n', 'r', '<Cmd>call VSCodeNotify("renameFile")<CR>', { silent = true })  -- 重命名文件
+    vim.keymap.set('n', 'y', '<Cmd>call VSCodeNotify("filesExplorer.copy")<CR>', { silent = true })  -- 复制文件
+    vim.keymap.set('n', 'x', '<Cmd>call VSCodeNotify("filesExplorer.cut")<CR>', { silent = true })  -- 剪切文件
+    vim.keymap.set('n', 'p', '<Cmd>call VSCodeNotify("filesExplorer.paste")<CR>', { silent = true })  -- 粘贴文件
+    vim.keymap.set('n', 'R', '<Cmd>call VSCodeNotify("workbench.files.action.refreshFilesExplorer")<CR>', { silent = true })  -- 刷新资源管理器
+    vim.keymap.set('n', 'q', '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', { silent = true })  -- 关闭侧边栏
+    
+    -- Telescope 模糊查找快捷键
+    vim.keymap.set('n', '<leader>ff', '<Cmd>call VSCodeNotify("workbench.action.quickOpen")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fg', '<Cmd>call VSCodeNotify("workbench.action.findInFiles")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fb', '<Cmd>call VSCodeNotify("workbench.action.showAllEditors")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fh', '<Cmd>call VSCodeNotify("workbench.action.showCommands")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fr', '<Cmd>call VSCodeNotify("workbench.action.openRecent")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fc', '<Cmd>call VSCodeNotify("workbench.action.showCommands")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fk', '<Cmd>call VSCodeNotify("workbench.action.openGlobalKeybindings")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fs', '<Cmd>call VSCodeNotify("editor.action.addSelectionToNextFindMatch")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fd', '<Cmd>call VSCodeNotify("workbench.actions.view.problems")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>ft', '<Cmd>call VSCodeNotify("workbench.action.gotoSymbol")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>fz', '<Cmd>call VSCodeNotify("workbench.action.findInFiles")<CR>', { silent = true })
+    vim.keymap.set('n', '<leader>rs', '<Cmd>call VSCodeNotify("workbench.action.findInFiles")<CR>', { silent = true })
+    
+    -- Telescope 导航快捷键 (在快速打开、搜索等对话框中使用)
+    vim.keymap.set('n', '<C-i>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenSelectPrevious")<CR>', { silent = true })  -- 向上移动选择
+    vim.keymap.set('n', '<C-k>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenSelectNext")<CR>', { silent = true })  -- 向下移动选择
+    vim.keymap.set('n', '<C-n>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenNavigateNext")<CR>', { silent = true })  -- 历史记录下一个
+    vim.keymap.set('n', '<C-p>', '<Cmd>call VSCodeNotify("workbench.action.quickOpenNavigatePrevious")<CR>', { silent = true })  -- 历史记录上一个
+    
+    -- 在快速打开面板中的额外导航
+    vim.keymap.set('n', '<Down>', '<Cmd>call VSCodeNotify("list.focusDown")<CR>', { silent = true })
+    vim.keymap.set('n', '<Up>', '<Cmd>call VSCodeNotify("list.focusUp")<CR>', { silent = true })
+    vim.keymap.set('n', '<CR>', '<Cmd>call VSCodeNotify("list.select")<CR>', { silent = true })
+    
+    -- 侧边栏切换
     vim.keymap.set('n', 'tt', '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', { silent = true })
 else
     -- 非 VSCode 环境的设置
