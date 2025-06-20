@@ -299,33 +299,38 @@ if vim.g.vscode then
     vim.keymap.set('n', '<leader>ge', '<Cmd>call VSCodeNotify("workbench.view.scm")<CR><Cmd>call VSCodeNotify("workbench.action.focusSideBar")<CR>', { silent = true, desc = "打开并聚焦源代码管理" })
     
     -- 文件资源管理器快捷键 (仅在资源管理器中生效)
-    -- 通过 autocmd 在特定 filetype (推测为 'explorer') 的 buffer 中设置快捷键
+    -- 使用 autocmd 在进入文件浏览器缓冲区时应用特定的键位绑定
     do
         local explorer_augroup = vim.api.nvim_create_augroup("ExplorerKeymaps", { clear = true })
 
-        vim.api.nvim_create_autocmd("FileType", {
-            pattern = "explorer", -- 注意: 'explorer' 是一个推测值, 如果无效, 可能需要替换为正确的 filetype
+        vim.api.nvim_create_autocmd("BufEnter", {
+            pattern = "*",
             group = explorer_augroup,
             callback = function(args)
-                local map = function(keys, command, desc)
-                    vim.keymap.set('n', keys, command, { buffer = args.buf, silent = true, desc = desc })
+                -- 通过检查 VSCode Neovim 插件设置的缓冲区变量来确定是否在文件浏览器中
+                if vim.b[args.buf] and vim.b[args.buf].vscode_file_explorer then
+                    local map = function(keys, command, desc)
+                        vim.keymap.set('n', keys, command, { buffer = args.buf, silent = true, desc = desc })
+                    end
+
+                    -- 导航
+                    map('<space>', '<Cmd>call VSCodeNotify("list.toggleExpand")<CR>', "切换节点展开/折叠")
+                    map('<cr>',    '<Cmd>call VSCodeNotify("list.select")<CR>', "打开文件/目录")
+                    map('<esc>',   '<Cmd>call VSCodeNotify("workbench.action.focusActiveEditorGroup")<CR>', "返回编辑器焦点")
+                    map('q',       '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', "关闭侧边栏")
+                    map('i',       '<Cmd>call VSCodeNotify("list.focusUp")<CR>', "向上移动") -- 无效
+                    map('k',       '<Cmd>call VSCodeNotify("list.focusDown")<CR>', "向下移动") -- 无效
+
+                    -- 文件操作
+                    map('a', '<Cmd>call VSCodeNotify("explorer.newFile")<CR>', "新建文件")
+                    map('A', '<Cmd>call VSCodeNotify("explorer.newFolder")<CR>', "新建文件夹")
+                    map('d', '<Cmd>call VSCodeNotify("deleteFile")<CR>', "删除文件")
+                    map('r', '<Cmd>call VSCodeNotify("renameFile")<CR>', "重命名文件")
+                    map('y', '<Cmd>call VSCodeNotify("filesExplorer.copy")<CR>', "复制文件")
+                    map('x', '<Cmd>call VSCodeNotify("filesExplorer.cut")<CR>', "剪切文件")
+                    map('p', '<Cmd>call VSCodeNotify("filesExplorer.paste")<CR>', "粘贴文件")
+                    map('R', '<Cmd>call VSCodeNotify("workbench.files.action.refreshFilesExplorer")<CR>', "刷新资源管理器")
                 end
-
-                -- 导航
-                map('<space>', '<Cmd>call VSCodeNotify("list.toggleExpand")<CR>', "切换节点展开/折叠")
-                map('<cr>',    '<Cmd>call VSCodeNotify("list.select")<CR>', "打开文件/目录")
-                map('<esc>',   '<Cmd>call VSCodeNotify("workbench.action.focusActiveEditorGroup")<CR>', "返回编辑器焦点")
-                map('q',       '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', "关闭侧边栏")
-
-                -- 文件操作
-                map('a', '<Cmd>call VSCodeNotify("explorer.newFile")<CR>', "新建文件")
-                map('A', '<Cmd>call VSCodeNotify("explorer.newFolder")<CR>', "新建文件夹")
-                map('d', '<Cmd>call VSCodeNotify("deleteFile")<CR>', "删除文件")
-                map('r', '<Cmd>call VSCodeNotify("renameFile")<CR>', "重命名文件")
-                map('y', '<Cmd>call VSCodeNotify("filesExplorer.copy")<CR>', "复制文件")
-                map('x', '<Cmd>call VSCodeNotify("filesExplorer.cut")<CR>', "剪切文件")
-                map('p', '<Cmd>call VSCodeNotify("filesExplorer.paste")<CR>', "粘贴文件")
-                map('R', '<Cmd>call VSCodeNotify("workbench.files.action.refreshFilesExplorer")<CR>', "刷新资源管理器")
             end
         })
     end
