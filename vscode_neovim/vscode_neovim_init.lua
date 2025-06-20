@@ -270,30 +270,65 @@ if vim.g.vscode then
     vim.keymap.set('n', '<leader>/', '<Cmd>call VSCodeNotify("workbench.action.terminal.toggleTerminal")<CR>', { silent = true })  -- 打开/关闭终端
     vim.keymap.set('n', '<leader>t', '<Cmd>call VSCodeNotify("workbench.action.terminal.new")<CR>', { silent = true })  -- 新建终端
     
-    -- Neo-tree 文件浏览器快捷键
-    vim.keymap.set('n', '<leader>fe', '<Cmd>call VSCodeNotify("workbench.view.explorer")<CR>', { silent = true })
-    vim.keymap.set('n', '<leader>e', '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', { silent = true })
-    vim.keymap.set('n', '<leader>fE', '<Cmd>call VSCodeNotify("revealFileInOS")<CR>', { silent = true })
-    vim.keymap.set('n', '<leader>E', '<Cmd>call VSCodeNotify("revealFileInOS")<CR>', { silent = true })
-    vim.keymap.set('n', '<leader>be', '<Cmd>call VSCodeNotify("workbench.action.showAllEditors")<CR>', { silent = true })
-    vim.keymap.set('n', '<leader>ge', '<Cmd>call VSCodeNotify("workbench.view.scm")<CR>', { silent = true })
+    -- Neo-tree 文件浏览器及相关视图快捷键
+
+    -- <leader>fe: 打开文件资源管理器并聚焦
+    -- 执行 `workbench.view.explorer` 打开或切换到文件资源管理器视图,
+    -- 然后执行 `workbench.action.focusSideBar` 将焦点移到侧边栏, 方便立即操作文件树。
+    vim.keymap.set('n', '<leader>fe', '<Cmd>call VSCodeNotify("workbench.view.explorer")<CR><Cmd>call VSCodeNotify("workbench.action.focusSideBar")<CR>', { silent = true, desc = "打开并聚焦文件浏览器" })
+
+    -- <leader>e: 切换侧边栏的显示/隐藏状态
+    -- 执行 `workbench.action.toggleSidebarVisibility`，这是一个纯粹的切换操作。
+    -- 如果侧边栏是打开的，它会关闭；如果是关闭的，它会打开。它不负责将焦点移到侧边栏。
+    vim.keymap.set('n', '<leader>e', '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', { silent = true, desc = "切换侧边栏可见性" })
+
+    -- <leader>fE / <leader>E: 在操作系统文件管理器中显示当前文件
+    -- 执行 `revealFileInOS`，这会在 Finder (macOS) 或资源管理器 (Windows) 中定位并显示当前文件。
+    -- 这两个快捷键功能完全相同，可以移除一个以避免冗余。
+    vim.keymap.set('n', '<leader>fE', '<Cmd>call VSCodeNotify("revealFileInOS")<CR>', { silent = true, desc = "在 OS 文件管理器中显示" })
+    vim.keymap.set('n', '<leader>E', '<Cmd>call VSCodeNotify("revealFileInOS")<CR>', { silent = true, desc = "在 OS 文件管理器中显示 (冗余)" })
+
+    -- <leader>be: 显示所有已打开的编辑器列表
+    -- 执行 `workbench.action.showAllEditors`，这会弹出一个快速选择列表，
+    -- 列出所有当前打开的标签页（缓冲区），方便在它们之间快速跳转。
+    vim.keymap.set('n', '<leader>be', '<Cmd>call VSCodeNotify("workbench.action.showAllEditors")<CR>', { silent = true, desc = "显示所有打开的编辑器" })
+
+    -- <leader>ge: 打开源代码管理(Git)视图并聚焦
+    -- 执行 `workbench.view.scm` 打开或切换到源代码管理视图，
+    -- 然后执行 `workbench.action.focusSideBar` 将焦点移到侧边栏，方便查看 Git 状态或执行 Git 操作。
+    vim.keymap.set('n', '<leader>ge', '<Cmd>call VSCodeNotify("workbench.view.scm")<CR><Cmd>call VSCodeNotify("workbench.action.focusSideBar")<CR>', { silent = true, desc = "打开并聚焦源代码管理" })
     
-    -- 文件资源管理器内部导航快捷键 (参考 neo-tree 配置)
-    -- 这些快捷键在文件资源管理器获得焦点时生效
-    vim.keymap.set('n', '<space>', '<Cmd>call VSCodeNotify("list.toggleExpand")<CR>', { silent = true })  -- 切换节点展开/折叠
-    vim.keymap.set('n', '<cr>', '<Cmd>call VSCodeNotify("list.select")<CR>', { silent = true })  -- 打开文件/目录
-    vim.keymap.set('n', '<esc>', '<Cmd>call VSCodeNotify("workbench.action.focusActiveEditorGroup")<CR>', { silent = true })  -- 返回编辑器焦点
-    
-    -- 文件操作快捷键 (在资源管理器中)
-    vim.keymap.set('n', 'a', '<Cmd>call VSCodeNotify("explorer.newFile")<CR>', { silent = true })  -- 新建文件
-    vim.keymap.set('n', 'A', '<Cmd>call VSCodeNotify("explorer.newFolder")<CR>', { silent = true })  -- 新建文件夹
-    vim.keymap.set('n', 'd', '<Cmd>call VSCodeNotify("deleteFile")<CR>', { silent = true })  -- 删除文件
-    vim.keymap.set('n', 'r', '<Cmd>call VSCodeNotify("renameFile")<CR>', { silent = true })  -- 重命名文件
-    vim.keymap.set('n', 'y', '<Cmd>call VSCodeNotify("filesExplorer.copy")<CR>', { silent = true })  -- 复制文件
-    vim.keymap.set('n', 'x', '<Cmd>call VSCodeNotify("filesExplorer.cut")<CR>', { silent = true })  -- 剪切文件
-    vim.keymap.set('n', 'p', '<Cmd>call VSCodeNotify("filesExplorer.paste")<CR>', { silent = true })  -- 粘贴文件
-    vim.keymap.set('n', 'R', '<Cmd>call VSCodeNotify("workbench.files.action.refreshFilesExplorer")<CR>', { silent = true })  -- 刷新资源管理器
-    vim.keymap.set('n', 'q', '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', { silent = true })  -- 关闭侧边栏
+    -- 文件资源管理器快捷键 (仅在资源管理器中生效)
+    -- 通过 autocmd 在特定 filetype (推测为 'explorer') 的 buffer 中设置快捷键
+    do
+        local explorer_augroup = vim.api.nvim_create_augroup("ExplorerKeymaps", { clear = true })
+
+        vim.api.nvim_create_autocmd("FileType", {
+            pattern = "explorer", -- 注意: 'explorer' 是一个推测值, 如果无效, 可能需要替换为正确的 filetype
+            group = explorer_augroup,
+            callback = function(args)
+                local map = function(keys, command, desc)
+                    vim.keymap.set('n', keys, command, { buffer = args.buf, silent = true, desc = desc })
+                end
+
+                -- 导航
+                map('<space>', '<Cmd>call VSCodeNotify("list.toggleExpand")<CR>', "切换节点展开/折叠")
+                map('<cr>',    '<Cmd>call VSCodeNotify("list.select")<CR>', "打开文件/目录")
+                map('<esc>',   '<Cmd>call VSCodeNotify("workbench.action.focusActiveEditorGroup")<CR>', "返回编辑器焦点")
+                map('q',       '<Cmd>call VSCodeNotify("workbench.action.toggleSidebarVisibility")<CR>', "关闭侧边栏")
+
+                -- 文件操作
+                map('a', '<Cmd>call VSCodeNotify("explorer.newFile")<CR>', "新建文件")
+                map('A', '<Cmd>call VSCodeNotify("explorer.newFolder")<CR>', "新建文件夹")
+                map('d', '<Cmd>call VSCodeNotify("deleteFile")<CR>', "删除文件")
+                map('r', '<Cmd>call VSCodeNotify("renameFile")<CR>', "重命名文件")
+                map('y', '<Cmd>call VSCodeNotify("filesExplorer.copy")<CR>', "复制文件")
+                map('x', '<Cmd>call VSCodeNotify("filesExplorer.cut")<CR>', "剪切文件")
+                map('p', '<Cmd>call VSCodeNotify("filesExplorer.paste")<CR>', "粘贴文件")
+                map('R', '<Cmd>call VSCodeNotify("workbench.files.action.refreshFilesExplorer")<CR>', "刷新资源管理器")
+            end
+        })
+    end
     
     -- Telescope 模糊查找快捷键
     vim.keymap.set('n', '<leader>ff', '<Cmd>call VSCodeNotify("workbench.action.quickOpen")<CR>', { silent = true })
