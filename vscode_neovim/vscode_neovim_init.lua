@@ -270,7 +270,11 @@ if vim.g.vscode then
     vim.keymap.set('n', '<leader>/', '<Cmd>call VSCodeNotify("workbench.action.terminal.toggleTerminal")<CR>', { silent = true })  -- 打开/关闭终端
     vim.keymap.set('n', '<leader>t', '<Cmd>call VSCodeNotify("workbench.action.terminal.new")<CR>', { silent = true })  -- 新建终端
     
-    -- Neo-tree 文件浏览器及相关视图快捷键
+    -- 终端模式下的快捷键
+    vim.keymap.set('t', '<C-q>', '<Cmd>call VSCodeNotify("workbench.action.terminal.toggleTerminal")<CR>', { silent = true })  -- Ctrl+Q 关闭终端
+    vim.keymap.set('t', '<C-[>', '<Cmd>call VSCodeNotify("workbench.action.focusActiveEditorGroup")<CR>', { silent = true })  -- Ctrl+[ 返回编辑器
+    
+    -- Neo-tree 文件浏览器及相关视图快捷
 
     -- <leader>fe: 打开文件资源管理器并聚焦
     -- 执行 `workbench.view.explorer` 打开或切换到文件资源管理器视图,
