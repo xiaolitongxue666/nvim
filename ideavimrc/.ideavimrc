@@ -1,0 +1,471 @@
+" === Editor Setup(编辑器设置) ===
+" ==============================
+" ===
+" === System(全局设置)
+" ===
+" copy form system clipboard(允许从系统剪切板拷贝数据)
+set clipboard+=unnamed
+
+" let the color compatible to terminal(让配色和终端兼容)
+let &t_ut=' '
+
+" automatic change working dir at now edit file's path(将工作目录自动跳转到编辑的文件路径)
+set autochdir
+
+" auto reload file(自动重载配置文件)
+set autoread
+
+" ===
+" === Editor behavior(编辑操作)
+" ===
+"show line number(显示行号)
+set number
+
+"show relative line number(显示相对行号)
+set relativenumber
+
+"show cursor(显示光标)
+set cursorline
+
+" expand tab(扩展tab等价四个空格)
+set expandtab
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+
+" apply the indentation of the current line to the next(当前行的缩进应用下一行)
+set autoindent
+
+" show the space at the end of line(显示行尾空格)
+set list
+
+" show the tab(显示tab符号，行首，行尾分别为以下符号)
+set listchars=tab:▸\ ,trail:▫
+
+" corsor distance form buffer edge some lines(光标到缓冲区边缘的距离)
+set scrolloff=4
+
+" allow for mappings includes 'Esc', while preserving zero timeout after pressing it manually(设置映射按键后的延迟)
+set ttimeoutlen=0
+set notimeout
+
+" rember the cursor positon and other status when reopen file(在下一次打开文件的时候，记忆光标位置)
+set viewoptions=cursor,folds,slash,unix
+
+" automatic line break(自动换行)
+set wrap
+
+" set text width(设置文本宽度)
+set tw=80
+
+" expression what is evaluated to obtain the proper indent for a line(关闭自动缩进)
+set indentexpr=
+
+" the kind of folding used for the current window(使用代码缩进级别来创建代码折叠)
+set foldmethod=indent " 折叠方法设置为 indent
+set foldlevel=99 " 最大折叠级别设置为 99
+set foldenable " 启用代码折叠功能
+set formatoptions-=tc " 不会自动将制表符转换为空格，也不会在行尾添加空格
+
+" 窗口分割方向设置为水平方向
+set splitright
+" 窗口分割方向设置为垂直方向
+set splitbelow
+
+" enable mouse in vim(允许使用鼠标)
+set mouse=a
+
+" if in insert, replace  or visual mode put a message on the last line swith to not show this line(各种模式状态显示在窗口最下方的状态栏中)
+set noshowmode
+
+"show typed command(显示输入的命令，一般在：command 场景下显示)
+set showcmd
+
+" open command line comletion in enhanced mode(增强模式下打开代码补全)
+set wildmenu
+
+"ignore case the word during the search(搜索过程中忽略大小写)
+set ignorecase
+set smartcase
+
+" should make scrolling faster(窗口滚动更快速)
+set ttyfast
+set lazyredraw
+
+" 使用视觉铃声代替声音铃声来指示错误或警告
+set visualbell
+
+" high light search(搜索操作时，高亮关键词)
+set hlsearch
+"charter by charter high light the entered words during the search(搜索操作时，键入一个字符，高亮一个字符)
+set incsearch
+
+" open the file cursor at the last edited position(重新打开文件，光标在上次编辑的位置)
+au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+
+" ===
+" === Terminal Setting(终端设置)
+" ===
+"
+let g:neoterm_autoscroll = 1
+"
+autocmd TermOpen term://* startinsert
+" tnoremap <C-N> <C-\><C-N>
+" tnoremap <C-O> <C-\><C-N><C-O>
+let g:terminal_color_0  = '#000000'
+let g:terminal_color_1  = '#FF5555'
+let g:terminal_color_2  = '#50FA7B'
+let g:terminal_color_3  = '#F1FA8C'
+let g:terminal_color_4  = '#BD93F9'
+let g:terminal_color_5  = '#FF79C6'
+let g:terminal_color_6  = '#8BE9FD'
+let g:terminal_color_7  = '#BFBFBF'
+let g:terminal_color_8  = '#4D4D4D'
+let g:terminal_color_9  = '#FF6E67'
+let g:terminal_color_10 = '#5AF78E'
+let g:terminal_color_11 = '#F4F99D'
+let g:terminal_color_12 = '#CAA9FA'
+let g:terminal_color_13 = '#FF92D0'
+let g:terminal_color_14 = '#9AEDFE'
+
+" ===
+" === Basic Mappings(基础键位映射)
+" ===
+
+" 设置空格键为LEADER
+" Set <LEADER> as <SPACE>, ; as :
+let mapleader=" "
+
+" S 保存当前文件，Q 退出nvim
+" Save & quit
+map S :w<CR>
+map Q :q<CR>
+
+" 重载nvim配置文件
+" Reload config file
+map R :source ~/.ideavimrc<CR>
+
+" 空格 + rc 打开nvim配置文件
+" Open the vimrc file anytime
+map <LEADER>rc :e ~/.ideavimrc<CR>
+
+" Undo operations
+" Just type 'u' do undo
+" Just type <C-u> do undo in Insert mode
+
+" Redo operations
+" Just type <C-r> do redo
+
+" 普通模式和visual模式插入按键重映射
+" Insert Key
+noremap h i
+noremap H I
+" Visual mode key map
+vnoremap h i
+vnoremap H I
+
+" Y 拷贝光标当前位置到行尾的字符串,也可以直接使用yy拷贝当前行
+" Make Y to copy till the end of the line
+nnoremap Y y$
+
+" Y 拷贝光标当前位置到行为的字符串到系统剪切板
+" Copy to system clipboard
+vnoremap Y :w !xclip -i -sel c<CR>
+
+" Indentation
+" <<减少当前行缩进 | >> 增加当前行缩进
+nnoremap < <<
+nnoremap > >>
+
+" n 跳转到下一个搜索结果
+" N 跳转到上一个搜索结果
+" 空格+回车 取消搜索高亮显示
+" Jump to search result next one
+noremap n nzz
+" Jumo to search result last one
+noremap N Nzz
+" Clear all search high light
+noremap <LEADER><CR> :nohlsearch<CR>
+
+" 显示相邻的重复字符或者单词
+" Adjacent duplicate words
+noremap <LEADER>dw /\(\<\w\+\>\)\_s*\1
+
+" 将四个空格转换为制表符
+" Space to Tab
+" nnoremap <LEADER>tt :%s/    /\t/g
+" vnoremap <LEADER>tt :s/    /\t/g
+
+" 折叠代码
+" Folding
+map <silent> <LEADER>o za
+
+" Open up lazygit (TODO: May replace with gitui)
+" noremap \g :term lazygit<CR>
+" noremap <c-g> :term lazygit<CR>
+
+" ===
+" === Cursor Movement(光标移动)
+" ===
+"
+" New cursor movement (the default arrow keys are used for resizing windows)
+"     ^
+"     i
+" < j   l >
+"     k
+"     v
+noremap <silent> i k
+noremap <silent> k j
+noremap <silent> j h
+noremap <silent> l l
+
+" 光标快速移动
+" I/K keys for 5 times i/k (faster navigation)
+noremap <silent> I 5k
+noremap <silent> K 5j
+" J/L keys for 5 times j/l (faster navigation)
+"noremap J 5h
+"noremap L 5l
+" J key: go to the start of the line
+noremap <silent> J 0
+" L key: go to the end of the line
+noremap <silent> L $
+
+" 将视角上下移动五行而不移动光标
+" Ctrl + I or K will move up/down the view port without moving the cursor
+noremap <LEADER>mi 5<C-y>
+noremap <LEADER>mk 5<C-e>
+
+" Move as page
+" Ctrl + i up page
+" Ctrl + k down page
+" noremap <silent> <C-i> <C-u>
+" noremap <silent> <C-k> <C-d>
+
+" ===
+" === Window management(窗口管理)
+" ===
+" 空格+ i k j l 在不同分屏窗口之间移动
+" Use <space> + new arrow keys for moving the cursor around windows
+map <LEADER>i <C-w>k
+map <LEADER>k <C-w>j
+map <LEADER>j <C-w>h
+map <LEADER>l <C-w>l
+
+" Disabling the default s key
+noremap s <nop>
+
+" split the screens to up (horizontal), down (horizontal), left (vertical), right (vertical)
+" s+ i/k/j/l 创建分屏窗口
+noremap si :set nosplitbelow<CR>:split<CR>:set splitbelow<CR>
+noremap sk :set splitbelow<CR>:split<CR>
+noremap sj :set nosplitright<CR>:vsplit<CR>:set splitright<CR>
+noremap sl :set splitright<CR>:vsplit<CR>
+
+"光标键调整分屏窗口大小 (无效)
+" Resize splits with arrow keys
+nnoremap <Up> :resize -5<CR>
+nnoremap <Down> :resize +5<CR>
+nnoremap <Left> :vertical resize -5<CR>
+nnoremap <Right> :vertical resize +5<CR>
+
+" 纵向横向调整两个分屏窗口的布局 (无效)
+" Place the two screens up and down
+map sh <C-w>t<C-w>K
+" Place the two screens side by side
+map sv <C-w>t<C-w>H
+
+" 旋转屏幕 (无效)
+" Rotate screens
+noremap srh <C-w>b<C-w>K
+noremap srv <C-w>b<C-w>H
+
+" 空格+q 关闭当前使用的窗口
+" Press <SPACE> + q to close the window below the current window
+noremap <LEADER>q <C-w>j:q<CR>
+
+" ===
+" === Other useful stuff
+" ===
+" sp to show the current buffer file path
+" nnoremap sp 1<C-g>
+
+" Opening a terminal window(打开一个终端窗口)
+" map <LEADER>/ :set splitbelow<CR>:sp<CR>:term<CR>
+" noremap <LEADER>/ :term<CR>
+" noremap <LEADER>/ :set splitbelow<CR>:split<CR>:res +10<CR>:term<CR>
+
+" Close a terminal windows(关闭一个终端窗口)
+" 退出终端模式
+" tnoremap <C-N> <C-\><C-N>
+" 关闭终端
+" tnoremap <C-O> <C-\><C-N><C-O>
+
+" Press ` to change case (instead of ~)
+noremap <LEADER>sc ~
+
+
+" ===
+" === IDEA Actions
+" ===
+以下是带有中文注释的 `ideavimrc` 配置文件：
+" 映射 <leader>d 到调试动作
+map <leader>d <Action>(Debug)  " 将 <leader>d 映射到调试功能
+
+" 映射 <leader>r 到重命名元素动作
+map <leader>r <Action>(RenameElement)  " 将 <leader>r 映射到重命名元素功能
+
+" 映射 <leader>RR 到快速重构列表动作
+map <leader>RR <Action>(Refactorings.QuickListPopupAction)  " 将 <leader>RR 映射到快速重构列表
+
+" 映射 <leader>sw 到包围动作
+" map <leader>sw <Action>(SurroundWith)  " 将 <leader>sw 映射到包围功能
+
+" 映射 <leader>c 到停止动作
+map <leader>c <Action>(Stop)  " 将 <leader>c 映射到停止功能
+
+" 映射 <leader>z 到切换无干扰模式
+map <leader>z <Action>(ToggleDistractionFreeMode)  " 将 <leader>z 映射到切换无干扰模式
+
+" 映射 <leader>oi 到优化导入动作
+map <leader>oi <Action>(OptimizeImports)  " 将 <leader>oi 映射到优化导入功能
+
+" 映射 <leader>s 到在项目视图中选择动作
+map <leader>s <Action>(SelectInProjectView)  " 将 <leader>s 映射到选择项目视图功能
+
+" 映射 <leader>a 到注释动作
+" map <leader>a <Action>(Annotate)  " 将 <leader>a 映射到注释功能
+
+" 映射 <leader>h 到显示版本控制文件历史
+map <leader>h <Action>(Vcs.ShowTabbedFileHistory)  " 将 <leader>h 映射到显示版本控制文件历史
+
+" 映射 <S-Space> 到跳转到下一个错误
+map <S-Space> <Action>(GotoNextError)  " 将 <S-Space> 映射到跳转到下一个错误
+
+" 映射 <leader>ee 到显示错误描述
+map <leader>ee <Action>(ShowErrorDescription)  " 将 <leader>ee 映射到显示错误描述
+
+" 映射 <leader>hh 到快速实现
+map <leader>hh <Action>(QuickImplementations)  " 将 <leader>hh 映射到快速实现功能
+
+" 映射 <leader>hj 到显示悬停信息
+map <leader>hj <Action>(ShowHoverInfo)  " 将 <leader>hj 映射到显示悬停信息
+
+" 断点相关映射
+" 映射 <leader>ub 到切换行断点
+:map <leader>ub <Action>(ToggleLineBreakpoint)  " 将 <leader>ub 映射到切换行断点
+
+" 映射 <leader>us 到查看断点
+:map <leader>us <Action>(ViewBreakpoints)  " 将 <leader>us 映射到查看断点
+
+" 映射 <leader>ur 到移除所有断点
+:map <leader>ur <Action>(Debugger.RemoveAllBreakpoints)  " 将 <leader>ur 映射到移除所有断点
+
+" 书签相关映射
+" 映射 <leader>bs 到显示书签
+" nmap <leader>bs <Action>(ShowBookmarks)  " 将 <leader>bs 映射到显示书签
+
+" 映射 <leader>bt 到激活书签工具窗口
+" nmap <leader>bt <Action>(ActivateBookmarksToolWindow)  " 将 <leader>bt
+映射到激活书签工具窗口
+
+" 映射 <leader>bb 到切换书签
+" nmap <leader>bb <Action>(ToggleBookmark)  " 将 <leader>bb 映射到切换书签
+
+" 映射 <leader>be 到编辑书签
+" nmap <leader>be <Action>(EditBookmark)  " 将 <leader>be 映射到编辑书签
+
+" 映射 <leader>bp 到跳转到上一个书签
+" nmap <leader>bp <Action>(GotoPreviousBookmark)  " 将 <leader>bp 映射到跳转到上一个书签
+
+" 映射 <leader>bn 到跳转到下一个书签
+" nmap <leader>bn <Action>(GotoNextBookmark)  " 将 <leader>bn 映射到跳转到下一个书签
+
+" 设置书签相关的描述
+" let g:WhichKeyDesc_bookmarks = "<leader>b Bookmarks"  " 设置书签描述
+" let g:WhichKeyDesc_bookmarks_menu = "<leader>bm Bookmark Menu"  " 设置书签菜单描述
+" let g:WhichKeyDesc_bookmarks_show = "<leader>bs Show Bookmarks"  " 设置显示书签描述
+" let g:WhichKeyDesc_bookmarks_tool = "<leader>bt Bookmark Tool"  " 设置书签工具描述
+" let g:WhichKeyDesc_bookmarks_toggle_bookmark = "<leader>bb Toggle Bookmark"
+ " 设置切换书签描述
+" let g:WhichKeyDesc_bookmarks_edit = "<leader>be Edit Bookmark"  " 设置编辑书签描述
+" let g:WhichKeyDesc_bookmarks_prev = "<leader>bp Previous Bookmark"
+ " 设置上一个书签描述
+" let g:WhichKeyDesc_bookmarks_next = "<leader>bn Next Bookmark"  " 设置下一个书签描述
+
+" 注释相关映射
+:map <leader>cl <Action>(CommentByLineComment)  " 将 <leader>cl 映射到按行注释
+:map <leader>cb <Action>(CommentByBlockComment)  " 将 <leader>cb 映射到按块注释
+
+" Ace 相关映射
+" :map ff <Action>(AceAction)  " 将 ff 映射到 Ace 动作
+" :map fv <Action>(AceTargetAction)  " 将 fv 映射到 Ace 目标动作
+:map fl <Action>(AceLineAction)  " 将 fl 映射到 Ace 行动作
+
+" 各种功能映射
+:map <leader>hu <Action>(HighlightUsagesInFile)  " 将 <leader>hu 映射到高亮文件中的用法
+:map <leader>rl <Action>(RecentLocations)  " 将 <leader>rl 映射到最近位置
+:map gy <Action>(RecentChangedFiles)  " 将 gy 映射到最近更改的文件
+:map <leader>sh <Action>(LocalHistory.ShowHistory)  " 将 <leader>sh 映射到显示本地历史
+:map <leader>m <Action>(ShowIntentionActions)  " 将 <leader>m 映射到显示意图动作
+:map <leader>o <Action>(FileStructurePopup)  " 将 <leader>o 映射到文件结构弹出窗口
+:map <leader>pw <Action>(SelectInProjectView)  " 将 <leader>pw 映射到在项目视图中选择
+:map <leader>rt <Action>(RunContextGroup)  " 将 <leader>rt 映射到运行上下文组
+:map gh <Action>(GotoDeclaration)  " 将 gh 映射到跳转到声明
+:map <leader>so <Action>(SelectAllOccurrences)  " 将 <leader>so 映射到选择所有出现
+
+" 视觉模式下的缩进映射
+xnoremap < <gv  " 在视觉模式下向左缩进并保持选择
+xnoremap > >gv  " 在视觉模式下向右缩进并保持选择
+
+" 复制整个文件
+" gg 光标移动到文件的第一行
+" G 光标移动到文件的最后一行
+" "+y: 这个命令将选中的文本复制到系统剪贴板中。"+ 表示使用系统剪贴板，y 是 "yank" 的意思，即复制。
+nmap <C-a> ggVG"+y  " 将 <C-a> 映射到复制整个文件到剪贴板
+
+" 代码导航映射
+:map gf {  " 将 gf 映射到跳转到函数开始
+:map gj }  " 将 gj 映射到跳转到函数结束
+:map gd <Action>(MethodUp)  " 将 gd 映射到向上跳转方法
+:map gk <Action>(MethodDown)  " 将 gk 映射到向下跳转方法
+:map ge <Action>(GotoNextError)  " 将 ge 映射到跳转到下一个错误
+:map gE <Action>(GotoPreviousError)  " 将 gE 映射到跳转到上一个错误
+:map gs <Action>(JumpToLastChange)  " 将 gs 映射到跳转到最后一次更改
+:map gl <Action>(JumpToNextChange)  " 将 gl 映射到跳转到下一个更改
+:map ga <Action>(VcsShowNextChangeMarker)  " 将 ga 映射到显示下一个更改标记
+:map gø <Action>(VcsShowPrevChangeMarker)  " 将 gø 映射到显示上一个更改标记
+:map gn <Action>(GotoNextElementUnderCaretUsage)  " 将 gn 映射到跳转到光标下的下一个元素
+:map gN <Action>(GotoPrevElementUnderCaretUsage)  " 将 gN 映射到跳转到光标下的上一个元素
+
+" 分割窗口相关映射
+:nmap <leader>i <Action>(PrevSplitter)  " 将 <leader>i 映射到上一个分割窗口
+:nmap <c-v> <Action>(SplitVertically)  " 将 <c-v> 映射到垂直分割窗口
+
+" 内置导航到已导航项目的映射
+:nmap <c-o> <Action>(Back)  " 将 <c-o> 映射到后退
+:nmap <c-i> <Action>(Forward)  " 将 <c-i> 映射到前进
+
+" 保留 IdeaVim 默认设置
+:map g<c-o> <c-o>  " 将 g<c-o> 映射到后退
+:map g<c-i> <c-i>  " 将 g<c-i> 映射到前进
+
+" 关闭相关映射
+:map <leader>q <Action>(CloseEditor)  " 将 <leader>q 映射到关闭编辑器
+:map <leader>Q <Action>(CloseAllEditors)  " 将 <leader>Q 映射到关闭所有编辑器
+:map <leader>w <Action>(CloseAllEditorsButActive)  " 将 <leader>w 映射到关闭所有编辑器但保留活动编辑器
+
+" 重新激活一些 IDEA 快捷键
+:map <c-n> <Action>(SearchEverywhere)  " 将 <c-n> 映射到全局搜索
+:map <leader>gg <Action>(GotoFile)  " 将 <leader>gg 映射到跳转到文件
+:map <c-b> <Action>(ShowUsages)  " 将 <c-b> 映射到显示用法
+:map <c-s> <Action>(SaveAll)  " 将 <c-s> 映射到保存所有
+:map <c-c> <Action>(GotoImplementation)  " 将 <c-c> 映射到跳转到实现
+
+" 运行相关映射
+:map <leader>cg <Action>(ChooseRunConfiguration)  " 将 <leader>cg 映射到选择运行配置
+:map <leader>dg <Action>(ChooseDebugConfiguration)  " 将 <leader>dg 映射到选择调试配置
+:map <leader>1 <Action>(Run)  " 将 <leader>1 映射到运行
+:map <leader>2 <Action>(Debug)  " 将 <leader>2 映射到调试
+:map <leader>0 <Action>(Stop)  " 将 <leader>0 映射到停止
+
