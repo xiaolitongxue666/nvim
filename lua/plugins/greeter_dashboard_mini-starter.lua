@@ -63,6 +63,12 @@ return {
                 name = "s Restore Session",
                 section = "会话管理"
             },
+            -- 恢复最后一个会话
+            {
+                action = "lua require('persistence').load({ last = true })",
+                name = "S Restore Last Session",
+                section = "会话管理"
+            },
             -- Lazy 插件管理
             {
                 action = "Lazy",

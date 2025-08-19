@@ -6,8 +6,8 @@
 return {
     {
         "folke/persistence.nvim",
-        -- 在文件读取事件时懒加载
-        event = "BufReadPre",
+        -- 在启动时加载
+        lazy = false,
         -- 按键映射时懒加载
         keys = {
             { "<leader>qs", function() require("persistence").save() end, desc = "保存会话" },
@@ -43,9 +43,21 @@ return {
                 group = vim.api.nvim_create_augroup("persistence_auto_load", { clear = true }),
                 callback = function()
                     -- 延迟执行以确保其他插件已加载
-                    vim.defer_fn(auto_load_session, 100)
+                    vim.defer_fn(auto_load_session, 200)
                 end,
                 nested = true,
+            })
+            
+            -- 在会话加载完成后自动打开文件浏览器
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "PersistenceLoadPost",
+                group = vim.api.nvim_create_augroup("persistence_auto_tree", { clear = true }),
+                callback = function()
+                    -- 延迟打开文件浏览器，确保会话完全加载
+                    vim.defer_fn(function()
+                        require("neo-tree.command").execute({ toggle = true, dir = vim.uv.cwd() })
+                    end, 200)
+                end,
             })
             
             -- 在退出时自动保存会话
