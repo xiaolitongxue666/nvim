@@ -43,7 +43,6 @@
 │       ├── ui_dressing.lua                        # UI 界面美化
 │       ├── ui_icons_nvim-web-devicons.lua         # 文件图标
 │       ├── ui_notice.lua                          # 通知系统
-│       ├── ui_nvim-tree.lua                       # 文件浏览器
 │       └── ui_status_line_lualine.lua             # 状态栏
 └── test_dir/                           # 测试目录
     ├── test.c
@@ -106,7 +105,7 @@ flowchart TD
     L1 --> L3["cmp-nvim-lsp<br/>(LSP 补全源)"]
     
     H3 --> M1["telescope.nvim<br/>(cmd: Telescope)"]
-    H3 --> M2["nvim-tree.lua<br/>(按键触发)"]
+    H3 --> M2["neo-tree<br/>(按键触发)"]
     H3 --> M3["which-key.nvim<br/>(VeryLazy)"]
     H3 --> M4["其他 UI 插件"]
     
@@ -267,10 +266,7 @@ flowchart TD
 - **鼠标右键点击** - 关闭对应的缓冲区
 - **点击关闭图标** - 关闭对应的缓冲区（如果显示）
 
-##### nvim-tree (ui_nvim-tree.lua)
-**功能**: 文件浏览器树形视图
-**快捷键**:
-- `tt` - 切换文件浏览器
+
 
 ##### neo-tree (ui_file_explorer_neo-tree.lua)
 **功能**: 现代化文件浏览器，支持文件系统、缓冲区、Git 状态浏览
@@ -461,7 +457,7 @@ flowchart TD
 - `<C-i>/<C-k>/<C-j>/<C-l>` - 调整窗口大小
 
 ### 文件和项目
-- `tt` - 切换文件浏览器
+- `<leader>fe` / `<leader>e` - 切换文件浏览器
 - `<C-j>/<C-l>` - 切换 buffer 标签
 - `<leader>/` - 打开终端
 

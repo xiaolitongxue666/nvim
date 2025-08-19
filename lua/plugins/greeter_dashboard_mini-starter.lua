@@ -96,7 +96,7 @@ return {
             header = logo,
             -- 页脚（插件统计信息）
             footer = get_footer,
-            -- 查询更新字符（移除 't' 以避免与 nvim-tree 快捷键冲突）
+            -- 查询更新字符（移除 't' 以避免与 neo-tree 快捷键冲突）
             query_updaters = 'abcdefghijklmnopqrsuvwxyz0123456789_-.',
             -- 内容钩子，用于自定义显示
             content_hooks = {
