@@ -31,8 +31,8 @@
 │       ├── dap_lua_one-small-step-for-vimkind.lua # Lua 调试适配器
 │       ├── dap_nvim-dap.lua                       # 调试适配器协议
 │       ├── finder_telescope.lua                   # 模糊查找
-│       ├── greeter_dashboard_alpha-nvim.lua       # 启动页面
-│       ├── help_document_neodev.lua               # Neovim 开发帮助
+│       ├── greeter_dashboard_mini-starter.lua     # 启动页面
+│       ├── help_document_lazydev.lua              # Neovim 开发帮助
 │       ├── indent_guides_indent-blankline.lua     # 缩进指示线
 │       ├── keytips_which-key.lua                  # 按键提示
 │       ├── lsp_server_manager_mason-lspconfig.lua # LSP 服务器配置
@@ -342,11 +342,22 @@ flowchart TD
 
 ##### persistence.nvim (session_manager_persistence.lua)
 **功能**: 自动保存和恢复编辑会话，支持多项目会话管理
+**特性**:
+- 自动保存会话：退出时自动保存当前工作环境
+- 自动恢复会话：启动时自动恢复上次的工作环境
+- 多项目支持：为不同项目保存独立的会话
+- 文件浏览器集成：恢复会话后自动打开neo-tree文件浏览器
+
 **快捷键**:
 - `<leader>qs` - 保存会话
 - `<leader>ql` - 加载会话
 - `<leader>qL` - 加载最后一个会话
 - `<leader>qd` - 停止会话记录
+
+**自动行为**:
+- 启动Neovim时，如果没有命令行参数，会自动恢复上次的会话
+- 退出Neovim时，会自动保存当前会话
+- 会话恢复后会自动打开文件浏览器，方便继续工作
 
 #### 视觉增强
 
@@ -383,6 +394,7 @@ flowchart TD
 - `g` - 文本搜索
 - `c` - 配置文件
 - `s` - 恢复会话
+- `S` - 恢复最后一个会话
 - `l` - Lazy 插件管理
 - `q` - 退出
 
@@ -416,6 +428,32 @@ flowchart TD
    ```
 
 首次启动时，lazy.nvim 会自动安装所有插件。
+
+### 会话管理使用
+
+配置支持自动会话管理，提供以下功能：
+
+1. **自动恢复会话**：
+   ```bash
+   # 直接启动，会自动恢复上次的会话
+   nvim
+   ```
+
+2. **手动恢复会话**：
+   - 启动页面中按 `s` 恢复会话
+   - 启动页面中按 `S` 恢复最后一个会话
+   - 使用快捷键 `<leader>ql` 或 `<leader>qL`
+
+3. **指定文件启动**：
+   ```bash
+   # 指定文件或目录启动，不会自动恢复会话
+   nvim some_file.txt
+   nvim /path/to/project
+   ```
+
+4. **会话管理**：
+   - `<leader>qs` - 手动保存当前会话
+   - `<leader>qd` - 停止自动会话记录
 
 ## 快捷键说明
 
@@ -652,6 +690,12 @@ flowchart TD
 - `n/N` - 下一个/上一个搜索结果
 - `<leader><CR>` - 取消搜索高亮
 - `*/#` - 搜索当前单词 (向前/向后)
+
+### 会话管理
+- `<leader>qs` - 保存当前会话
+- `<leader>ql` - 加载会话
+- `<leader>qL` - 加载最后一个会话
+- `<leader>qd` - 停止会话记录
 
 ### 代码操作
 - `<leader>o` - 折叠/展开代码
