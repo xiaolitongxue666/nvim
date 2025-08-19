@@ -20,6 +20,7 @@
 │   ├── config/                         # 配置模块
 │   │   └── lazy.lua                    # lazy.nvim 插件管理器配置
 │   ├── keybindings.lua                 # 按键绑定配置
+│   ├── window_control.lua              # 智能窗口控制模块
 │   └── plugins/                        # 插件配置目录
 │       ├── code_completion_nvim-autopairs.lua    # 自动括号配对
 │       ├── code_completion_nvim-cmp.lua           # 代码补全
@@ -43,6 +44,7 @@
 │       ├── ui_dressing.lua                        # UI 界面美化
 │       ├── ui_icons_nvim-web-devicons.lua         # 文件图标
 │       ├── ui_notice.lua                          # 通知系统
+│       ├── ui_outline.lua                         # 代码大纲 (Outline)
 │       └── ui_status_line_lualine.lua             # 状态栏
 └── test_dir/                           # 测试目录
     ├── test.c
@@ -60,6 +62,7 @@ flowchart TD
     A["启动 Neovim"] --> B["加载 init.lua"]
     B --> C["require('basic')"]
     B --> D["require('keybindings')"]
+    B --> D1["require('window_control')"]
     B --> E["require('config.lazy')"]
     
     C --> C1["设置编码 UTF-8"]
@@ -73,6 +76,10 @@ flowchart TD
     D --> D3["光标移动重映射"]
     D --> D4["窗口管理快捷键"]
     D --> D5["插件快捷键预设"]
+    
+    D1 --> D1_1["智能窗口控制"]
+    D1_1 --> D1_2["窗口类型识别"]
+    D1_2 --> D1_3["智能调整策略"]
     
     E --> E1["检查 lazy.nvim 安装"]
     E1 --> E2{"lazy.nvim 存在？"}
@@ -163,6 +170,7 @@ flowchart TD
 - **init.lua**: Neovim 配置入口文件，加载基础设置、按键绑定和插件管理器
 - **lua/basic.lua**: 基础编辑器设置，包括编码、行号、缩进、搜索等配置
 - **lua/keybindings.lua**: 自定义按键绑定，包括光标移动、窗口管理、文件操作等
+- **lua/window_control.lua**: 智能窗口控制模块，提供窗口类型识别和智能调整策略
 - **lua/config/lazy.lua**: lazy.nvim 插件管理器的配置和初始化
 
 ### 插件配置
@@ -291,6 +299,42 @@ flowchart TD
 ##### nui.nvim (ui_component_lib_nui.lua)
 **功能**: UI 组件库，为其他插件提供 UI 组件支持
 
+##### outline.nvim (ui_outline.lua)
+**功能**: 代码大纲侧边栏，支持 LSP 和 Tree-sitter 符号导航
+**特性**: 
+- 支持 LSP 和 Tree-sitter 符号解析
+- 智能缓冲区管理，防止缓冲区冲突
+- 自动更新符号列表和当前符号高亮
+- 支持多种编程语言的符号解析
+- 符号层次结构 UI，支持可折叠节点
+- 自定义符号图标和映射
+- 预览符号位置功能
+- 激进缓冲区清理策略，彻底解决冲突问题
+
+**快捷键**:
+- `<leader>o` - 切换代码大纲
+- `<leader>O` - 强制重新打开代码大纲
+
+**大纲窗口内快捷键**:
+- `Enter` - 跳转到符号位置
+- `o` - 预览符号位置
+- `Ctrl+p` - 切换预览窗口
+- `za` - 折叠/展开节点
+- `zM` - 折叠所有节点
+- `zR` - 展开所有节点
+- `Space` - 选择符号
+- `j/k` - 上下导航
+- `gg/G` - 跳转到第一个/最后一个符号
+- `/` - 搜索符号
+- `R` - 刷新
+- `q` - 关闭
+- `?` - 显示帮助
+
+**窗口配置**:
+- 固定宽度：30 字符
+- 位置：右侧
+- 支持智能窗口调整
+
 ##### nvim-notify (ui_notification_manager_nvim-notify.lua)
 **功能**: 通知管理器，提供美观的通知显示
 **快捷键**:
@@ -347,17 +391,20 @@ flowchart TD
 - 自动恢复会话：启动时自动恢复上次的工作环境
 - 多项目支持：为不同项目保存独立的会话
 - 文件浏览器集成：恢复会话后自动打开neo-tree文件浏览器
+- 智能会话管理：避免与手动会话操作冲突
 
 **快捷键**:
 - `<leader>qs` - 保存会话
 - `<leader>ql` - 加载会话
 - `<leader>qL` - 加载最后一个会话
 - `<leader>qd` - 停止会话记录
+- `<leader>Q` - 直接退出 Neovim（保存所有文件）
 
 **自动行为**:
 - 启动Neovim时，如果没有命令行参数，会自动恢复上次的会话
 - 退出Neovim时，会自动保存当前会话
 - 会话恢复后会自动打开文件浏览器，方便继续工作
+- 延迟加载机制，确保会话恢复的稳定性
 
 #### 视觉增强
 
@@ -461,6 +508,7 @@ flowchart TD
 - `<Space>` - Leader 键
 - `S` - 保存文件
 - `Q` - 退出
+- `<leader>Q` - 直接退出Neovim（保存所有文件）
 - `R` - 重载配置
 - `<leader>rc` - 打开配置文件
 
@@ -492,10 +540,33 @@ flowchart TD
 - `<leader>i/k/j/l` - 在窗口间移动
 - `<leader>q` - 关闭当前窗口
 - `<leader>b` - 关闭当前 buffer
-- `<C-i>/<C-k>/<C-j>/<C-l>` - 调整窗口大小
+
+#### 智能窗口大小调整
+- `<C-Up>/<C-Down>` - 调整窗口高度（步长：3行）
+- `<C-Left>/<C-Right>` - 调整窗口宽度（步长：3字符）
+- `<leader>wn` - 设置窗口为窄模式
+- `<leader>wN` - 设置窗口为正常模式
+- `<leader>ww` - 设置窗口为宽模式
+- `<leader>wb` - 平衡所有窗口大小
+- `<leader>wm` - 最大化当前窗口
+- `<leader>wr` - 恢复窗口布局
+
+**智能特性：**
+- 插件窗口（outline、neo-tree）有合理的宽度限制
+- 大纲窗口：最小30字符，最大35%屏幕宽度，步长限制为-2到2字符
+- 文件树窗口：最小35字符，最大45%屏幕宽度，步长限制为-2到2字符
+- 智能调整：在主窗口时，Ctrl+←/→会调整相邻的插件窗口而不是主窗口
+- 动态范围：根据屏幕宽度自动调整最大宽度限制
+- 调试功能：`<leader>wd` 显示当前窗口信息和相邻插件窗口
+- 缓冲区管理：自动清理outline插件的残留缓冲区
 
 ### 文件和项目
-- `<leader>fe` / `<leader>e` - 切换文件浏览器
+- `<leader>fe` / `<leader>e` - 切换文件浏览器（根目录）
+- `<leader>fE` / `<leader>E` - 切换文件浏览器（当前文件目录）
+- `<leader>be` - 缓冲区浏览器
+- `<leader>ge` - Git状态浏览器
+- `<leader>o` - 切换代码大纲
+- `<leader>O` - 打开代码大纲
 - `<C-j>/<C-l>` - 切换 buffer 标签
 - `<leader>/` - 打开终端
 
@@ -696,6 +767,7 @@ flowchart TD
 - `<leader>ql` - 加载会话
 - `<leader>qL` - 加载最后一个会话
 - `<leader>qd` - 停止会话记录
+- `<leader>Q` - 直接退出 Neovim（保存所有文件）
 
 ### 代码操作
 - `<leader>o` - 折叠/展开代码

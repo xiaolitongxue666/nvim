@@ -16,5 +16,7 @@
 require("basic")
 -- 整体快捷键映射 & 插件快捷键配置
 require("keybindings")
+-- 智能窗口控制
+require("window_control").setup_keymaps()
 -- lazy.nvim插件管理
 require("config.lazy")

@@ -92,11 +92,11 @@ map("n", "<LEADER>k", "<C-w>j", opt)
 map("n", "<LEADER>j", "<C-w>h", opt)
 map("n", "<LEADER>l", "<C-w>l", opt)
 
--- 光标键调整分屏窗口大小
-map("", "<up>", ":res +5<CR>", opt)
-map("", "<down>", ":res -5<CR>", opt)
-map("", "<left>", ":vertical resize-5<CR>", opt)
-map("", "<right>", ":vertical resize+5<CR>", opt)
+-- 光标键调整分屏窗口大小（已移至智能窗口控制模块）
+-- map("", "<up>", ":res +5<CR>", opt)
+-- map("", "<down>", ":res -5<CR>", opt)
+-- map("", "<left>", ":vertical resize-5<CR>", opt)
+-- map("", "<right>", ":vertical resize+5<CR>", opt)
 
 -- 纵向横向调整两个分屏窗口的布局
 map("", "sh", "<C-w>t<C-w>K", opt)
@@ -108,6 +108,9 @@ map("n", "srv", "<C-w>b<C-w>H", opt)
 
 -- 空格+q 关闭当前使用的窗口
 map("n", "<LEADER>q", ":q<CR>", opt)
+
+-- 空格+Q 直接退出Neovim（保存所有文件）
+map("n", "<LEADER>Q", ":wqa<CR>", opt)
 
 -- 空格+b 关闭当前使用的buffer
 map("n", "<LEADER>b", ":b #<CR>:bd #<CR>", opt)

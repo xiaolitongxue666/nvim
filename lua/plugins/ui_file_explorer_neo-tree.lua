@@ -22,14 +22,48 @@ return {
             {
                 "<leader>fe",
                 function()
-                    require("neo-tree.command").execute({ toggle = true, dir = vim.uv.cwd() })
+                    -- 检查是否已经有 neo-tree 窗口
+                    local neo_tree_win = nil
+                    for _, win in ipairs(vim.api.nvim_list_wins()) do
+                        local buf = vim.api.nvim_win_get_buf(win)
+                        local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+                        if filetype == "neo-tree" then
+                            neo_tree_win = win
+                            break
+                        end
+                    end
+                    
+                    if neo_tree_win then
+                        -- 如果存在，关闭它
+                        vim.api.nvim_win_close(neo_tree_win, true)
+                    else
+                        -- 如果不存在，打开它
+                        require("neo-tree.command").execute({ toggle = true, dir = vim.uv.cwd() })
+                    end
                 end,
                 desc = "文件浏览器（根目录）",
             },
             {
                 "<leader>fE",
                 function()
-                    require("neo-tree.command").execute({ toggle = true, dir = vim.fn.expand("%:p:h") })
+                    -- 检查是否已经有 neo-tree 窗口
+                    local neo_tree_win = nil
+                    for _, win in ipairs(vim.api.nvim_list_wins()) do
+                        local buf = vim.api.nvim_win_get_buf(win)
+                        local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+                        if filetype == "neo-tree" then
+                            neo_tree_win = win
+                            break
+                        end
+                    end
+                    
+                    if neo_tree_win then
+                        -- 如果存在，关闭它
+                        vim.api.nvim_win_close(neo_tree_win, true)
+                    else
+                        -- 如果不存在，打开它
+                        require("neo-tree.command").execute({ toggle = true, dir = vim.fn.expand("%:p:h") })
+                    end
                 end,
                 desc = "文件浏览器（当前文件）",
             },
@@ -280,6 +314,9 @@ return {
             -- 文件系统监视器配置
             filesystem_watchers = {
                 enable = true,
+                debounce_delay = 100,
+                debounce_trailing = true,
+                debounce_leading = false,
             },
             -- Git 配置
             git = {
@@ -312,6 +349,37 @@ return {
             })
 
             require("neo-tree").setup(opts)
+
+            -- 添加 neo-tree 缓冲区清理函数
+            local function cleanup_neo_tree_buffers()
+                local buffers = vim.api.nvim_list_bufs()
+                for _, buf in ipairs(buffers) do
+                    local bufname = vim.api.nvim_buf_get_name(buf)
+                    local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
+                    local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+                    
+                    -- 清理 neo-tree 相关缓冲区
+                    if (bufname:match("^neo%-tree://") or 
+                        filetype == "neo-tree" or 
+                        filetype == "neo-tree-popup") and 
+                        buftype == "nofile" then
+                        vim.api.nvim_buf_delete(buf, { force = true })
+                    end
+                end
+            end
+            
+            -- 在启动时清理可能存在的 neo-tree 缓冲区
+            vim.api.nvim_create_autocmd("VimEnter", {
+                group = vim.api.nvim_create_augroup("neo_tree_cleanup", { clear = true }),
+                callback = cleanup_neo_tree_buffers,
+                once = true,
+            })
+            
+            -- 在退出时清理 neo-tree 缓冲区
+            vim.api.nvim_create_autocmd("VimLeavePre", {
+                group = vim.api.nvim_create_augroup("neo_tree_cleanup_exit", { clear = true }),
+                callback = cleanup_neo_tree_buffers,
+            })
 
             -- 自动刷新 Git 状态
             vim.api.nvim_create_autocmd("TermClose", {
