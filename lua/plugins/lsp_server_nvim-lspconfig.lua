@@ -254,7 +254,16 @@ return {
             for server, config in pairs(opts.servers) do
                 config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})
                 config.on_attach = on_attach
-                lspconfig[server].setup(config)
+                local available_server = lspconfig[server]
+                if not available_server then
+                    vim.notify(
+                        string.format("nvim-lspconfig 未提供语言服务器 `%s`，请检查名称是否正确或更新 nvim-lspconfig", server),
+                        vim.log.levels.WARN,
+                        { title = "LSP" }
+                    )
+                else
+                    available_server.setup(config)
+                end
             end
         end,
     },

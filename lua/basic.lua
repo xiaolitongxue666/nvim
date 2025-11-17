@@ -110,6 +110,8 @@ if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
 	vim.opt.shellxquote = ""
 	vim.opt.shellpipe = "|"
 	vim.opt.shellredir = ">"
+	-- 使用正斜杠路径，避免插件在解析 runtimepath 时出错
+	vim.opt.shellslash = true
 else
 	-- macOS 和 Linux 使用默认 shell
 	-- 不需要特殊设置，使用系统默认

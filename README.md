@@ -406,6 +406,20 @@ flowchart TD
 - 会话恢复后会自动打开文件浏览器，方便继续工作
 - 延迟加载机制，确保会话恢复的稳定性
 
+#### 任务运行
+
+##### overseer.nvim (task_runner_overseer.lua)
+**功能**: 任务运行与管理，统一控制构建、脚本与命令输出
+**特性**:
+- 默认通过 ToggleTerm 输出，融入既有终端工作流
+- 底部任务列表快速查看状态与详情
+- 自定义 “Run current file” 模板，依据文件类型自动挑选解释器
+**快捷键**:
+- `<leader>or` - 打开任务选择器（`:OverseerRun`）
+- `<leader>oo` - 切换任务列表（`:OverseerToggle`）
+- `<leader>oa` - 任务快速操作（`:OverseerQuickAction`）
+- `<leader>of` - 运行当前文件模板（`:OverseerRunCurrent`）
+
 #### 视觉增强
 
 ##### tokyonight.nvim (colorscheme_tokyonight.lua)
@@ -790,6 +804,12 @@ flowchart TD
 - `<leader>qL` - 加载最后一个会话
 - `<leader>qd` - 停止会话记录
 - `<leader>Q` - 直接退出 Neovim（保存所有文件）
+
+### 任务运行
+- `<leader>or` - 运行 Overseer 任务
+- `<leader>oo` - 打开/关闭任务列表
+- `<leader>oa` - Overseer 快速操作
+- `<leader>of` - 运行当前文件 Overseer 模板
 
 ### 代码操作
 - `<leader>o` - 折叠/展开代码

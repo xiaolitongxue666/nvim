@@ -111,6 +111,24 @@ return {
                         return term.name
                     end
                 },
+                -- 打开/关闭时的回调，用于自动聚焦终端窗口
+                on_open = function(term)
+                    vim.schedule(function()
+                        if term.window and vim.api.nvim_win_is_valid(term.window) then
+                            vim.api.nvim_set_current_win(term.window)
+                            vim.cmd("startinsert!")
+                        end
+                    end)
+                end,
+                on_close = function(term)
+                    vim.schedule(function()
+                        if term and term.window and vim.api.nvim_win_is_valid(term.window) then
+                            vim.cmd("stopinsert")
+                        else
+                            vim.cmd("stopinsert")
+                        end
+                    end)
+                end,
             })
             
             -- 设置终端模式下的键位映射

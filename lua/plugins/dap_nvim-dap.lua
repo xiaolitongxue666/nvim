@@ -10,6 +10,8 @@ return {
         "mfussenegger/nvim-dap",
         -- 当插件加载时应该加载的插件名称或插件规范列表
         dependencies = {
+            -- async/await 支持库，nvim-dap-ui 运行所需
+            "nvim-neotest/nvim-nio",
             -- 调试器的精美 UI 界面
             {
                 -- 依赖插件名称

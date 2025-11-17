@@ -9,8 +9,8 @@
 return {
     {
         "stevearc/dressing.nvim",
-        -- 懒加载，仅在需要时加载
-        lazy = true,
+        -- 提前加载，避免在 fast-event 中动态加载导致错误
+        event = "UIEnter",
         -- 插件配置选项
         opts = {
             input = {
@@ -64,7 +64,7 @@ return {
                 -- 设置为 false 以禁用选择 UI
                 enabled = true,
                 -- 优先级顺序的后端
-                backend = { "telescope", "fzf_lua", "fzf", "builtin", "nui" },
+                backend = { "builtin", "nui", "telescope", "fzf_lua", "fzf" },
                 -- 修剪提示
                 trim_prompt = true,
                 -- 用于 vim.ui.select 的选项
@@ -120,6 +120,12 @@ return {
                     min_height = { 10, 0.2 },
                     -- 覆盖特定命令的配置
                     override = function(conf)
+                        vim.schedule(function()
+                            local buf = vim.api.nvim_get_current_buf()
+                            local opts = { buffer = buf, silent = true, nowait = true }
+                            vim.keymap.set("n", "i", "k", opts)
+                            vim.keymap.set("n", "k", "j", opts)
+                        end)
                         return conf
                     end,
                 },
