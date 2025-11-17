@@ -447,6 +447,28 @@ flowchart TD
 
 ## 安装和使用
 
+### 默认配置路径
+
+以下表格列出了 Neovim 0.9+ 在三大桌面系统上的默认「用户级」配置路径（`$XDG_CONFIG_HOME` 未设定时取系统默认值）。
+
+| 平台 | 变量/文件 | 默认路径 | 备注 |
+|------|-----------|----------|------|
+| Linux / *BSD / WSL | `$XDG_CONFIG_HOME` | `$HOME/.config` | 绝大多数发行版通用 |
+|  | 主配置目录 | `$HOME/.config/nvim` | `init.vim` / `init.lua` 所在 |
+|  | 数据目录 | `$HOME/.local/share/nvim` | 插件、swap、shada 等 |
+
+| 平台 | 变量/文件 | 默认路径 | 备注 |
+|------|-----------|----------|------|
+| Windows (10/11) | `%LOCALAPPDATA%` | `C:\Users\<用户名>\AppData\Local` | Windows 标准本机应用数据 |
+|  | 主配置目录 | `%LOCALAPPDATA%\nvim` | `init.vim` / `init.lua` 所在 |
+|  | 数据目录 | `%LOCALAPPDATA%\nvim-data` | 插件、shada、日志等 |
+
+| 平台 | 变量/文件 | 默认路径 | 备注 |
+|------|-----------|----------|------|
+| macOS | `$XDG_CONFIG_HOME` | `$HOME/.config` | 遵循 XDG 规范 |
+|  | 主配置目录 | `$HOME/.config/nvim` | 与 Linux 相同 |
+|  | 数据目录 | `$HOME/.local/share/nvim` | 插件、shada、日志等 |
+
 ### 前置要求
 
 - Neovim >= 0.8.0 (需要 LuaJIT 支持)
