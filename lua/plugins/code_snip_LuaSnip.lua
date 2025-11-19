@@ -11,9 +11,7 @@ return {
         -- 跟随最新发布版本
         -- 从仓库使用的版本
         version = "v2.*", -- 将 <CurrentMajor> 替换为最新发布的主版本号（最新版本的第一个数字）
-        -- 安装 jsregexp（可选！）
-        -- 插件安装或更新时执行构建。在运行构建之前
-        build = "make install_jsregexp",
+        -- 如果确实需要 jsregexp，可在插件目录手动执行 make install_jsregexp
         -- 插件加载时需要加载的依赖插件列表
         dependencies = {
             "rafamadriz/friendly-snippets",
