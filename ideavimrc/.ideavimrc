@@ -3,6 +3,10 @@
 " ===
 " === System(全局设置)
 " ===
+" 文件以utf8格式加载
+set encoding=utf-8
+set fileencoding=utf-8
+
 " copy form system clipboard(允许从系统剪切板拷贝数据)
 set clipboard+=unnamed
 
@@ -14,6 +18,21 @@ set autochdir
 
 " auto reload file(自动重载配置文件)
 set autoread
+
+" 允许隐藏被修改过的buffer
+set hidden
+
+" 禁止创建备份文件
+set backup=false
+set writebackup=false
+set swapfile=false
+
+" 更小的更新时间
+set updatetime=300
+
+" 样式设置
+set background=dark
+set termguicolors
 
 " ===
 " === Editor behavior(编辑操作)
@@ -27,6 +46,12 @@ set relativenumber
 "show cursor(显示光标)
 set cursorline
 
+" 显示左侧图标指示列
+set signcolumn=yes
+
+" 右侧参考线，超过表示代码太长了，考虑换行
+set colorcolumn=80
+
 " expand tab(扩展tab等价四个空格)
 set expandtab
 set tabstop=4
@@ -35,15 +60,22 @@ set softtabstop=4
 
 " apply the indentation of the current line to the next(当前行的缩进应用下一行)
 set autoindent
+set smartindent
+
+" 键入'>>'和'<<' 时移动长度,类似Tab和逆向Tab
+set shiftround
 
 " show the space at the end of line(显示行尾空格)
 set list
 
 " show the tab(显示tab符号，行首，行尾分别为以下符号)
-set listchars=tab:▸\ ,trail:▫
+" 不可见字符的显示，这里只把tab显示为>~，行尾显示为↵
+set listchars=eol:↵,tab:>~
 
 " corsor distance form buffer edge some lines(光标到缓冲区边缘的距离)
-set scrolloff=4
+" jk移动时光标下上方保留8行
+set scrolloff=8
+set sidescrolloff=8
 
 " allow for mappings includes 'Esc', while preserving zero timeout after pressing it manually(设置映射按键后的延迟)
 set ttimeoutlen=0
@@ -54,6 +86,9 @@ set viewoptions=cursor,folds,slash,unix
 
 " automatic line break(自动换行)
 set wrap
+
+" 行结尾可以跳到下一行
+set whichwrap=b,s,<,>,[,],h,l
 
 " set text width(设置文本宽度)
 set tw=80
@@ -76,13 +111,29 @@ set splitbelow
 set mouse=a
 
 " if in insert, replace  or visual mode put a message on the last line swith to not show this line(各种模式状态显示在窗口最下方的状态栏中)
+" 使用增强状态栏后不再需要 vim 的模式提示
 set noshowmode
 
 "show typed command(显示输入的命令，一般在：command 场景下显示)
 set showcmd
 
+" 命令行高为2，提供足够的显示空间
+set cmdheight=2
+
 " open command line comletion in enhanced mode(增强模式下打开代码补全)
 set wildmenu
+
+" 不向插入补全菜单传递消息
+set shortmess+=c
+
+" 自动补全不自动选中
+set completeopt=menu,menuone,noselect,noinsert
+
+" 补全菜单高度
+set pumheight=10
+
+" 始终显示标签栏
+set showtabline=2
 
 "ignore case the word during the search(搜索过程中忽略大小写)
 set ignorecase
