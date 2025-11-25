@@ -2,6 +2,42 @@
 
 一个基于 Lua 的现代化 Neovim 配置，使用 lazy.nvim 作为插件管理器。
 
+**注意**: 此配置通过 Git Submodule 方式管理，配置仓库位于独立的 GitHub 仓库。
+
+## Git Submodule 说明
+
+此 Neovim 配置作为 Git Submodule 集成到 script_tool_and_config 项目中。
+
+### 首次克隆项目后初始化 Submodule
+
+```bash
+cd script_tool_and_config
+git submodule update --init --recursive
+```
+
+或者只初始化 nvim submodule：
+
+```bash
+git submodule update --init dotfiles/nvim
+```
+
+### 更新 Submodule
+
+```bash
+# 更新到远程仓库的最新提交
+git submodule update --remote dotfiles/nvim
+
+# 然后重新运行安装脚本
+cd dotfiles/nvim
+./install.sh
+```
+
+### 克隆项目时同时克隆 Submodule
+
+```bash
+git clone --recursive git@github.com:your-username/script_tool_and_config.git
+```
+
 ## 项目结构
 
 ```
@@ -492,23 +528,71 @@ flowchart TD
 
 ### 安装步骤
 
-1. 备份现有配置：
-   ```bash
-   mv ~/.config/nvim{,.bak}
-   mv ~/.local/share/nvim{,.bak}
-   mv ~/.local/state/nvim{,.bak}
-   mv ~/.cache/nvim{,.bak}
-   ```
+#### 1. 安装 Neovim
 
-2. 克隆配置：
-   ```bash
-   git clone <repository-url> ~/.config/nvim
-   ```
+##### macOS (Homebrew)
 
-3. 启动 Neovim：
-   ```bash
-   nvim
-   ```
+```bash
+brew install neovim
+```
+
+##### Linux (Arch Linux)
+
+```bash
+sudo pacman -S neovim
+```
+
+##### Linux (Ubuntu/Debian)
+
+```bash
+sudo apt-get install neovim
+```
+
+##### Windows
+
+下载安装包：https://github.com/neovim/neovim/releases
+
+#### 2. 安装配置文件
+
+##### 自动安装（推荐）
+
+使用安装脚本自动检测系统并安装对应配置（包含自动备份）：
+
+```bash
+cd script_tool_and_config/dotfiles/nvim
+chmod +x install.sh
+./install.sh
+```
+
+安装脚本会自动：
+- 检查 Git Submodule 是否已初始化
+- 检测操作系统（macOS/Linux/Windows）
+- 备份现有配置文件（如果存在）
+- 复制配置文件到 `~/.config/nvim/` 或 `%XDG_CONFIG_HOME%/nvim/`
+- Windows 上检查 XDG_CONFIG_HOME 环境变量
+
+##### 手动安装
+
+```bash
+# 确保 submodule 已初始化
+cd script_tool_and_config
+git submodule update --init dotfiles/nvim
+
+# 备份现有配置
+mv ~/.config/nvim{,.bak} 2>/dev/null || true
+mv ~/.local/share/nvim{,.bak} 2>/dev/null || true
+mv ~/.local/state/nvim{,.bak} 2>/dev/null || true
+mv ~/.cache/nvim{,.bak} 2>/dev/null || true
+
+# 复制配置文件（排除 .git 目录）
+cp -r dotfiles/nvim/* ~/.config/nvim/
+```
+
+#### 3. 启动 Neovim
+
+```bash
+nvim
+```
 
 首次启动时，lazy.nvim 会自动安装所有插件。
 
@@ -858,6 +942,93 @@ flowchart TD
 - `<leader>c` - 修改不进入寄存器
 - `<leader>x` - 剪切不进入寄存器
 
+## 更新配置
+
+### 方法 1: 使用 Git Submodule 更新
+
+```bash
+cd script_tool_and_config
+git submodule update --remote dotfiles/nvim
+cd dotfiles/nvim
+./install.sh
+```
+
+### 方法 2: 直接在 Submodule 目录中更新
+
+```bash
+cd script_tool_and_config/dotfiles/nvim
+git pull origin main  # 或 master，取决于你的分支名
+cd ../..
+./install.sh
+```
+
+## Windows 配置说明
+
+在 Windows 上使用 Neovim 时，需要配置 `XDG_CONFIG_HOME` 环境变量，以便 Neovim 能够正确找到配置文件位置。
+
+### 配置步骤
+
+1. **打开系统属性**：
+   - 右键单击"此电脑"或"计算机"图标，选择"属性"
+   - 在左侧菜单中，点击"高级系统设置"
+
+2. **打开环境变量设置**：
+   - 在"系统属性"窗口中，点击"环境变量"按钮
+
+3. **添加新环境变量**：
+   - 在"用户变量"或"系统变量"部分点击"新建"按钮
+
+4. **输入变量名和变量值**：
+   - **变量名**：`XDG_CONFIG_HOME`
+   - **变量值**：`C:\Users\<用户名>\.config\`
+     例如：`C:\Users\Administrator\.config\`
+   - 点击"确定"保存
+
+5. **确认更改**：
+   - 关闭所有窗口，确保更改已保存
+
+6. **重新启动终端**：
+   - 关闭并重新打开 Git Bash 或 PowerShell，以使新环境变量生效
+
+### 验证环境变量
+
+在 Git Bash 中运行：
+
+```bash
+echo $XDG_CONFIG_HOME
+```
+
+应该输出：`C:\Users\<用户名>\.config\`
+
+配置完成后，Neovim 的配置文件路径将是：
+`%XDG_CONFIG_HOME%\nvim\` (即 `~/.config/nvim/`)
+
+## 故障排除
+
+### Submodule 未初始化
+
+如果遇到 "Submodule 未初始化" 错误：
+
+```bash
+cd script_tool_and_config
+git submodule update --init dotfiles/nvim
+```
+
+### 配置文件冲突
+
+如果安装时提示配置文件已存在，安装脚本会自动备份。备份文件位于：
+`~/.config/nvim.backup.YYYYMMDD_HHMMSS`
+
+### Windows 上配置文件位置不正确
+
+确保已正确设置 `XDG_CONFIG_HOME` 环境变量，并重新启动终端。
+
+### 插件安装失败
+
+1. 检查网络连接
+2. 确保 Neovim 版本 >= 0.8.0
+3. 查看 Neovim 日志：`:messages`
+
 ## 维护说明
 
 - 插件配置文件按功能分类命名，便于管理和查找
@@ -865,4 +1036,17 @@ flowchart TD
 - 使用 lazy.nvim 的延迟加载特性优化启动速度
 - 定期运行 `:Lazy update` 更新插件
 - 运行 `:MasonUpdate` 更新 LSP 服务器和工具
+
+## 参考链接
+
+- [Neovim 官方文档](https://neovim.io/doc/user/index.html)
+- [Neovim Lua 学习指南](https://github.com/nshen/learn-neovim-lua)
+- [lazy.nvim 文档](https://github.com/folke/lazy.nvim)
+- [原始配置仓库](https://github.com/xiaolitongxue666/nvim)
+
+## 原始配置仓库
+
+此配置来自独立的 GitHub 仓库：
+- 仓库地址: https://github.com/xiaolitongxue666/nvim
+- 详细文档请参考原始仓库的 README.md
 
