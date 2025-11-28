@@ -48,7 +48,7 @@ if [[ "$PLATFORM" == "windows" ]]; then
     echo "=========================================="
     echo "Windows 配置检查"
     echo "=========================================="
-    
+
     # 检查 XDG_CONFIG_HOME 环境变量
     if [ -z "$XDG_CONFIG_HOME" ]; then
         echo "警告: 未设置 XDG_CONFIG_HOME 环境变量"
@@ -139,6 +139,137 @@ else
     curl -fLo "$VIM_PLUG_DIR/plug.vim" --create-dirs \
         https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     echo "✅ vim-plug 已安装"
+fi
+
+# Linux 系统：安装 Python 环境（如果 uv 可用且环境变量设置）
+if [[ "$PLATFORM" == "linux" ]] && command -v uv >/dev/null 2>&1; then
+    echo ""
+    echo "=========================================="
+    echo "配置 Neovim Python 环境"
+    echo "=========================================="
+
+    # 检查是否使用系统级安装
+    use_system_venv="${USE_SYSTEM_NVIM_VENV:-0}"
+    install_user="${INSTALL_USER:-$USER}"
+
+    # 确定虚拟环境路径
+    venv_dir=""
+    venv_path=""
+
+    if [[ "${use_system_venv}" == "1" ]]; then
+        # 系统级安装：所有用户共享
+        venv_dir="/usr/local/share/nvim/venv"
+        venv_path="${venv_dir}/nvim-python"
+        echo "使用系统级 Neovim Python 环境（所有用户共享）"
+    else
+        # 用户级安装：每个用户独立
+        venv_dir="${HOME}/.config/nvim/venv"
+        venv_path="${venv_dir}/nvim-python"
+        echo "使用用户级 Neovim Python 环境"
+    fi
+
+    echo "虚拟环境路径: ${venv_path}"
+
+    # 创建虚拟环境目录
+    mkdir -p "${venv_dir}"
+
+    # 如果虚拟环境已存在，则更新包
+    if [[ -d "${venv_path}" ]]; then
+        echo "虚拟环境已存在，将更新包"
+    else
+        echo "创建虚拟环境..."
+        if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
+            # 系统级：以 root 运行
+            uv venv "${venv_path}" || {
+                echo "⚠️  创建虚拟环境失败"
+                exit 1
+            }
+        else
+            # 用户级：以当前用户运行
+            uv venv "${venv_path}" || {
+                echo "⚠️  创建虚拟环境失败"
+                exit 1
+            }
+        fi
+        echo "✅ 虚拟环境已创建"
+    fi
+
+    # 安装 Python 包
+    python_packages=(
+        pynvim
+        pyright
+        ruff-lsp
+        debugpy
+        black
+        isort
+        flake8
+        mypy
+    )
+
+    echo "安装 Python 包: ${python_packages[*]}"
+    echo "这可能需要几分钟..."
+
+    # 检查已安装的包，只安装缺失的包
+    packages_to_install=()
+    installed_packages=""
+
+    # 获取已安装的包列表
+    if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
+        installed_packages=$(source "${venv_path}/bin/activate" && uv pip list --format=freeze 2>/dev/null | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]' || echo "")
+    else
+        installed_packages=$(source "${venv_path}/bin/activate" && uv pip list --format=freeze 2>/dev/null | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]' || echo "")
+    fi
+
+    # 检查每个包是否需要安装
+    for pkg in "${python_packages[@]}"; do
+        pkg_lower="${pkg,,}"  # 转换为小写
+        if echo "${installed_packages}" | grep -q "^${pkg_lower}$"; then
+            echo "  ✓ ${pkg} 已安装，跳过"
+        else
+            packages_to_install+=("${pkg}")
+        fi
+    done
+
+    # 如果没有需要安装的包，直接返回
+    if [[ ${#packages_to_install[@]} -eq 0 ]]; then
+        echo "✅ 所有包已安装"
+    else
+        echo "安装 ${#packages_to_install[@]} 个包: ${packages_to_install[*]}"
+
+        # 使用 uv pip 安装包
+        install_cmd="source '${venv_path}/bin/activate' && uv pip install -U ${packages_to_install[*]}"
+
+        if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
+            # 系统级：以 root 运行
+            timeout 600 bash -c "${install_cmd}" || {
+                echo "⚠️  部分包安装失败，但继续"
+            }
+        else
+            # 用户级：以当前用户运行
+            timeout 600 bash -c "${install_cmd}" || {
+                echo "⚠️  部分包安装失败，但继续"
+            }
+        fi
+
+        echo "✅ Python 包安装完成"
+    fi
+
+    # 输出配置说明
+    echo ""
+    echo "=========================================="
+    echo "Neovim Python 环境配置"
+    echo "=========================================="
+    echo "虚拟环境位置: ${venv_path}"
+    echo ""
+    echo "请在 Neovim 配置 (init.lua) 中添加："
+    echo ""
+    echo "-- 指定 Python 解释器"
+    echo "vim.g.python3_host_prog = \"${venv_path}/bin/python\""
+    echo ""
+    echo "-- 添加虚拟环境 site-packages 到 pythonpath"
+    echo "local venv_path = \"${venv_path}\""
+    echo "vim.opt.pp:prepend(venv_path .. \"/lib/python*/site-packages\")"
+    echo ""
 fi
 
 echo ""
