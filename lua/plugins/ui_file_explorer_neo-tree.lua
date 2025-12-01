@@ -32,7 +32,7 @@ return {
                             break
                         end
                     end
-                    
+
                     if neo_tree_win then
                         -- 如果存在，关闭它
                         vim.api.nvim_win_close(neo_tree_win, true)
@@ -56,7 +56,7 @@ return {
                             break
                         end
                     end
-                    
+
                     if neo_tree_win then
                         -- 如果存在，关闭它
                         vim.api.nvim_win_close(neo_tree_win, true)
@@ -195,7 +195,17 @@ return {
                     ["<cr>"] = "open",
                     ["<esc>"] = "cancel",
                     ["P"] = { "toggle_preview", config = { use_float = true, use_image_nvim = true } },
-                    ["l"] = "focus_preview",
+                    -- 自定义 ijkl 导航（与全局键位一致：i=上, k=下, j=左, l=右）
+                    ["i"] = function(state)
+                        -- 向上移动：使用 vim 的 k 命令
+                        vim.api.nvim_feedkeys("k", "n", false)
+                    end,
+                    ["k"] = function(state)
+                        -- 向下移动：使用 vim 的 j 命令
+                        vim.api.nvim_feedkeys("j", "n", false)
+                    end,
+                    ["j"] = "close_node",         -- 向左/关闭节点/返回父目录（对应 h）
+                    ["l"] = "open",               -- 向右/打开节点/进入目录（对应 l）
                     ["S"] = "open_split",
                     ["s"] = "open_vsplit",
                     ["t"] = "open_tabnew",
@@ -222,7 +232,6 @@ return {
                     ["?"] = "show_help",
                     ["<"] = "prev_source",
                     [">"] = "next_source",
-                    ["i"] = "noop",  -- 禁用 i 键
                     ["gd"] = "show_file_details",  -- 使用 gd 显示文件详情
                 },
             },
@@ -357,24 +366,24 @@ return {
                     local bufname = vim.api.nvim_buf_get_name(buf)
                     local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
                     local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-                    
+
                     -- 清理 neo-tree 相关缓冲区
-                    if (bufname:match("^neo%-tree://") or 
-                        filetype == "neo-tree" or 
-                        filetype == "neo-tree-popup") and 
+                    if (bufname:match("^neo%-tree://") or
+                        filetype == "neo-tree" or
+                        filetype == "neo-tree-popup") and
                         buftype == "nofile" then
                         vim.api.nvim_buf_delete(buf, { force = true })
                     end
                 end
             end
-            
+
             -- 在启动时清理可能存在的 neo-tree 缓冲区
             vim.api.nvim_create_autocmd("VimEnter", {
                 group = vim.api.nvim_create_augroup("neo_tree_cleanup", { clear = true }),
                 callback = cleanup_neo_tree_buffers,
                 once = true,
             })
-            
+
             -- 在退出时清理 neo-tree 缓冲区
             vim.api.nvim_create_autocmd("VimLeavePre", {
                 group = vim.api.nvim_create_augroup("neo_tree_cleanup_exit", { clear = true }),

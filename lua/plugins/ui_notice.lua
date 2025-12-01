@@ -201,6 +201,8 @@ return {
             },
             -- 节流配置
             throttle = 1000 / 30,
+            -- 源配置（sources）- 如果 noice.nvim 需要
+            sources = {},
         },
         -- 按键映射
         keys = {
@@ -249,7 +251,11 @@ return {
                     },
                 }
             end
-            
+
+            -- 确保 sources 配置存在（避免 nil 值错误）
+            -- noice.nvim 可能在内部访问 opts.sources，需要确保它始终存在
+            opts.sources = opts.sources or {}
+
             require("noice").setup(opts)
         end,
     },

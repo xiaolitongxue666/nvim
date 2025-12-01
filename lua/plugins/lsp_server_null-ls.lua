@@ -26,11 +26,48 @@ return {
         config = function()
             local null_ls = require("null-ls")
             local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
+
+            -- 检查工具是否可用，如果不可用则跳过
+            local sources = {}
+
+            -- 检查 stylua 是否可用（通过 mason 或系统安装）
+            local stylua_ok = false
+            if vim.fn.executable("stylua") == 1 then
+                stylua_ok = true
+            else
+                -- 检查 mason 安装的 stylua
+                local mason_stylua = vim.fn.stdpath("data") .. "/mason/bin/stylua"
+                if vim.fn.filereadable(mason_stylua) == 1 then
+                    stylua_ok = true
+                end
+            end
+
+            if stylua_ok then
+                table.insert(sources, null_ls.builtins.formatting.stylua)
+            else
+                vim.notify("stylua not found, skipping. Install via: :MasonInstall stylua", vim.log.levels.WARN)
+            end
+
+            -- 检查 black 是否可用（通过 mason 或系统安装）
+            local black_ok = false
+            if vim.fn.executable("black") == 1 then
+                black_ok = true
+            else
+                -- 检查 mason 安装的 black
+                local mason_black = vim.fn.stdpath("data") .. "/mason/bin/black"
+                if vim.fn.filereadable(mason_black) == 1 then
+                    black_ok = true
+                end
+            end
+
+            if black_ok then
+                table.insert(sources, null_ls.builtins.formatting.black)
+            else
+                vim.notify("black not found, skipping. Install via: :MasonInstall black", vim.log.levels.WARN)
+            end
+
             null_ls.setup({
-                sources = {
-                    null_ls.builtins.formatting.stylua,
-                    null_ls.builtins.formatting.black,
-                },
+                sources = sources,
                 on_attach = function(client, bufnr)
                     if client.supports_method("textDocument/formatting") then
                         vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })

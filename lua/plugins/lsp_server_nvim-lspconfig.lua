@@ -81,6 +81,17 @@ return {
                         },
                     },
                 },
+                -- Ruff LSP (Python 代码检查和格式化)
+                ruff_lsp = {
+                    init_options = {
+                        settings = {
+                            -- 配置 ruff 规则
+                            args = {
+                                "--ignore", "I",  -- 忽略所有 import 排序规则（I001, I002 等）
+                            },
+                        },
+                    },
+                },
                 -- Rust 语言服务器
                 rust_analyzer = {
                     settings = {
@@ -175,10 +186,10 @@ return {
         config = function(_, opts)
             local lspconfig = require("lspconfig")
             local cmp_nvim_lsp = require("cmp_nvim_lsp")
-            
+
             -- 设置诊断配置
             vim.diagnostic.config(vim.deepcopy(opts.diagnostics))
-            
+
             -- 获取默认的 LSP 能力
             local capabilities = vim.tbl_deep_extend(
                 "force",
@@ -186,7 +197,7 @@ return {
                 vim.lsp.protocol.make_client_capabilities(),
                 cmp_nvim_lsp.default_capabilities()
             )
-            
+
             -- 设置全局键位映射
             local function setup_keymaps()
                 -- 诊断相关键位映射
@@ -195,14 +206,14 @@ return {
                 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "上一个诊断" })
                 vim.keymap.set("n", "<leader>cq", vim.diagnostic.setloclist, { desc = "诊断列表" })
             end
-            
+
             -- 设置 LSP 附加时的键位映射
             local function on_attach(client, bufnr)
                 local keymap_opts = { buffer = bufnr, silent = true }
-                
+
                 -- 启用补全
                 vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
-                
+
                 -- LSP 相关键位映射
                 vim.keymap.set("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", keymap_opts, { desc = "跳转到声明" }))
                 vim.keymap.set("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", keymap_opts, { desc = "跳转到定义" }))
@@ -217,14 +228,14 @@ return {
                 vim.keymap.set("n", "<leader>cf", function()
                     vim.lsp.buf.format({ async = true })
                 end, vim.tbl_extend("force", keymap_opts, { desc = "格式化代码" }))
-                
+
                 -- 工作区相关键位映射
                 vim.keymap.set("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, vim.tbl_extend("force", keymap_opts, { desc = "添加工作区文件夹" }))
                 vim.keymap.set("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, vim.tbl_extend("force", keymap_opts, { desc = "移除工作区文件夹" }))
                 vim.keymap.set("n", "<leader>wl", function()
                     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
                 end, vim.tbl_extend("force", keymap_opts, { desc = "列出工作区文件夹" }))
-                
+
                 -- 启用文档高亮
                 if opts.document_highlight and opts.document_highlight.enabled and client.server_capabilities.documentHighlightProvider then
                     local group = vim.api.nvim_create_augroup("lsp_document_highlight", { clear = false })
@@ -240,16 +251,16 @@ return {
                         callback = vim.lsp.buf.clear_references,
                     })
                 end
-                
+
                 -- 启用内联提示
                 if opts.inlay_hints and opts.inlay_hints.enabled and client.server_capabilities.inlayHintProvider then
                     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
                 end
             end
-            
+
             -- 设置全局键位映射
             setup_keymaps()
-            
+
             -- 配置各个语言服务器
             for server, config in pairs(opts.servers) do
                 config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})

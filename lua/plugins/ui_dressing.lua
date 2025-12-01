@@ -122,9 +122,12 @@ return {
                     override = function(conf)
                         vim.schedule(function()
                             local buf = vim.api.nvim_get_current_buf()
-                            local opts = { buffer = buf, silent = true, nowait = true }
+                            local opts = { buffer = buf, silent = true, nowait = true, noremap = true }
+                            -- 确保 ijkl 映射在所有缓冲区中一致
                             vim.keymap.set("n", "i", "k", opts)
                             vim.keymap.set("n", "k", "j", opts)
+                            vim.keymap.set("n", "j", "h", opts)
+                            vim.keymap.set("n", "l", "l", opts)
                         end)
                         return conf
                     end,

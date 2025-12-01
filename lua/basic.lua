@@ -116,3 +116,4 @@ else
 	-- macOS 和 Linux 使用默认 shell
 	-- 不需要特殊设置，使用系统默认
 end
+

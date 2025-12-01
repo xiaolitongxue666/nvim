@@ -11,7 +11,7 @@ return {
         -- 插件名称
         "williamboman/mason-lspconfig.nvim",
         -- 依赖项：确保 mason.nvim 和 nvim-lspconfig 首先加载
-        dependencies = { 
+        dependencies = {
             "williamboman/mason.nvim",
             "neovim/nvim-lspconfig"
         },
@@ -20,6 +20,8 @@ return {
         -- 插件配置选项
         opts = {
             -- 自动安装的 LSP 服务器列表
+            -- 注意：只包含 mason-lspconfig 支持的服务器名称
+            -- ruff_lsp 需要通过 mason.nvim 单独安装，然后在 lspconfig 中配置
             ensure_installed = {
                 "lua_ls",           -- Lua 语言服务器
                 "bashls",           -- Bash 语言服务器

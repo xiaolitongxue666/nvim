@@ -10,17 +10,22 @@ return {
     {
         -- 插件名称
         "williamboman/mason.nvim",
+        -- 依赖项：自动安装工具
+        dependencies = {
+            "WhoIsSethDaniel/mason-tool-installer.nvim",
+        },
         -- 基于命令的懒加载
         cmd = "Mason",
         -- 基于按键映射的懒加载
-        keys = { 
+        keys = {
             { "<leader>cm", "<cmd>Mason<cr>", desc = "打开 Mason 包管理器" },
             { "<leader>cM", "<cmd>MasonUpdate<cr>", desc = "更新 Mason 注册表" },
         },
         -- 插件安装或更新时执行的构建命令
         build = ":MasonUpdate", -- :MasonUpdate 更新注册表内容
-        -- 插件配置选项
-        opts = {
+        -- 插件配置函数（使用 config 而不是 opts，以便集成 mason-tool-installer）
+        config = function()
+            require("mason").setup({
             -- 用户界面配置
             ui = {
                 -- 图标配置
@@ -60,12 +65,10 @@ return {
             },
             -- 安装根目录
             install_root_dir = vim.fn.stdpath("data") .. "/mason",
-            -- 包安装配置
+            -- 让 mason 所有 Python 包都走 uv tool install，速度 20×+
             pip = {
-                -- 升级 pip
+                -- 升级 pip（禁用，因为使用 uv）
                 upgrade_pip = false,
-                -- 安装参数
-                install_args = {},
             },
             -- 日志级别
             log_level = vim.log.levels.INFO,
@@ -76,6 +79,27 @@ return {
                 -- 下载 URL 模板
                 download_url_template = "https://github.com/%s/releases/download/%s/%s",
             },
-        },
+            })
+
+            -- 自动安装最常用的工具（全部走 uv）
+            require("mason-tool-installer").setup({
+                ensure_installed = {
+                    -- LSP 服务器
+                    "pyright",      -- Python LSP
+                    "ruff-lsp",     -- Ruff Python 代码检查器和格式化工具
+                    -- Python 工具
+                    "black",        -- Python 代码格式化工具
+                    "isort",        -- Python import 排序
+                    "debugpy",      -- Python 调试器
+                    "mypy",         -- Python 类型检查器
+                    -- 其他工具
+                    "taplo",        -- TOML 格式化工具
+                    "stylua",       -- Lua 代码格式化工具
+                    "shfmt",        -- Shell 脚本格式化工具
+                },
+                auto_update = true,
+                run_on_start = true,
+            })
+        end,
     },
 }

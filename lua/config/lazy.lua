@@ -27,6 +27,9 @@ vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
+-- 禁用 LazyVim 导入顺序检查（不使用 LazyVim）
+vim.g.lazyvim_check_order = false
+
 -- 设置 lazy.nvim
 require("lazy").setup({
     spec = {

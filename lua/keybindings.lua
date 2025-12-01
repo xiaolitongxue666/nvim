@@ -42,20 +42,49 @@ map("", "<LEADER>o", "za", opt)
 
 -- 光标常规移动
 --     ^
---     i
--- < j   l >
---     k
+--     i (上)
+-- < j (左)   l (右) >
+--     k (下)
 --     v
-map("n", "i", "k", opt)
-map("n", "k", "j", opt)
-map("n", "j", "h", opt)
-map("n", "l", "l", opt)
+-- Vim 默认：j=下, k=上, h=左, l=右
+-- 目标映射：i=上, k=下, j=左, l=右
+-- 所以：i->k(上), k->j(下), j->h(左), l->l(右)
+-- 使用 vim.keymap.set 确保优先级，force=true 强制覆盖
+vim.keymap.set("n", "i", "k", { desc = "向上移动", silent = true, noremap = true, force = true })
+vim.keymap.set("n", "k", "j", { desc = "向下移动", silent = true, noremap = true, force = true })
+vim.keymap.set("n", "j", "h", { desc = "向左移动", silent = true, noremap = true, force = true })
+vim.keymap.set("n", "l", "l", { desc = "向右移动", silent = true, noremap = true, force = true })
 
 -- v 模式下光标常规移动
-map("v", "i", "k", opt)
-map("v", "k", "j", opt)
-map("v", "j", "h", opt)
-map("v", "l", "l", opt)
+vim.keymap.set("v", "i", "k", { desc = "向上移动", silent = true, noremap = true, force = true })
+vim.keymap.set("v", "k", "j", { desc = "向下移动", silent = true, noremap = true, force = true })
+vim.keymap.set("v", "j", "h", { desc = "向左移动", silent = true, noremap = true, force = true })
+vim.keymap.set("v", "l", "l", { desc = "向右移动", silent = true, noremap = true, force = true })
+
+-- 确保在插件加载后，ijkl 光标移动映射始终正确（覆盖任何插件可能设置的映射）
+vim.api.nvim_create_autocmd("User", {
+    pattern = "VeryLazy",
+    callback = function()
+        -- 重新设置 ijkl 光标移动映射，确保优先级
+        -- 使用 force = true 确保覆盖任何已存在的映射
+        vim.keymap.set("n", "i", "k", { desc = "向上移动", silent = true, noremap = true, force = true })
+        vim.keymap.set("n", "k", "j", { desc = "向下移动", silent = true, noremap = true, force = true })
+        vim.keymap.set("n", "j", "h", { desc = "向左移动", silent = true, noremap = true, force = true })
+        vim.keymap.set("n", "l", "l", { desc = "向右移动", silent = true, noremap = true, force = true })
+
+        vim.keymap.set("v", "i", "k", { desc = "向上移动", silent = true, noremap = true, force = true })
+        vim.keymap.set("v", "k", "j", { desc = "向下移动", silent = true, noremap = true, force = true })
+        vim.keymap.set("v", "j", "h", { desc = "向左移动", silent = true, noremap = true, force = true })
+        vim.keymap.set("v", "l", "l", { desc = "向右移动", silent = true, noremap = true, force = true })
+    end,
+    once = false,  -- 不限制只执行一次，确保每次 VeryLazy 事件都重新应用
+})
+
+-- 插入模式下光标常规移动（使用 <C-o> 执行普通模式命令后自动返回插入模式）
+map("i", "i", "<C-o>k", opt)
+map("i", "k", "<C-o>j", opt)
+map("i", "j", "<C-o>h", opt)
+map("i", "l", "<C-o>l", opt)
 
 -- 光标快速移动
 -- 光标上移5行
