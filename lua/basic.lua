@@ -90,6 +90,34 @@ vim.o.showtabline = 2
 vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif ]])
 -- 拷贝到剪切板
 vim.o.clipboard = "unnamed"
+
+-- 检查 clipboard provider 是否可用（延迟检查，因为 provider 可能在启动后才可用）
+vim.schedule(function()
+    -- 检查是否在 SSH 环境中（DISPLAY 为空通常表示无 X11 转发）
+    local is_ssh_env = (vim.env.SSH_CLIENT ~= nil or vim.env.SSH_CONNECTION ~= nil) and (vim.env.DISPLAY == nil or vim.env.DISPLAY == "")
+
+    -- 检查是否有可用的 clipboard 工具
+    local clipboard_tool = nil
+    if vim.fn.executable("xclip") == 1 then
+        clipboard_tool = "xclip"
+    elseif vim.fn.executable("xsel") == 1 then
+        clipboard_tool = "xsel"
+    elseif vim.fn.executable("pbcopy") == 1 and vim.fn.executable("pbpaste") == 1 then
+        clipboard_tool = "pbcopy/pbpaste"
+    end
+
+    -- 检查 Neovim 是否检测到 clipboard provider
+    if vim.fn.has("clipboard") == 0 then
+        -- Neovim 编译时没有 clipboard 支持
+        if clipboard_tool and not is_ssh_env then
+            -- 只在非 SSH 环境中显示警告
+            vim.notify("Clipboard tool found: " .. clipboard_tool .. ", but Neovim was not compiled with clipboard support. Reinstall Neovim with clipboard support.", vim.log.levels.WARN)
+        end
+    elseif is_ssh_env and clipboard_tool then
+        -- SSH 环境且无 X11 转发：这是正常情况，不显示警告
+        -- 用户可以通过安装 X 服务器（如 VcXsrv）并启用 X11 转发来使用 clipboard
+    end
+end)
 -- 在 copy 后高亮
 vim.api.nvim_create_autocmd({ "TextYankPost" }, {
 	pattern = { "*" },
