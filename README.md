@@ -75,6 +75,7 @@ git clone --recursive git@github.com:your-username/script_tool_and_config.git
 │       ├── lsp_server_manager_mason-lspconfig.lua # LSP 服务器配置
 │       ├── lsp_server_manager_mason.lua           # LSP 服务器管理
 │       ├── lsp_server_nvim-lspconfig.lua          # LSP 配置
+│       ├── practice_typr.lua                      # 打字练习
 │       ├── ui_buffer_tabpage_bufferline.lua       # 缓冲区标签页
 │       ├── ui_component_lib_nui.lua               # UI 组件库
 │       ├── ui_dressing.lua                        # UI 界面美化
@@ -455,6 +456,32 @@ flowchart TD
 - `<leader>oo` - 切换任务列表（`:OverseerToggle`）
 - `<leader>oa` - 任务快速操作（`:OverseerQuickAction`）
 - `<leader>of` - 运行当前文件模板（`:OverseerRunCurrent`）
+
+#### 打字练习
+
+##### typr (practice_typr.lua)
+**功能**: 美观的打字练习插件，提供打字练习界面和统计仪表板
+**特性**:
+- 美观的打字练习界面
+- 实时打字统计和进度显示
+- 打字历史记录和数据分析
+- 支持符号、数字、随机模式切换
+- 可自定义练习行数
+**命令**:
+- `:Typr` - 启动打字练习
+- `:TyprStats` - 查看打字统计
+**Typr 窗口内快捷键**:
+- `s` - 切换符号模式
+- `n` - 切换数字模式
+- `r` - 切换随机模式
+- `3` - 设置 3 行练习（其他数字类似，如 `5` 设置 5 行）
+**TyprStats 窗口内快捷键**:
+- `D` - 切换到仪表板视图
+- `H` - 切换到历史记录视图
+- `K` - 切换到按键统计视图
+**注意**: 
+- typr 缓冲区的文件类型为 `typr`，如需禁用代码补全，请参考补全插件的文档配置该文件类型
+- Activity UI 功能仍在开发中，可能无法正常工作
 
 #### 视觉增强
 
