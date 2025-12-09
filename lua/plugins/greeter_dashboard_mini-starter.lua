@@ -7,8 +7,8 @@ return {
     "echasnovski/mini.starter",
     -- 版本控制，使用最新版本
     version = false,
-    -- 在 VimEnter 事件时加载
-    event = "VimEnter",
+    -- 立即加载，确保启动菜单优先显示
+    lazy = false,
     -- 插件配置
     config = function()
         -- 导入 mini.starter 模块

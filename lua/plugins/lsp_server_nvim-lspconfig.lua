@@ -1,6 +1,7 @@
 -- Neovim 内置 LSP 客户端的快速配置
 -- 提供各种语言服务器的预配置设置
-
+-- 使用新 API: vim.lsp.config (Neovim 0.11+)
+--
 -- https://github.com/neovim/nvim-lspconfig
 
 -- 统一处理 schemastore 模块加载
@@ -184,7 +185,23 @@ return {
         },
         -- 插件配置函数
         config = function(_, opts)
-            local lspconfig = require("lspconfig")
+            -- 检查 Neovim 版本（新 API 需要 0.11+）
+            local nvim_version = vim.version()
+            local min_version = { 0, 11, 0 }
+            local version_ok = (nvim_version.major > min_version[1]) or
+                              (nvim_version.major == min_version[1] and nvim_version.minor > min_version[2]) or
+                              (nvim_version.major == min_version[1] and nvim_version.minor == min_version[2] and nvim_version.patch >= min_version[3])
+            
+            if not version_ok then
+                vim.notify(
+                    string.format("需要 Neovim 0.11.0+，当前版本: %d.%d.%d。请升级 Neovim 以使用新 API。", 
+                        nvim_version.major, nvim_version.minor, nvim_version.patch),
+                    vim.log.levels.ERROR,
+                    { title = "LSP" }
+                )
+                return
+            end
+
             local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
             -- 设置诊断配置
@@ -261,19 +278,29 @@ return {
             -- 设置全局键位映射
             setup_keymaps()
 
-            -- 配置各个语言服务器
-            for server, config in pairs(opts.servers) do
-                config.capabilities = vim.tbl_deep_extend("force", {}, capabilities, config.capabilities or {})
-                config.on_attach = on_attach
-                local available_server = lspconfig[server]
-                if not available_server then
+            -- 使用新 API: vim.lsp.config 配置各个语言服务器
+            for server, server_config in pairs(opts.servers) do
+                -- 合并配置（不修改原始配置对象）
+                local final_config = vim.tbl_deep_extend("force", {
+                    capabilities = capabilities,
+                    on_attach = on_attach,
+                }, server_config or {})
+                
+                -- 使用新 API: vim.lsp.config 配置服务器
+                -- 这会扩展/覆盖默认配置，不会触发 __index 错误
+                local ok, err = pcall(function()
+                    vim.lsp.config(server, final_config)
+                    -- 启用服务器（自动附加到匹配的文件类型）
+                    vim.lsp.enable(server)
+                end)
+                
+                if not ok then
+                    -- 只显示警告，不中断配置流程
                     vim.notify(
-                        string.format("nvim-lspconfig 未提供语言服务器 `%s`，请检查名称是否正确或更新 nvim-lspconfig", server),
+                        string.format("无法配置语言服务器 `%s`: %s", server, tostring(err)),
                         vim.log.levels.WARN,
                         { title = "LSP" }
                     )
-                else
-                    available_server.setup(config)
                 end
             end
         end,

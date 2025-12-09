@@ -30,23 +30,31 @@ return {
         config = function(_, opts)
             require("persistence").setup(opts)
             
-            -- 自动加载会话
+            -- 禁用自动加载会话，让用户通过启动菜单手动选择
+            -- 这样可以确保启动菜单始终显示
+            -- 如果需要自动加载，可以取消下面的注释
+            --[[
             local function auto_load_session()
                 -- 只有在没有参数启动 Neovim 时才自动加载会话
                 if vim.fn.argc(-1) == 0 then
-                    require("persistence").load()
+                    -- 检查是否在启动菜单中（mini.starter 的 filetype 是 "starter"）
+                    if vim.bo.filetype ~= "starter" then
+                        require("persistence").load()
+                    end
                 end
             end
             
-            -- 在 VimEnter 事件后自动加载会话
+            -- 在 VimEnter 事件后自动加载会话（延迟更长时间，确保启动菜单先显示）
             vim.api.nvim_create_autocmd("VimEnter", {
                 group = vim.api.nvim_create_augroup("persistence_auto_load", { clear = true }),
                 callback = function()
-                    -- 延迟执行以确保其他插件已加载
-                    vim.defer_fn(auto_load_session, 200)
+                    -- 延迟执行，确保启动菜单先显示
+                    -- 如果启动菜单存在，则不会自动加载会话
+                    vim.defer_fn(auto_load_session, 500)
                 end,
                 nested = true,
             })
+            --]]
             
             -- 在会话加载完成后自动打开文件浏览器
             vim.api.nvim_create_autocmd("User", {

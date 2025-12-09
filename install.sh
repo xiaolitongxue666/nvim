@@ -286,25 +286,125 @@ install_language_tools() {
             log_info "Please install Homebrew first: /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
         fi
     elif [[ "${PLATFORM}" == "windows" ]]; then
-        # Windows: 提示手动安装
-        log_warning "Windows platform detected"
-        log_info "Please install language tools manually:"
-        for tool in "${tools_to_install[@]}"; do
-            case "${tool}" in
-                "go")
-                    log_info "  Go: Download from https://golang.org/dl/ or use: winget install GoLang.Go"
-                    ;;
-                "ruby")
-                    log_info "  Ruby: Download from https://rubyinstaller.org/ or use: winget install RubyInstallerTeam.Ruby"
-                    ;;
-                "composer")
-                    log_info "  Composer: Download from https://getcomposer.org/download/ or use: winget install Composer.Composer"
-                    ;;
-                "julia")
-                    log_info "  Julia: Download from https://julialang.org/downloads/ or use: winget install Julia.Julia"
-                    ;;
-            esac
-        done
+        # Windows: 尝试自动安装
+        log_info "Windows platform detected, attempting automatic installation..."
+        
+        # 代理设置（如果需要）
+        local proxy_host="${PROXY_HOST:-127.0.0.1}"
+        local proxy_port="${PROXY_PORT:-7890}"
+        local use_proxy="${USE_PROXY:-1}"
+        
+        if [[ "${use_proxy}" == "1" ]]; then
+            export http_proxy="http://${proxy_host}:${proxy_port}"
+            export https_proxy="http://${proxy_host}:${proxy_port}"
+            export HTTP_PROXY="http://${proxy_host}:${proxy_port}"
+            export HTTPS_PROXY="http://${proxy_host}:${proxy_port}"
+            export npm_config_proxy="http://${proxy_host}:${proxy_port}"
+            export npm_config_https_proxy="http://${proxy_host}:${proxy_port}"
+            log_info "Proxy enabled: http://${proxy_host}:${proxy_port}"
+        fi
+        
+        # 安装 Go
+        if [[ " ${tools_to_install[*]} " =~ " go " ]]; then
+            log_info "Installing Go..."
+            if command -v winget >/dev/null 2>&1; then
+                # 检查是否已安装但不在 PATH
+                local go_paths=(
+                    "/c/Program Files/Go/bin/go"
+                    "/c/Program Files (x86)/Go/bin/go"
+                    "${HOME}/go/bin/go"
+                )
+                local go_found=0
+                for go_path in "${go_paths[@]}"; do
+                    if [[ -f "${go_path}" ]]; then
+                        log_info "Found Go at: ${go_path}"
+                        export PATH="${PATH}:$(dirname "${go_path}")"
+                        go_found=1
+                        break
+                    fi
+                done
+                
+                if [[ ${go_found} -eq 0 ]]; then
+                    if winget install --id GoLang.Go --silent --accept-package-agreements --accept-source-agreements 2>&1; then
+                        log_success "Go installed successfully"
+                        export PATH="${PATH}:/c/Program Files/Go/bin"
+                    else
+                        log_warning "Go installation failed, please install manually: winget install GoLang.Go"
+                    fi
+                fi
+            else
+                log_warning "winget not found, please install Go manually: https://golang.org/dl/"
+            fi
+        fi
+        
+        # 安装 Composer
+        if [[ " ${tools_to_install[*]} " =~ " composer " ]]; then
+            log_info "Installing Composer..."
+            local composer_phar_path="${HOME}/.local/bin/composer"
+            local composer_dir="$(dirname "${composer_phar_path}")"
+            mkdir -p "${composer_dir}"
+            
+            if curl -x "http://${proxy_host}:${proxy_port}" -o "${composer_phar_path}" \
+                "https://getcomposer.org/download/latest-stable/composer.phar" 2>&1; then
+                chmod +x "${composer_phar_path}"
+                if "${composer_phar_path}" --version >/dev/null 2>&1; then
+                    log_success "Composer installed successfully (phar)"
+                    log_info "Composer path: ${composer_phar_path}"
+                    log_info "Please ensure ${composer_dir} is in PATH"
+                else
+                    log_warning "Composer installation verification failed"
+                fi
+            else
+                log_warning "Composer download failed, please install manually: https://getcomposer.org/download/"
+            fi
+        fi
+        
+        # 安装 julia
+        if [[ " ${tools_to_install[*]} " =~ " julia " ]]; then
+            log_info "Installing julia..."
+            if command -v winget >/dev/null 2>&1; then
+                # 检查是否已安装但不在 PATH
+                local julia_search_dirs=(
+                    "${HOME}/AppData/Local/Programs"
+                    "/c/Users/Administrator/AppData/Local/Programs"
+                )
+                local julia_found=""
+                for search_dir in "${julia_search_dirs[@]}"; do
+                    if [[ -d "${search_dir}" ]]; then
+                        local found
+                        found=$(find "${search_dir}" -name "julia.exe" -type f 2>/dev/null | head -n 1 || echo "")
+                        if [[ -n "${found}" ]] && [[ -f "${found}" ]]; then
+                            julia_found="${found}"
+                            break
+                        fi
+                    fi
+                done
+                
+                if [[ -n "${julia_found}" ]]; then
+                    log_info "Found julia at: ${julia_found}"
+                    export PATH="${PATH}:$(dirname "${julia_found}")"
+                else
+                    local winget_output
+                    winget_output=$(winget install --id Julialang.Julia --silent --accept-package-agreements --accept-source-agreements 2>&1) || {
+                        if echo "${winget_output}" | grep -q "已安装\|already installed\|找不到可用的升级"; then
+                            log_success "julia already installed (detected by winget)"
+                        else
+                            log_warning "julia installation failed, please install manually: winget install Julialang.Julia"
+                        fi
+                    }
+                fi
+            else
+                log_warning "winget not found, please install julia manually: https://julialang.org/downloads/"
+            fi
+        fi
+        
+        # Ruby 在 Windows 上通常已安装（通过 RubyInstaller），只需检查
+        if [[ " ${tools_to_install[*]} " =~ " ruby " ]]; then
+            log_info "Checking Ruby installation..."
+            if ! command -v ruby >/dev/null 2>&1; then
+                log_warning "Ruby not found, please install manually: https://rubyinstaller.org/ or winget install RubyInstallerTeam.Ruby"
+            fi
+        fi
     fi
 }
 
@@ -653,6 +753,14 @@ setup_nodejs_environment() {
 
     # 检查 neovim npm 包是否已安装
     if command -v npm >/dev/null 2>&1; then
+        # 确保 Windows 环境变量正确传递（Git Bash 需要）
+        if [[ "${PLATFORM}" == "windows" ]] && [[ -z "${APPDATA:-}" ]]; then
+            # 尝试从 Windows 环境获取 APPDATA
+            if command -v cmd.exe >/dev/null 2>&1; then
+                export APPDATA="$(cmd.exe //c "echo %APPDATA%" 2>/dev/null | tr -d '\r\n' || echo "")"
+            fi
+        fi
+        
         if npm list -g neovim >/dev/null 2>&1; then
             log_success "neovim npm package already installed"
         else
@@ -664,8 +772,47 @@ setup_nodejs_environment() {
                 log_info "You can install it manually later: npm install -g neovim"
             fi
         fi
+        
+        # 安装 tree-sitter CLI 和 pnpm（用于健康检查）
+        if ! command -v tree-sitter >/dev/null 2>&1; then
+            log_info "Installing tree-sitter CLI..."
+            if npm install -g tree-sitter-cli >/dev/null 2>&1; then
+                log_success "tree-sitter CLI installed"
+            else
+                log_warning "tree-sitter CLI installation failed, but continuing"
+            fi
+        else
+            log_success "tree-sitter CLI already installed"
+        fi
+        
+        if ! command -v pnpm >/dev/null 2>&1; then
+            log_info "Installing pnpm..."
+            if npm install -g pnpm >/dev/null 2>&1; then
+                log_success "pnpm installed"
+            else
+                log_warning "pnpm installation failed, but continuing"
+            fi
+        else
+            log_success "pnpm already installed"
+        fi
     else
-        log_warning "npm not found, skipping neovim npm package installation"
+        log_warning "npm not found, skipping npm package installation"
+    fi
+    
+    # 安装 Ruby neovim gem（如果 Ruby 可用）
+    if command -v ruby >/dev/null 2>&1; then
+        if gem list neovim 2>/dev/null | grep -q neovim; then
+            log_success "neovim Ruby gem already installed"
+        else
+            log_info "Installing neovim Ruby gem..."
+            if gem install neovim >/dev/null 2>&1; then
+                log_success "neovim Ruby gem installed"
+            else
+                log_warning "neovim Ruby gem installation failed, but continuing"
+            fi
+        fi
+    else
+        log_info "Ruby not found, skipping neovim gem installation"
     fi
 }
 

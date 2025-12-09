@@ -102,8 +102,8 @@ return {
         opts = {
             -- 数据源
             sources = { "filesystem", "buffers", "git_status", "document_symbols" },
-            -- 不替换的文件类型
-            open_files_do_not_replace_types = { "terminal", "trouble", "qf", "Outline" },
+            -- 不替换的文件类型（包括 neo-tree 自身，避免缓冲区冲突）
+            open_files_do_not_replace_types = { "terminal", "trouble", "qf", "Outline", "neo-tree", "neo-tree-popup" },
             -- 文件系统配置
             filesystem = {
                 -- 绑定到当前工作目录
@@ -115,6 +115,8 @@ return {
                 },
                 -- 使用 libuv 文件监视器
                 use_libuv_file_watcher = true,
+                -- 缓冲区名称配置（避免 E95 错误）
+                hijack_netrw_behavior = "open_current",
                 -- 过滤器
                 filtered_items = {
                     visible = false,
@@ -323,9 +325,11 @@ return {
             -- 文件系统监视器配置
             filesystem_watchers = {
                 enable = true,
-                debounce_delay = 100,
+                debounce_delay = 200,
                 debounce_trailing = true,
                 debounce_leading = false,
+                -- 忽略某些事件以避免缓冲区冲突
+                ignore_dirs = {},
             },
             -- Git 配置
             git = {
@@ -342,6 +346,40 @@ return {
         },
         -- 插件配置函数
         config = function(_, opts)
+            -- 添加 neo-tree 缓冲区清理函数（必须在其他函数之前定义）
+            local function cleanup_neo_tree_buffers()
+                local buffers = vim.api.nvim_list_bufs()
+                for _, buf in ipairs(buffers) do
+                    local bufname = vim.api.nvim_buf_get_name(buf)
+                    local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
+                    local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+
+                    -- 清理 neo-tree 相关缓冲区
+                    if (bufname:match("^neo%-tree://") or
+                        filetype == "neo-tree" or
+                        filetype == "neo-tree-popup") and
+                        buftype == "nofile" then
+                        -- 检查缓冲区是否在窗口中
+                        local is_used = false
+                        for _, win in ipairs(vim.api.nvim_list_wins()) do
+                            if vim.api.nvim_win_get_buf(win) == buf then
+                                is_used = true
+                                break
+                            end
+                        end
+                        if not is_used then
+                            pcall(vim.api.nvim_buf_delete, buf, { force = true })
+                        end
+                    end
+                end
+            end
+
+            -- 修复缓冲区名称冲突的错误处理
+            local function safe_navigate()
+                -- 在导航前清理可能冲突的缓冲区
+                cleanup_neo_tree_buffers()
+            end
+
             -- 文件移动/重命名时的 LSP 处理
             local function on_move(data)
                 -- 如果有 LazyVim 工具，使用其 LSP 重命名功能
@@ -355,27 +393,31 @@ return {
             vim.list_extend(opts.event_handlers, {
                 { event = events.FILE_MOVED, handler = on_move },
                 { event = events.FILE_RENAMED, handler = on_move },
+                -- 在文件系统导航前清理缓冲区
+                {
+                    event = events.FS_EVENT,
+                    handler = function()
+                        -- 延迟清理，避免与导航冲突
+                        vim.defer_fn(safe_navigate, 50)
+                    end,
+                },
             })
 
             require("neo-tree").setup(opts)
 
-            -- 添加 neo-tree 缓冲区清理函数
-            local function cleanup_neo_tree_buffers()
-                local buffers = vim.api.nvim_list_bufs()
-                for _, buf in ipairs(buffers) do
-                    local bufname = vim.api.nvim_buf_get_name(buf)
-                    local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-                    local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-
-                    -- 清理 neo-tree 相关缓冲区
-                    if (bufname:match("^neo%-tree://") or
-                        filetype == "neo-tree" or
-                        filetype == "neo-tree-popup") and
-                        buftype == "nofile" then
-                        vim.api.nvim_buf_delete(buf, { force = true })
-                    end
-                end
-            end
+            -- 捕获并处理 E95 缓冲区名称冲突错误
+            -- 使用 vim 的错误处理机制
+            local error_group = vim.api.nvim_create_augroup("neo_tree_error_handling", { clear = true })
+            
+            -- 在文件系统事件后清理可能冲突的缓冲区
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "NeoTreeFilesystem*",
+                group = error_group,
+                callback = function()
+                    -- 延迟清理，避免与正在进行的操作冲突
+                    vim.defer_fn(cleanup_neo_tree_buffers, 100)
+                end,
+            })
 
             -- 在启动时清理可能存在的 neo-tree 缓冲区
             vim.api.nvim_create_autocmd("VimEnter", {

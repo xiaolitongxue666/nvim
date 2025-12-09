@@ -34,23 +34,16 @@ return {
             },
             -- 自动安装缺失的 LSP 服务器
             automatic_installation = true,
-            -- 处理程序配置（可选）
+            -- 处理程序配置（使用新 API）
             handlers = {
-                -- 默认处理程序：为所有服务器设置基本配置
+                -- 默认处理程序：使用新 API 配置所有服务器
                 function(server_name)
-                    require("lspconfig")[server_name].setup({})
-                end,
-                -- 特定服务器的自定义配置
-                ["lua_ls"] = function()
-                    require("lspconfig").lua_ls.setup({
-                        settings = {
-                            Lua = {
-                                diagnostics = {
-                                    globals = { "vim" }
-                                }
-                            }
-                        }
-                    })
+                    -- 使用新 API: vim.lsp.config 和 vim.lsp.enable
+                    -- 这会避免触发 __index 错误
+                    pcall(function()
+                        vim.lsp.config(server_name, {})
+                        vim.lsp.enable(server_name)
+                    end)
                 end,
             },
         },

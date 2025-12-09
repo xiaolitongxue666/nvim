@@ -48,8 +48,8 @@ git clone --recursive git@github.com:your-username/script_tool_and_config.git
 │   ├── modules.xml
 │   ├── nvim.iml
 │   └── vcs.xml
-├── Dockerfile                          # Docker 容器配置
 ├── README.md                           # 项目说明文档
+├── install.sh                          # 安装脚本（包含健康检查修复功能）
 ├── init.lua                            # Neovim 主配置入口
 ├── lua/                                # Lua 配置文件目录
 │   ├── basic.lua                       # 基础设置配置
@@ -1143,6 +1143,114 @@ git submodule update --init dotfiles/nvim
 2. 确保 Neovim 版本 >= 0.8.0
 3. 查看 Neovim 日志：`:messages`
 
+### 健康检查警告和错误
+
+如果 `:checkhealth` 显示警告或错误：
+
+1. **运行安装脚本自动修复**：
+   ```bash
+   ./install.sh
+   ```
+   脚本会自动安装缺失的工具和依赖。
+
+2. **手动安装缺失的工具**：
+   - Go: `winget install GoLang.Go` (Windows) 或使用系统包管理器
+   - Composer: 下载 phar 文件或使用包管理器
+   - julia: `winget install Julialang.Julia` (Windows) 或使用系统包管理器
+   - tree-sitter CLI: `npm install -g tree-sitter-cli`
+   - pnpm: `npm install -g pnpm`
+   - neovim Ruby gem: `gem install neovim` (如果使用 Ruby)
+
+3. **检查环境变量**：
+   - 确保 `APPDATA` 环境变量在 Windows 上正确设置（Git Bash 需要）
+   - 确保工具的可执行文件在系统 PATH 中
+
+4. **查看详细日志**：
+   保存健康检查日志并查看具体错误信息。
+
+## 健康检查和诊断
+
+Neovim 提供了 `:checkhealth` 命令来检查配置和插件的健康状态。`install.sh` 脚本已集成健康检查修复功能，会自动安装缺失的工具和依赖。
+
+### 运行健康检查
+
+在 Neovim 中执行：
+```vim
+:checkhealth
+```
+
+### 保存健康检查日志
+
+#### 方法一：使用 `:redir` 命令（推荐）
+
+在交互式 nvim 中执行以下命令序列：
+
+```vim
+:redir > nvim_checkhealth.log
+:checkhealth
+:redir END
+```
+
+**操作步骤**：
+1. 打开 nvim：`nvim`
+2. 执行 `:redir > nvim_checkhealth.log` 开始重定向输出
+3. 执行 `:checkhealth` 执行健康检查（会显示完整输出）
+4. 执行 `:redir END` 结束重定向
+5. 退出 nvim：`:q`
+6. 查看日志：`cat nvim_checkhealth.log`
+
+**追加模式**（如果需要追加到现有文件）：
+```vim
+:redir >> nvim_checkhealth.log
+:checkhealth
+:redir END
+```
+
+#### 方法二：非交互式命令（一行命令）
+
+在终端中直接执行：
+
+```bash
+nvim --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "q"
+```
+
+### 自动修复健康检查问题
+
+`install.sh` 脚本已集成健康检查修复功能，会自动：
+
+1. **安装语言工具**：
+   - Go（通过 winget 或包管理器）
+   - Composer（下载 phar 文件）
+   - julia（通过 winget 或包管理器）
+   - Ruby（检查是否已安装）
+
+2. **安装开发工具**：
+   - tree-sitter CLI（通过 npm）
+   - pnpm（通过 npm）
+   - neovim Ruby gem（如果 Ruby 可用）
+
+3. **修复配置问题**：
+   - 禁用不需要的 provider（如 Perl）
+   - 配置 DAP 适配器路径
+   - 确保环境变量正确传递
+
+### 代理支持
+
+如果网络环境需要代理，可以通过环境变量配置：
+
+```bash
+export PROXY_HOST=127.0.0.1
+export PROXY_PORT=7890
+export USE_PROXY=1
+./install.sh
+```
+
+或禁用代理：
+```bash
+export USE_PROXY=0
+./install.sh
+```
+
 ## 维护说明
 
 - 插件配置文件按功能分类命名，便于管理和查找
@@ -1150,6 +1258,7 @@ git submodule update --init dotfiles/nvim
 - 使用 lazy.nvim 的延迟加载特性优化启动速度
 - 定期运行 `:Lazy update` 更新插件
 - 运行 `:MasonUpdate` 更新 LSP 服务器和工具
+- 定期运行 `:checkhealth` 检查配置健康状态
 
 ## 参考链接
 

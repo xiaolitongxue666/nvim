@@ -113,12 +113,62 @@ return {
         config = function()
             local dap = require("dap")
             
+            -- 检测操作系统
+            local is_windows = vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1
+            local is_mac = vim.fn.has('mac') == 1
+            local is_linux = vim.fn.has('unix') == 1 and not is_mac
+            
+            -- 查找 lldb 可执行文件的辅助函数
+            local function find_lldb()
+                if is_windows then
+                    -- Windows: 检查 mason 安装的 lldb 或系统路径
+                    local mason_lldb = vim.fn.stdpath("data") .. '/mason/packages/codelldb/extension/adapter/codelldb.exe'
+                    if vim.fn.executable(mason_lldb) == 1 then
+                        return mason_lldb
+                    end
+                    -- 检查系统安装的 lldb
+                    local system_lldb = vim.fn.exepath('lldb')
+                    if system_lldb and system_lldb ~= '' then
+                        return system_lldb
+                    end
+                    return nil
+                elseif is_mac then
+                    -- macOS: 使用 Xcode 的 lldb 或检测系统路径
+                    local xcode_lldb = '/usr/bin/lldb'
+                    if vim.fn.executable(xcode_lldb) == 1 then
+                        return xcode_lldb
+                    end
+                    local system_lldb = vim.fn.exepath('lldb')
+                    if system_lldb and system_lldb ~= '' then
+                        return system_lldb
+                    end
+                    return nil
+                else
+                    -- Linux: 检查标准路径或系统路径
+                    local linux_lldb = '/usr/bin/lldb-vscode'
+                    if vim.fn.executable(linux_lldb) == 1 then
+                        return linux_lldb
+                    end
+                    local system_lldb = vim.fn.exepath('lldb-vscode')
+                    if system_lldb and system_lldb ~= '' then
+                        return system_lldb
+                    end
+                    return nil
+                end
+            end
+            
             -- LLDB 适配器配置（用于 C/C++/Rust）
-            dap.adapters.lldb = {
-                type = 'executable',
-                command = '/usr/bin/lldb-vscode', -- 根据需要调整，必须是绝对路径
-                name = "lldb"
-            }
+            local lldb_path = find_lldb()
+            if lldb_path then
+                dap.adapters.lldb = {
+                    type = 'executable',
+                    command = lldb_path,
+                    name = "lldb"
+                }
+            else
+                -- 如果未找到 lldb，不配置适配器（避免错误）
+                vim.notify("LLDB 未找到，C/C++/Rust 调试功能将不可用。可以通过 mason 安装 codelldb。", vim.log.levels.WARN)
+            end
             
             -- C++ 调试配置
             dap.configurations.cpp = {
@@ -191,15 +241,44 @@ return {
             }
             
             -- Python 调试配置
+            -- 查找 Python 可执行文件的辅助函数
+            local function find_python()
+                -- 优先使用配置的 Python 路径
+                if vim.g.python3_host_prog and vim.g.python3_host_prog ~= '' then
+                    return vim.g.python3_host_prog
+                end
+                
+                -- 尝试查找 python3
+                local python3 = vim.fn.exepath('python3')
+                if python3 and python3 ~= '' then
+                    return python3
+                end
+                
+                -- 尝试查找 python
+                local python = vim.fn.exepath('python')
+                if python and python ~= '' then
+                    return python
+                end
+                
+                -- Windows 特定路径
+                if is_windows then
+                    local win_python = vim.fn.stdpath("data") .. '/mason/packages/debugpy/venv/Scripts/python.exe'
+                    if vim.fn.executable(win_python) == 1 then
+                        return win_python
+                    end
+                end
+                
+                -- 默认值（如果都找不到）
+                return is_windows and 'python' or 'python3'
+            end
+            
             dap.configurations.python = {
                 {
                     type = 'python',
                     request = 'launch',
                     name = "启动 Python 文件",
                     program = "${file}",
-                    pythonPath = function()
-                        return '/usr/bin/python3'
-                    end,
+                    pythonPath = find_python,
                 },
             }
             

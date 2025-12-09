@@ -83,3 +83,29 @@ fabric.properties
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
 
+# Neovim configuration specific
+# Temporary files and logs
+*.log
+nvim_checkhealth.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# Installation temporary files
+composer-setup.php
+composer.phar
+composer-installer.php
+
+# Error directories (created by npm when APPDATA env var not set)
+\$\{APPDATA\}/
+${APPDATA}/
+
+# Health check analysis (optional, can be regenerated)
+HEALTH_CHECK_ANALYSIS.md
+
+# Windows specific
+Thumbs.db
+desktop.ini
+

@@ -128,6 +128,10 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
 	end,
 })
 
+-- 禁用不需要的 provider（消除健康检查警告）
+-- Perl provider: 版本太旧，不需要
+vim.g.loaded_perl_provider = 0
+
 -- 根据操作系统设置shell
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
 	-- Windows 系统使用 Git Bash
