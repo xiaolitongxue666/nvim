@@ -5,7 +5,17 @@
 -- https://github.com/folke/lazy.nvim
 
 -- 引导 lazy.nvim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+-- 获取数据目录路径，并确保路径格式正确（去除可能的引号）
+local datapath = vim.fn.stdpath("data")
+-- 去除路径两端的引号（如果环境变量值包含引号）
+datapath = string.gsub(datapath, "^[\"']+", "")
+datapath = string.gsub(datapath, "[\"']+$", "")
+-- 规范化路径，确保使用正斜杠（Neovim 内部使用正斜杠）
+datapath = vim.fn.fnamemodify(datapath, ":p")
+datapath = string.gsub(datapath, "\\", "/")
+-- 移除末尾的斜杠（如果有）
+datapath = string.gsub(datapath, "/+$", "")
+local lazypath = datapath .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"
     local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
