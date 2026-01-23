@@ -277,7 +277,7 @@ flowchart TD
 - `<leader>aii` - 中断 opencode 会话
 
 **窗口导航**:
-- `<leader>aie` - 从 opencode 窗口返回主编辑窗口
+- `<leader>aie` - 从 opencode 窗口返回主编辑窗口（不隐藏 opencode 窗口，仅切换焦点）
 - `<leader>j` / `<leader>l` - 在窗口间移动（左侧/右侧）
 
 **上下文占位符**:
@@ -1154,14 +1154,14 @@ nvim
 - `<leader>aii` - 中断 opencode 会话
 
 #### 窗口导航
-- `<leader>aie` - 从 opencode 窗口返回主编辑窗口
+- `<leader>aie` - 从 opencode 窗口返回主编辑窗口（不隐藏 opencode 窗口，仅切换焦点）
 - `<leader>j` / `<leader>l` - 在窗口间移动（左侧/右侧）
 
 #### 使用技巧
 1. **快速询问**：选中代码后按 `<leader>aia` 直接询问
 2. **操作符模式**：使用 `go` 作为操作符，支持 Vim 的点和重复功能
 3. **上下文占位符**：在提示中使用 `@this`、`@buffer`、`@diagnostics` 等占位符
-4. **窗口切换**：在 opencode 窗口中按 `<leader>aie` 快速返回编辑窗口
+4. **窗口切换**：在 opencode 窗口中按 `<leader>aie` 快速返回编辑窗口，opencode 窗口保持可见
 
 ### LSP 语言服务器
 

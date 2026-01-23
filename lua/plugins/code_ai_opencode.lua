@@ -101,31 +101,42 @@ return {
             {
                 "<leader>aie",  -- ai = AI, e = edit (返回主编辑窗口)
                 function()
-                    -- 尝试切换到上一个窗口（通常是主编辑窗口）
-                    local prev_win = vim.fn.winnr("#")
-                    if prev_win > 0 and vim.fn.winbufnr(prev_win) ~= -1 then
-                        vim.cmd(prev_win .. "wincmd w")
-                    else
-                        -- 如果上一个窗口无效，尝试找到第一个普通编辑窗口
-                        local current_win = vim.api.nvim_get_current_win()
-                        local windows = vim.api.nvim_list_wins()
-                        for _, win in ipairs(windows) do
-                            if win ~= current_win then
-                                local buf = vim.api.nvim_win_get_buf(win)
-                                local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-                                local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-                                -- 跳过终端、帮助、quickfix 等特殊窗口
-                                if buftype == "" and filetype ~= "help" and filetype ~= "qf" then
-                                    vim.api.nvim_set_current_win(win)
-                                    return
-                                end
+                    local current_win = vim.api.nvim_get_current_win()
+                    local current_buf = vim.api.nvim_win_get_buf(current_win)
+                    local windows = vim.api.nvim_list_wins()
+                    
+                    -- 找到第一个普通编辑窗口（跳过终端、帮助、quickfix、opencode 等特殊窗口）
+                    for _, win in ipairs(windows) do
+                        if win ~= current_win then
+                            local buf = vim.api.nvim_win_get_buf(win)
+                            local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
+                            local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+                            local bufname = vim.api.nvim_buf_get_name(buf)
+                            
+                            -- 跳过特殊窗口类型
+                            -- buftype: "" 表示普通文件缓冲区
+                            -- 跳过: 终端、帮助、quickfix、opencode 终端窗口等
+                            if buftype == "" 
+                                and filetype ~= "help" 
+                                and filetype ~= "qf"
+                                and not string.match(bufname, "opencode") then
+                                -- 找到普通编辑窗口，切换过去（不隐藏当前窗口）
+                                vim.api.nvim_set_current_win(win)
+                                return
                             end
                         end
-                        -- 如果找不到，使用默认的窗口切换
+                    end
+                    
+                    -- 如果找不到合适的窗口，尝试切换到上一个窗口
+                    local prev_win = vim.fn.winnr("#")
+                    if prev_win > 0 and prev_win ~= vim.fn.winnr() and vim.fn.winbufnr(prev_win) ~= -1 then
+                        vim.cmd(prev_win .. "wincmd w")
+                    else
+                        -- 最后尝试使用默认的窗口切换（切换到上一个窗口）
                         vim.cmd("wincmd p")
                     end
                 end,
-                desc = "返回主编辑窗口",
+                desc = "返回主编辑窗口（不隐藏 opencode）",
                 mode = { "n", "t" },
             },
         },
