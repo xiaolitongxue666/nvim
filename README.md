@@ -249,6 +249,7 @@ flowchart TD
 - `Ctrl+Space` - 扩展选择到下一个节点
 - `Backspace` - 缩小选择范围
 **特性**: 支持增量选择、智能缩进、语法感知的文本对象
+**诊断命令**: `:TSCheckCompiler` 和 `:TSViewLogs` 可用
 
 ##### opencode.nvim (code_ai_opencode.lua)
 **功能**: 集成 opencode AI 助手到 Neovim，提供编辑器感知的研究、审查和请求功能
@@ -701,6 +702,13 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 - 如果设置了 `$XDG_CONFIG_HOME`，则显示 `$XDG_CONFIG_HOME/nvim`
 - 否则显示 `$HOME/.config/nvim`（如果存在）
 - 或者显示 `$HOME/AppData/Local/nvim`（Windows 传统路径）
+
+查看所有相关的路径，可以使用：
+```vim
+:echo stdpath('data') " 数据目录
+:echo stdpath('config') " 配置目录
+:echo stdpath('cache') " 缓存目录
+```
 
 **其他有用的路径查询命令**：
 - `:echo stdpath('data')` - 查看数据目录（插件、swap 等）
