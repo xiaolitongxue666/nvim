@@ -37,7 +37,15 @@ return {
                     lualine_c = {'filename'},
                     lualine_x = {'encoding', 'fileformat', 'filetype'},
                     lualine_y = {'progress'},
-                    lualine_z = {'location'}
+                    lualine_z = {
+                        'location',
+                        {
+                            require("opencode").statusline,
+                            cond = function()
+                                return require("opencode").statusline() ~= nil
+                            end,
+                        },
+                    }
                 },
                 inactive_sections = {
                     lualine_a = {},
