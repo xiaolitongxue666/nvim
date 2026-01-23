@@ -250,6 +250,70 @@ flowchart TD
 - `Backspace` - 缩小选择范围
 **特性**: 支持增量选择、智能缩进、语法感知的文本对象
 
+##### opencode.nvim (code_ai_opencode.lua)
+**功能**: 集成 opencode AI 助手到 Neovim，提供编辑器感知的研究、审查和请求功能
+**特性**:
+- 自动连接到 CWD 中运行的 opencode 实例
+- 共享编辑器上下文（缓冲区、光标、选择、诊断等）
+- 支持输入提示、补全和高亮
+- 从提示库中选择提示或定义自定义提示
+- 执行命令和响应权限请求
+- 实时重载编辑后的缓冲区
+- 通过状态栏组件监控状态
+- 支持范围和点重复（Vim 风格）
+
+**主要功能快捷键**:
+- `<leader>aia` - 询问 opencode（当前选择或光标位置）
+- `<leader>ais` - 选择 opencode 操作（提示、命令等）
+- `<leader>ait` - 切换 opencode 窗口显示/隐藏
+
+**操作符模式**（支持范围和点重复）:
+- `go` - 添加范围到 opencode（作为操作符使用，如 `goap` 添加段落）
+- `goo` - 添加当前行到 opencode
+
+**会话控制**:
+- `<leader>aiu` - 向上滚动 opencode 会话（半页）
+- `<leader>aid` - 向下滚动 opencode 会话（半页）
+- `<leader>aii` - 中断 opencode 会话
+
+**窗口导航**:
+- `<leader>aie` - 从 opencode 窗口返回主编辑窗口
+- `<leader>j` / `<leader>l` - 在窗口间移动（左侧/右侧）
+
+**上下文占位符**:
+opencode.nvim 支持以下上下文占位符，可在提示中使用：
+- `@this` - 操作符范围或视觉选择（如果有），否则为光标位置
+- `@buffer` - 当前缓冲区
+- `@buffers` - 打开的缓冲区
+- `@visible` - 可见文本
+- `@diagnostics` - 当前缓冲区诊断
+- `@quickfix` - Quickfix 列表
+- `@diff` - Git diff
+- `@marks` - 全局标记
+- `@grapple` - grapple.nvim 标签
+
+**内置提示**:
+- `diagnostics` - 解释诊断信息
+- `diff` - 审查 Git diff
+- `document` - 为代码添加注释
+- `explain` - 解释代码及其上下文
+- `fix` - 修复诊断问题
+- `implement` - 实现代码
+- `optimize` - 优化代码性能和可读性
+- `review` - 审查代码正确性和可读性
+- `test` - 为代码添加测试
+
+**配置说明**:
+- 使用 `snacks` provider 作为默认提供者（更稳定）
+- 自动检测 CWD 中已运行的 opencode 实例
+- 如果找不到已存在的实例，会自动启动新的实例
+- 支持自动重载编辑后的文件（需要 `autoread` 选项）
+
+**状态栏集成**:
+opencode 状态显示在 lualine 状态栏的右侧，显示当前 opencode 会话状态。
+
+**更多信息**: [opencode.nvim GitHub](https://github.com/NickvanDyke/opencode.nvim)
+
 #### LSP 和开发工具
 
 ##### nvim-lspconfig (lsp_server_nvim-lspconfig.lua)
@@ -1072,6 +1136,32 @@ nvim
 - `<Tab>` - 增加缩进 (可视模式)
 - `<S-Tab>` - 减少缩进 (可视模式)
 - `<` / `>` - 减少/增加缩进并保持选择
+
+### AI 助手 (opencode)
+
+#### 主要功能
+- `<leader>aia` - 询问 opencode（当前选择或光标位置）
+- `<leader>ais` - 选择 opencode 操作（提示、命令等）
+- `<leader>ait` - 切换 opencode 窗口显示/隐藏
+
+#### 操作符模式
+- `go` - 添加范围到 opencode（作为操作符使用，如 `goap` 添加段落）
+- `goo` - 添加当前行到 opencode
+
+#### 会话控制
+- `<leader>aiu` - 向上滚动 opencode 会话（半页）
+- `<leader>aid` - 向下滚动 opencode 会话（半页）
+- `<leader>aii` - 中断 opencode 会话
+
+#### 窗口导航
+- `<leader>aie` - 从 opencode 窗口返回主编辑窗口
+- `<leader>j` / `<leader>l` - 在窗口间移动（左侧/右侧）
+
+#### 使用技巧
+1. **快速询问**：选中代码后按 `<leader>aia` 直接询问
+2. **操作符模式**：使用 `go` 作为操作符，支持 Vim 的点和重复功能
+3. **上下文占位符**：在提示中使用 `@this`、`@buffer`、`@diagnostics` 等占位符
+4. **窗口切换**：在 opencode 窗口中按 `<leader>aie` 快速返回编辑窗口
 
 ### LSP 语言服务器
 

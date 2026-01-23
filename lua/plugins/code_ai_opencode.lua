@@ -6,12 +6,11 @@
 
 return {
     {
-        -- 插件名称
         "NickvanDyke/opencode.nvim",
-        -- 依赖项
         dependencies = {
             -- 推荐用于 ask() 和 select() 功能
             -- 如果使用 snacks provider，则必需
+            ---@module 'snacks' <- Loads `snacks.nvim` types for configuration intellisense.
             {
                 "folke/snacks.nvim",
                 opts = {
@@ -21,7 +20,6 @@ return {
                 },
             },
         },
-        -- 命令懒加载（触发插件加载）
         cmd = {
             "OpencodeAsk",
             "OpencodeSelect",
@@ -29,18 +27,12 @@ return {
             "OpencodePrompt",
             "OpencodeCommand",
         },
-        -- 按键映射懒加载
         keys = {
             -- 主要功能快捷键
             {
                 "<leader>aia",  -- ai = AI, a = ask
                 function()
-                    local ok, opencode = pcall(require, "opencode")
-                    if ok then
-                        opencode.ask("@this: ", { submit = true })
-                    else
-                        vim.notify("opencode.nvim 未加载: " .. tostring(opencode), vim.log.levels.ERROR)
-                    end
+                    require("opencode").ask("@this: ", { submit = true })
                 end,
                 desc = "询问 opencode（当前选择）",
                 mode = { "n", "x" },
@@ -48,12 +40,7 @@ return {
             {
                 "<leader>ais",  -- ai = AI, s = select
                 function()
-                    local ok, opencode = pcall(require, "opencode")
-                    if ok then
-                        opencode.select()
-                    else
-                        vim.notify("opencode.nvim 未加载: " .. tostring(opencode), vim.log.levels.ERROR)
-                    end
+                    require("opencode").select()
                 end,
                 desc = "选择 opencode 操作",
                 mode = { "n", "x" },
@@ -61,17 +48,12 @@ return {
             {
                 "<leader>ait",  -- ai = AI, t = toggle
                 function()
-                    local ok, opencode = pcall(require, "opencode")
-                    if ok then
-                        opencode.toggle()
-                    else
-                        vim.notify("opencode.nvim 未加载: " .. tostring(opencode), vim.log.levels.ERROR)
-                    end
+                    require("opencode").toggle()
                 end,
                 desc = "切换 opencode",
                 mode = { "n", "t" },
             },
-            -- 操作符模式
+            -- 操作符模式（支持范围和点重复）
             {
                 "go",
                 function()
@@ -115,27 +97,57 @@ return {
                 desc = "中断 opencode 会话",
                 mode = "n",
             },
+            -- 窗口导航
+            {
+                "<leader>aie",  -- ai = AI, e = edit (返回主编辑窗口)
+                function()
+                    -- 尝试切换到上一个窗口（通常是主编辑窗口）
+                    local prev_win = vim.fn.winnr("#")
+                    if prev_win > 0 and vim.fn.winbufnr(prev_win) ~= -1 then
+                        vim.cmd(prev_win .. "wincmd w")
+                    else
+                        -- 如果上一个窗口无效，尝试找到第一个普通编辑窗口
+                        local current_win = vim.api.nvim_get_current_win()
+                        local windows = vim.api.nvim_list_wins()
+                        for _, win in ipairs(windows) do
+                            if win ~= current_win then
+                                local buf = vim.api.nvim_win_get_buf(win)
+                                local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
+                                local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+                                -- 跳过终端、帮助、quickfix 等特殊窗口
+                                if buftype == "" and filetype ~= "help" and filetype ~= "qf" then
+                                    vim.api.nvim_set_current_win(win)
+                                    return
+                                end
+                            end
+                        end
+                        -- 如果找不到，使用默认的窗口切换
+                        vim.cmd("wincmd p")
+                    end
+                end,
+                desc = "返回主编辑窗口",
+                mode = { "n", "t" },
+            },
         },
-        -- 插件配置
         config = function()
-            -- 配置 opencode.nvim
-            -- 根据官方文档：https://github.com/NickvanDyke/opencode.nvim
-            -- opencode.nvim 使用 vim.g.opencode_opts 进行配置
             ---@type opencode.Opts
             vim.g.opencode_opts = {
                 -- Provider 配置
                 -- opencode.nvim 会自动检测 CWD 中已运行的 opencode 实例
                 -- 如果找不到已存在的实例，才会使用配置的 provider 启动新的实例
+                -- 重要：必须使用 --port 标志来暴露服务器
                 provider = {
                     -- 可选值: "terminal", "snacks", "kitty", "wezterm", "tmux", 或自定义函数
                     -- 如果已经在终端运行了 opencode --port，插件会自动检测到，不会启动新的实例
-                    enabled = "terminal", -- 作为后备选项，如果找不到已存在的实例则使用
-                    -- terminal provider 配置
-                    terminal = {
-                        -- 终端命令
+                    enabled = "snacks", -- 使用 snacks provider（推荐，更稳定）
+                    snacks = {
                         cmd = "opencode",
-                        -- 启动参数（必须使用 --port 标志来暴露服务器）
                         args = { "--port", "0" }, -- 使用随机端口
+                    },
+                    -- terminal provider 配置（作为后备）
+                    terminal = {
+                        cmd = "opencode",
+                        args = { "--port", "0" },
                     },
                 },
                 -- 事件配置
@@ -146,21 +158,13 @@ return {
                 -- 输入提示配置
                 ask = {
                     -- 使用 snacks.input 时的补全源配置
+                    -- 如果使用 blink.cmp，可以配置补全源
                     -- blink_cmp_sources = { ... },
                 },
             }
 
             -- opencode.nvim 需要 autoread 来重载编辑后的文件
-            -- 已在 basic.lua 中设置，这里确保设置正确
             vim.o.autoread = true
-
-            -- 验证插件是否加载成功（仅在开发时使用）
-            -- local ok, opencode = pcall(require, "opencode")
-            -- if ok then
-            --     vim.notify("opencode.nvim 已加载", vim.log.levels.INFO)
-            -- else
-            --     vim.notify("opencode.nvim 加载失败: " .. tostring(opencode), vim.log.levels.ERROR)
-            -- end
 
             -- 可选：处理 opencode 事件
             -- vim.api.nvim_create_autocmd("User", {

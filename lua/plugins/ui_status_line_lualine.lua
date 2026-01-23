@@ -41,9 +41,6 @@ return {
                         'location',
                         {
                             require("opencode").statusline,
-                            cond = function()
-                                return require("opencode").statusline() ~= nil
-                            end,
                         },
                     }
                 },
