@@ -1,6 +1,48 @@
 -- 文件以utf8格式加载
 vim.g.encoding = "UTF-8"
 vim.o.fileencoding = "utf-8"
+
+-- 代理环境变量设置（跨平台兼容）
+-- 优先级：系统环境变量 > NVIM_PROXY_URL 环境变量 > 不设置（保持兼容性）
+-- 注意：nvim-treesitter 使用 Git 下载，需要确保 Git 和 Neovim 都能使用代理
+local function setup_proxy()
+    -- 如果系统环境变量已设置，直接使用（会自动继承）
+    if vim.env.http_proxy or vim.env.HTTP_PROXY then
+        return
+    end
+    
+    -- 尝试从 NVIM_PROXY_URL 环境变量获取（如果用户设置了）
+    -- 使用方法：在启动 Neovim 前设置 export NVIM_PROXY_URL=http://127.0.0.1:7890
+    local proxy_url = os.getenv("NVIM_PROXY_URL")
+    if proxy_url and proxy_url ~= "" then
+        vim.env.http_proxy = proxy_url
+        vim.env.https_proxy = proxy_url
+        vim.env.HTTP_PROXY = proxy_url
+        vim.env.HTTPS_PROXY = proxy_url
+    end
+end
+
+setup_proxy()
+
+-- 确保编译工具在 PATH 中（仅 Windows）
+-- macOS 和 Linux 通常通过包管理器安装，gcc 已在系统 PATH 中
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+    -- 添加 MinGW 到 PATH（如果 gcc 不可用）
+    if vim.fn.executable("gcc") == 0 then
+        local mingw_paths = {
+            "C:\\msys64\\mingw64\\bin",
+            "C:\\ProgramData\\mingw64\\mingw64\\bin",
+        }
+        local current_path = vim.env.PATH or ""
+        local path_separator = ";"  -- Windows 使用分号
+        for _, path in ipairs(mingw_paths) do
+            if vim.fn.isdirectory(path) == 1 and not string.find(current_path, path, 1, true) then
+                vim.env.PATH = path .. path_separator .. current_path
+                break
+            end
+        end
+    end
+end
 -- jk移动时光标下上方保留8行
 vim.o.scrolloff = 8
 vim.o.sidescrolloff = 8

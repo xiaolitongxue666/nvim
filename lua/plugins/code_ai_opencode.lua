@@ -33,7 +33,7 @@ return {
         keys = {
             -- 主要功能快捷键
             {
-                "<leader>oa",
+                "<leader>aia",  -- ai = AI, a = ask
                 function()
                     local ok, opencode = pcall(require, "opencode")
                     if ok then
@@ -46,7 +46,7 @@ return {
                 mode = { "n", "x" },
             },
             {
-                "<leader>os",
+                "<leader>ais",  -- ai = AI, s = select
                 function()
                     local ok, opencode = pcall(require, "opencode")
                     if ok then
@@ -59,7 +59,7 @@ return {
                 mode = { "n", "x" },
             },
             {
-                "<leader>ot",
+                "<leader>ait",  -- ai = AI, t = toggle
                 function()
                     local ok, opencode = pcall(require, "opencode")
                     if ok then
@@ -92,7 +92,7 @@ return {
             },
             -- 会话控制
             {
-                "<leader>ou",
+                "<leader>aiu",  -- ai = AI, u = up
                 function()
                     require("opencode").command("session.half.page.up")
                 end,
@@ -100,7 +100,7 @@ return {
                 mode = "n",
             },
             {
-                "<leader>od",
+                "<leader>aid",  -- ai = AI, d = down
                 function()
                     require("opencode").command("session.half.page.down")
                 end,
@@ -108,7 +108,7 @@ return {
                 mode = "n",
             },
             {
-                "<leader>oi",
+                "<leader>aii",  -- ai = AI, i = interrupt
                 function()
                     require("opencode").command("session.interrupt")
                 end,
