@@ -41,7 +41,7 @@ git clone --recursive git@github.com:your-username/script_tool_and_config.git
 ## 项目结构
 
 ```
-/Users/liyong/.config/nvim/
+~/.config/nvim/  (或 $XDG_CONFIG_HOME/nvim/)
 ├── .gitignore                          # Git 忽略文件
 ├── .idea/                              # JetBrains IDE 项目配置（可选）
 │   ├── .gitignore
@@ -611,31 +611,59 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 
 ## 安装和使用
 
-### 默认配置路径
+### Neovim 配置路径说明
 
-以下表格列出了 Neovim 0.9+ 在三大桌面系统上的默认「用户级」配置路径（`$XDG_CONFIG_HOME` 未设定时取系统默认值）。
+**重要提示**：Neovim 0.10+ 版本强化了对 XDG 目录规范的支持，优先使用 XDG 风格的路径，以实现跨平台配置路径的统一性。
 
-| 平台 | 变量/文件 | 默认路径 | 备注 |
-|------|-----------|----------|------|
-| Linux / *BSD / WSL | `$XDG_CONFIG_HOME` | `$HOME/.config` | 绝大多数发行版通用 |
-|  | 主配置目录 | `$HOME/.config/nvim` | `init.vim` / `init.lua` 所在 |
-|  | 数据目录 | `$HOME/.local/share/nvim` | 插件、swap、shada 等 |
+#### 路径查找优先级
 
-| 平台 | 变量/文件 | 默认路径 | 备注 |
-|------|-----------|----------|------|
-| Windows (10/11) | `%LOCALAPPDATA%` | `C:\Users\<用户名>\AppData\Local` | Windows 标准本机应用数据 |
-|  | 主配置目录 | `%LOCALAPPDATA%\nvim` | `init.vim` / `init.lua` 所在 |
-|  | 数据目录 | `%LOCALAPPDATA%\nvim-data` | 插件、shada、日志等 |
+当 Neovim 寻找配置文件（`init.lua` 或 `init.vim`）时，它会按以下顺序查找：
 
-| 平台 | 变量/文件 | 默认路径 | 备注 |
-|------|-----------|----------|------|
-| macOS | `$XDG_CONFIG_HOME` | `$HOME/.config` | 遵循 XDG 规范 |
-|  | 主配置目录 | `$HOME/.config/nvim` | 与 Linux 相同 |
-|  | 数据目录 | `$HOME/.local/share/nvim` | 插件、shada、日志等 |
+1. **`$XDG_CONFIG_HOME/nvim`**（如果设置了该环境变量）
+2. **`$HOME/.config/nvim`**（XDG 风格的新路径，**优先使用**）
+3. **`$HOME/AppData/Local/nvim`**（Windows 传统路径，仅在 XDG 路径不存在时使用）
+
+**本项目使用新路径（XDG 风格）**，确保在 Linux、macOS 和 Windows 上的配置路径保持一致。
+
+#### 查看当前配置路径
+
+在 Neovim 中，可以使用以下命令查看当前实际使用的配置路径：
+
+```vim
+:echo stdpath('config')
+```
+
+这个命令会显示 Neovim 当前使用的配置目录路径。根据路径查找优先级，它会显示：
+- 如果设置了 `$XDG_CONFIG_HOME`，则显示 `$XDG_CONFIG_HOME/nvim`
+- 否则显示 `$HOME/.config/nvim`（如果存在）
+- 或者显示 `$HOME/AppData/Local/nvim`（Windows 传统路径）
+
+**其他有用的路径查询命令**：
+- `:echo stdpath('data')` - 查看数据目录（插件、swap 等）
+- `:echo stdpath('state')` - 查看状态目录（shada、日志等）
+- `:echo stdpath('cache')` - 查看缓存目录
+- `:echo stdpath('config')` - 查看配置目录（配置文件所在位置）
+
+#### 各平台路径对照表
+
+| 内容 | 旧路径 (AppData) | 新路径 (XDG 风格) | 说明 |
+|------|-----------------|-------------------|------|
+| **配置文件** | `%LOCALAPPDATA%\nvim`<br/>`C:\Users\<用户名>\AppData\Local\nvim` | `$XDG_CONFIG_HOME/nvim`<br/>`C:\Users\<用户名>\.config\nvim` | `init.lua` / `init.vim` 所在目录 |
+| **数据文件** | `%LOCALAPPDATA%\nvim-data`<br/>`C:\Users\<用户名>\AppData\Local\nvim-data` | `$XDG_DATA_HOME/nvim`<br/>`C:\Users\<用户名>\.local\share\nvim` | 插件、swap、shada 等 |
+
+#### 各平台默认路径
+
+| 平台 | 配置目录 | 数据目录 | 备注 |
+|------|----------|----------|------|
+| **Linux / *BSD / WSL** | `$HOME/.config/nvim` | `$HOME/.local/share/nvim` | 遵循 XDG 规范 |
+| **macOS** | `$HOME/.config/nvim` | `$HOME/.local/share/nvim` | 遵循 XDG 规范 |
+| **Windows** | `$HOME/.config/nvim`<br/>（需设置 `XDG_CONFIG_HOME`） | `$HOME/.local/share/nvim`<br/>（需设置 `XDG_DATA_HOME`） | 推荐使用 XDG 风格路径 |
+| **Windows (传统)** | `%LOCALAPPDATA%\nvim` | `%LOCALAPPDATA%\nvim-data` | 仅在 XDG 路径不存在时使用 |
 
 ### 前置要求
 
 - Neovim >= 0.8.0 (需要 LuaJIT 支持)
+- **推荐使用 Neovim 0.10+** 以获得完整的 XDG 目录规范支持
 - Git >= 2.19.0
 - [Nerd Font](https://www.nerdfonts.com/) 字体 (可选，用于图标显示)
 - C 编译器 (用于 nvim-treesitter)
@@ -682,8 +710,10 @@ chmod +x install.sh
 - 检查 Git Submodule 是否已初始化
 - 检测操作系统（macOS/Linux/Windows）
 - 备份现有配置文件（如果存在）
-- 复制配置文件到 `~/.config/nvim/` 或 `%XDG_CONFIG_HOME%/nvim/`
-- Windows 上检查 XDG_CONFIG_HOME 环境变量
+- 复制配置文件到 XDG 风格的路径：
+  - Linux/macOS: `~/.config/nvim/`
+  - Windows: `%XDG_CONFIG_HOME%/nvim/` 或 `~/.config/nvim/`（如果设置了 XDG_CONFIG_HOME）
+- Windows 上检查并提示配置 XDG_CONFIG_HOME 环境变量
 
 ##### 手动安装
 
@@ -1105,9 +1135,17 @@ cd ../..
 
 ## Windows 配置说明
 
-在 Windows 上使用 Neovim 时，需要配置 `XDG_CONFIG_HOME` 环境变量，以便 Neovim 能够正确找到配置文件位置。
+在 Windows 上使用 Neovim 时，**强烈推荐**配置 XDG 环境变量，以便使用与 Linux/macOS 一致的配置路径。
+
+### 为什么使用 XDG 路径？
+
+1. **统一性**：在 Linux、macOS 和 Windows 上使用相同的配置路径结构
+2. **优先级**：Neovim 0.10+ 优先检查 `$HOME/.config/nvim`，如果存在则忽略旧路径
+3. **现代化**：遵循 XDG 目录规范，符合现代工具的标准做法
 
 ### 配置步骤
+
+#### 1. 设置 XDG_CONFIG_HOME（配置文件目录）
 
 1. **打开系统属性**：
    - 右键单击"此电脑"或"计算机"图标，选择"属性"
@@ -1117,7 +1155,7 @@ cd ../..
    - 在"系统属性"窗口中，点击"环境变量"按钮
 
 3. **添加新环境变量**：
-   - 在"用户变量"或"系统变量"部分点击"新建"按钮
+   - 在"用户变量"部分点击"新建"按钮
 
 4. **输入变量名和变量值**：
    - **变量名**：`XDG_CONFIG_HOME`
@@ -1125,24 +1163,67 @@ cd ../..
      例如：`C:\Users\Administrator\.config\`
    - 点击"确定"保存
 
-5. **确认更改**：
-   - 关闭所有窗口，确保更改已保存
+#### 2. 设置 XDG_DATA_HOME（数据文件目录，可选但推荐）
 
-6. **重新启动终端**：
-   - 关闭并重新打开 Git Bash 或 PowerShell，以使新环境变量生效
+按照相同步骤添加：
+
+- **变量名**：`XDG_DATA_HOME`
+- **变量值**：`C:\Users\<用户名>\.local\share\`
+  例如：`C:\Users\Administrator\.local\share\`
+
+#### 3. 确认更改
+
+- 关闭所有窗口，确保更改已保存
+- **重新启动终端**：关闭并重新打开 Git Bash 或 PowerShell，以使新环境变量生效
 
 ### 验证环境变量
+
+#### 在终端中验证
 
 在 Git Bash 中运行：
 
 ```bash
 echo $XDG_CONFIG_HOME
+echo $XDG_DATA_HOME
 ```
 
-应该输出：`C:\Users\<用户名>\.config\`
+应该输出：
+- `C:\Users\<用户名>\.config\`
+- `C:\Users\<用户名>\.local\share\`
 
-配置完成后，Neovim 的配置文件路径将是：
-`%XDG_CONFIG_HOME%\nvim\` (即 `~/.config/nvim/`)
+#### 在 Neovim 中验证实际使用的路径
+
+启动 Neovim 后，可以使用以下命令查看 Neovim 实际使用的配置路径：
+
+```vim
+:echo stdpath('config')
+```
+
+这个命令会显示 Neovim 当前实际使用的配置目录。如果配置正确，应该显示：
+- `C:\Users\<用户名>\.config\nvim`（如果设置了 `XDG_CONFIG_HOME`）
+- 或者 `C:\Users\<用户名>\.config\nvim`（如果 `$HOME/.config/nvim` 目录存在）
+
+**其他有用的路径查询命令**：
+```vim
+:echo stdpath('data')    " 查看数据目录（插件、swap 等）
+:echo stdpath('state')   " 查看状态目录（shada、日志等）
+:echo stdpath('cache')   " 查看缓存目录
+```
+
+### 配置路径说明
+
+配置完成后，Neovim 的路径将是：
+
+- **配置文件**：`%XDG_CONFIG_HOME%\nvim\` (即 `~/.config/nvim/`)
+- **数据文件**：`%XDG_DATA_HOME%\nvim\` (即 `~/.local/share/nvim/`)
+
+**验证方法**：在 Neovim 中运行 `:echo stdpath('config')` 和 `:echo stdpath('data')` 来确认实际使用的路径。
+
+### 注意事项
+
+- 如果 `$HOME/.config/nvim` 目录存在，Neovim 0.10+ 会优先使用它，**忽略**旧的 `AppData\Local\nvim` 路径
+- 如果未设置 `XDG_CONFIG_HOME`，Neovim 仍会尝试使用 `$HOME/.config/nvim`（如果存在）
+- 建议同时设置 `XDG_CONFIG_HOME` 和 `XDG_DATA_HOME` 以获得完整的 XDG 支持
 
 ## 故障排除
 
@@ -1162,7 +1243,32 @@ git submodule update --init dotfiles/nvim
 
 ### Windows 上配置文件位置不正确
 
-确保已正确设置 `XDG_CONFIG_HOME` 环境变量，并重新启动终端。
+**问题**：Neovim 找不到配置文件或使用了错误的路径。
+
+**诊断步骤**：
+
+1. **检查 Neovim 实际使用的配置路径**：
+   在 Neovim 中运行：
+   ```vim
+   :echo stdpath('config')
+   ```
+   这会显示 Neovim 当前实际使用的配置目录路径。
+
+2. **验证环境变量**：
+   在 Git Bash 中运行 `echo $XDG_CONFIG_HOME` 应该显示正确的路径（`C:\Users\<用户名>\.config\`）
+
+3. **检查配置文件位置**：
+   确认配置文件已复制到 `~/.config/nvim/` 目录（或 `stdpath('config')` 显示的路径）
+
+**解决方案**：
+1. 确保已正确设置 `XDG_CONFIG_HOME` 环境变量（指向 `C:\Users\<用户名>\.config\`）
+2. 重新启动终端以使环境变量生效
+3. 如果 `stdpath('config')` 显示的是旧路径（`AppData\Local\nvim`），检查是否存在 `$HOME/.config/nvim` 目录
+4. 如果旧路径存在但新路径不存在，Neovim 可能会使用旧路径。建议：
+   - 将配置文件从旧路径迁移到新路径
+   - 或者删除旧路径，强制使用新路径
+
+**注意**：Neovim 0.10+ 会优先使用 `$HOME/.config/nvim`，如果该目录存在，会忽略旧的 `AppData\Local\nvim` 路径。使用 `:echo stdpath('config')` 可以确认 Neovim 实际使用的路径。
 
 ### 插件安装失败
 

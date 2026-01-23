@@ -15,11 +15,11 @@ local opt = {
 map("", "S", ":w<CR>", opt)
 map("", "Q", ":q<CR>", opt)
 
--- 重载nvim配置文件
-map("", "R", ":source ~/.config/nvim/init.vim<CR>", opt)
+-- 重载nvim配置文件（使用 $MYVIMRC 环境变量，自动适配不同路径）
+map("", "R", ":source $MYVIMRC<CR>", opt)
 
--- 空格 + rc 打开nvim配置文件
-map("", "<LEADER>rc", ":e ~/.config/nvim/init.vim<CR>", opt)
+-- 空格 + rc 打开nvim配置文件（使用 $MYVIMRC 环境变量，自动适配不同路径）
+map("", "<LEADER>rc", ":e $MYVIMRC<CR>", opt)
 
 -- 普通模式和visual模式插入按键重映射
 map("n", "h", "i", opt)

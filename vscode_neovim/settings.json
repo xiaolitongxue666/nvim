@@ -1,7 +1,7 @@
 {
     "makefile.configureOnOpen": true,
     "explorer.confirmDelete": false,
-    "vscode-neovim.neovimInitVimPaths.win32": "c:\\Users\\Administrator\\AppData\\Local\\nvim\\vscode_neovim\\vscode_neovim_init.lua",
+    "vscode-neovim.neovimInitVimPaths.win32": "c:\\Users\\Administrator\\.config\\nvim\\vscode_neovim\\vscode_neovim_init.lua",
     "vscode-neovim.neovimInitVimPaths.darwin": "/Users/liyong/.config/nvim/vscode_neovim/vscode_neovim_init.lua",
     "vscode-neovim.neovimInitVimPaths.linux": "/home/user/.config/nvim/vscode_neovim/vscode_neovim_init.lua",
     "terminal.integrated.defaultProfile.windows": "Git Bash",
