@@ -24,42 +24,6 @@ return {
         -- 键位映射
                         keys = {
                     {
-                        "<leader>o",
-                        function()
-                            -- 激进清理所有outline缓冲区
-                            local buffers = vim.api.nvim_list_bufs()
-                            for _, buf in ipairs(buffers) do
-                                local bufname = vim.api.nvim_buf_get_name(buf)
-                                local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-                                local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-                                
-                                if (bufname:match("^outline://") or filetype == "outline") and buftype == "nofile" then
-                                    vim.api.nvim_buf_delete(buf, { force = true })
-                                end
-                            end
-                            
-                            -- 检查是否已经有outline窗口
-                            local outline_win = nil
-                            for _, win in ipairs(vim.api.nvim_list_wins()) do
-                                local buf = vim.api.nvim_win_get_buf(win)
-                                local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-                                if filetype == "outline" then
-                                    outline_win = win
-                                    break
-                                end
-                            end
-                            
-                            if outline_win then
-                                -- 如果存在，关闭它
-                                vim.api.nvim_win_close(outline_win, true)
-                            else
-                                -- 如果不存在，打开它
-                                vim.cmd("Outline")
-                            end
-                        end,
-                        desc = "切换代码大纲",
-                    },
-                    {
                         "<leader>O",
                         function()
                             -- 强制关闭所有outline窗口

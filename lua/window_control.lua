@@ -164,91 +164,6 @@ function M.restore_layout()
     vim.cmd("wincmd =")
 end
 
--- 调试函数：显示当前窗口信息
-function M.debug_window_info()
-    local window_type = get_window_type()
-    local current_width = vim.api.nvim_win_get_width(0)
-    local total_width = vim.o.columns
-    local buftype = vim.bo.buftype
-    local filetype = vim.bo.filetype
-    
-    print("=== 窗口调试信息 ===")
-    print("窗口类型: " .. window_type)
-    print("缓冲区类型: " .. buftype)
-    print("文件类型: " .. filetype)
-    print("当前宽度: " .. current_width)
-    print("总屏幕宽度: " .. total_width)
-    
-    if window_type == "outline" then
-        local min_width = 30
-        local max_width = math.floor(total_width * 0.35)
-        print("大纲窗口范围: " .. min_width .. " - " .. max_width)
-        print("当前步长限制: -2到2字符")
-    elseif window_type == "neo-tree" then
-        local min_width = 35
-        local max_width = math.floor(total_width * 0.45)
-        print("文件树窗口范围: " .. min_width .. " - " .. max_width)
-        print("当前步长限制: -2到2字符")
-    else
-        print("普通窗口：智能调整相邻插件窗口")
-        -- 检查是否有相邻的插件窗口
-        local current_win = vim.api.nvim_get_current_win()
-        local wins = vim.api.nvim_list_wins()
-        local plugin_wins = {}
-        
-        for _, win in ipairs(wins) do
-            if win ~= current_win then
-                local buf = vim.api.nvim_win_get_buf(win)
-                local win_filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-                if win_filetype == "outline" or win_filetype == "neo-tree" then
-                    table.insert(plugin_wins, {win = win, filetype = win_filetype})
-                end
-            end
-        end
-        
-        if #plugin_wins > 0 then
-            print("发现相邻插件窗口:")
-            for _, plugin in ipairs(plugin_wins) do
-                local plugin_width = vim.api.nvim_win_get_width(plugin.win)
-                print("  - " .. plugin.filetype .. " (宽度: " .. plugin_width .. ")")
-            end
-        else
-            print("无相邻插件窗口，使用标准调整")
-        end
-    end
-    
-    print("==================")
-end
-
--- 测试函数：模拟窗口调整
-function M.test_resize(direction, amount)
-    print("=== 测试窗口调整 ===")
-    print("方向: " .. direction)
-    print("调整量: " .. amount)
-    
-    local window_type = get_window_type()
-    local current_width = vim.api.nvim_win_get_width(0)
-    local total_width = vim.o.columns
-    
-    print("调整前宽度: " .. current_width)
-    
-    if direction == "width" and window_type == "outline" then
-        local min_width = 25
-        local max_width = math.floor(total_width * 0.4)
-        local step = amount
-        if math.abs(amount) > 3 then
-            step = amount > 0 and 2 or -2
-        end
-        
-        local new_width = math.max(min_width, math.min(max_width, current_width + step))
-        print("计算的新宽度: " .. new_width)
-        print("步长: " .. step)
-        print("最小宽度: " .. min_width)
-        print("最大宽度: " .. max_width)
-    end
-    
-    print("==================")
-end
 
 -- 设置窗口控制快捷键
 function M.setup_keymaps()
@@ -270,10 +185,6 @@ function M.setup_keymaps()
     map("n", "<leader>wb", ":lua require('window_control').balance_windows()<CR>", opt)
     map("n", "<leader>wm", ":lua require('window_control').maximize_window()<CR>", opt)
     map("n", "<leader>wr", ":lua require('window_control').restore_layout()<CR>", opt)
-    
-    -- 调试功能
-    map("n", "<leader>wd", ":lua require('window_control').debug_window_info()<CR>", opt)
-    map("n", "<leader>wt", ":lua require('window_control').test_resize('width', -3)<CR>", opt)
     
     -- 禁用原来的箭头键调整（可选）
     -- map("n", "<Up>", "<Nop>", opt)

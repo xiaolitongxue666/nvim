@@ -63,7 +63,7 @@ git clone --recursive git@github.com:your-username/script_tool_and_config.git
 │       ├── code_git_decorations_gitsigns.lua     # Git 装饰
 │       ├── code_highlight_nvim-treesitter.lua    # 语法高亮
 │       ├── code_snip_LuaSnip.lua                  # 代码片段
-│       ├── colorscheme_tokyonight.lua             # 主题配色
+│       ├── colorscheme_catppuccin.lua            # 主题配色
 │       ├── comment.lua                            # 代码注释
 │       ├── dap_lua_one-small-step-for-vimkind.lua # Lua 调试适配器
 │       ├── dap_nvim-dap.lua                       # 调试适配器协议
@@ -133,7 +133,7 @@ flowchart TD
     G --> H2["依赖插件"]
     G --> H3["懒加载插件"]
     
-    H1 --> I1["tokyonight 主题<br/>(priority=1000)"]
+    H1 --> I1["catppuccin 主题<br/>(priority=1000)"]
     I1 --> I2["应用配色方案"]
     
     H2 --> J1["mason.nvim<br/>(LSP 管理器)"]
@@ -637,9 +637,9 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 
 #### 视觉增强
 
-##### tokyonight.nvim (colorscheme_tokyonight.lua)
-**功能**: Tokyo Night 主题配色，提供深色现代化主题
-**特性**: 支持透明背景、多种样式（storm、moon、night、day）
+##### catppuccin.nvim (colorscheme_catppuccin.lua)
+**功能**: Catppuccin 主题配色，提供柔和的粉彩主题
+**特性**: 支持透明背景、多种样式（latte、frappe、macchiato、mocha）
 
 ##### indent-blankline.nvim (indent_guides_indent-blankline.lua)
 **功能**: 缩进指示线，显示代码缩进层级
@@ -648,18 +648,27 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 ##### gitsigns.nvim (code_git_decorations_gitsigns.lua)
 **功能**: Git 状态装饰，在编辑器中显示 Git 变更信息
 **快捷键**:
-- `]c` - 下一个 Git 变更
-- `[c` - 上一个 Git 变更
-- `<leader>hs` - 暂存当前 hunk
-- `<leader>hr` - 重置当前 hunk
-- `<leader>hS` - 暂存整个缓冲区
-- `<leader>hu` - 撤销暂存 hunk
-- `<leader>hR` - 重置整个缓冲区
-- `<leader>hp` - 预览 hunk
-- `<leader>hb` - 显示当前行 blame
-- `<leader>tb` - 切换当前行 blame 显示
-- `<leader>hd` - 显示删除的内容
-- `<leader>td` - 切换删除内容显示
+- `]h` - 下一个 Git 变更（在 diff 模式下使用 `]c`）
+- `[h` - 上一个 Git 变更（在 diff 模式下使用 `[c`）
+- `<leader>ghs` - 暂存当前 hunk
+- `<leader>ghr` - 重置当前 hunk
+- `<leader>ghS` - 暂存整个缓冲区
+- `<leader>ghu` - 撤销暂存 hunk
+- `<leader>ghR` - 重置整个缓冲区
+- `<leader>ghp` - 预览 hunk
+- `<leader>ghi` - 内联预览 hunk
+- `<leader>ghb` - 显示当前行 blame
+- `<leader>ghtb` - 切换当前行 blame 显示
+- `<leader>ghB` - 显示文件 blame
+- `<leader>ghd` - Diff 当前文件
+- `<leader>ghD` - Diff 当前文件 (HEAD~1)
+- `<leader>ghts` - 切换标识显示
+- `<leader>ghtn` - 切换行号高亮
+- `<leader>ghtl` - 切换行高亮
+- `<leader>ghtw` - 切换单词 Diff
+- `<leader>ghtd` - 切换已删除行显示
+- `<leader>ghq` - 所有 Hunks 到 Quickfix
+- `<leader>ghl` - 当前缓冲区 Hunks 到 Location List
 
 ##### mini.starter (greeter_dashboard_mini-starter.lua)
 **功能**: 启动欢迎页面，提供快速访问常用功能的入口

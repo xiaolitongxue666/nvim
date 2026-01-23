@@ -31,11 +31,9 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- 确保在加载 lazy.nvim 之前设置 `mapleader` 和 `maplocalleader`
--- 以便映射正确。
+-- 注意：mapleader 和 maplocalleader 已在 keybindings.lua 中设置
+-- keybindings.lua 在 lazy.lua 之前加载（见 init.lua），因此这里不需要重复设置
 -- 这也是设置其他配置 (vim.opt) 的好地方
-vim.g.mapleader = " "
-vim.g.maplocalleader = "\\"
 
 -- 禁用 LazyVim 导入顺序检查（不使用 LazyVim）
 vim.g.lazyvim_check_order = false
