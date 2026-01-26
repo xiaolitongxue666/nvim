@@ -27,6 +27,8 @@ return {
             max_width = function()
                 return math.floor(vim.o.columns * 0.75)
             end,
+            -- 设置背景颜色，用于100%透明度时的回退颜色
+            background_colour = "#000000",
         },
         -- Init 函数总是在启动时执行
         init = function()
