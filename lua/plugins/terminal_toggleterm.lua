@@ -20,7 +20,7 @@ return {
         -- 按键映射懒加载
         keys = {
             -- 主要终端快捷键
-            { "<leader>/", "<cmd>ToggleTerm<cr>", desc = "切换终端", mode = { "n", "t" } },
+            { "<leader>/", "<cmd>ToggleTerm<cr>", desc = "终端", mode = { "n", "t" } },
             { "<C-`>", "<cmd>ToggleTerm<cr>", desc = "切换终端" },
             -- 其他终端类型
             { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", desc = "浮动终端" },
@@ -47,7 +47,7 @@ return {
                         return vim.o.columns * 0.4
                     end
                 end,
-                -- 打开终端的快捷键（可以在普通模式、插入模式和终端模式使用）
+                -- 打开终端的快捷键
                 open_mapping = [[<leader>/]],
                 -- 隐藏行号
                 hide_numbers = true,
@@ -74,7 +74,9 @@ return {
                 -- 退出时关闭
                 close_on_exit = true,
                 -- 使用的 shell
-                shell = vim.o.shell,
+                -- Windows 上使用 Git Bash 作为交互式终端
+                -- vim.o.shell 保持 PowerShell 用于插件内部命令，避免路径问题
+                shell = vim.fn.has("win32") == 1 and (vim.fn.stdpath("config") .. "\\scripts\\bash.cmd") or vim.o.shell,
                 -- 自动滚动到底部
                 auto_scroll = true,
                 -- 浮动窗口配置
@@ -134,7 +136,7 @@ return {
             -- 设置终端模式下的键位映射
             function _G.set_terminal_keymaps()
                 local opts = { buffer = 0 }
-                -- 终端切换（<leader>/ 关闭终端并回到之前窗口）
+                -- 终端切换
                 vim.keymap.set('t', '<leader>/', '<cmd>ToggleTerm<cr>', opts)
                 -- 退出终端模式但不关闭终端
                 vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
@@ -233,8 +235,8 @@ return {
             vim.keymap.set('v', '<leader>ts', '<cmd>lua send_visual_selection_to_terminal()<cr>', { desc = "发送选中内容到终端" })
             
             -- 全局快捷键映射
-            vim.keymap.set('n', '<leader>/', '<cmd>ToggleTerm<cr>', { desc = "切换终端" })
-            vim.keymap.set('i', '<leader>/', '<esc><cmd>ToggleTerm<cr>', { desc = "切换终端" })
+            vim.keymap.set('n', '<leader>/', '<cmd>ToggleTerm<cr>', { desc = "终端" })
+            vim.keymap.set('i', '<leader>/', '<esc><cmd>ToggleTerm<cr>', { desc = "终端" })
         end,
     },
 }
