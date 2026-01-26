@@ -16,25 +16,11 @@ return {
         branch = 'master',
         -- 禁用懒加载，官方不支持懒加载
         lazy = false,
-        -- 插件安装或更新时执行的构建命令
-        -- 自动更新所有已安装的解析器到最新版本
-        build = ":TSUpdate",
+        -- Windows 环境：禁用自动构建（使用手动编译的解析器）
+        -- 在 UNIX 系统上可以启用: build = ":TSUpdate",
+        build = false,
         -- Opts 是一个将传递给 Plugin.config() 函数的表。设置此值将隐含 Plugin.config()
         opts = {
-            -- 安装目录（使用 XDG 路径，Windows 上确保使用正斜杠）
-            install_dir = (function()
-                local install_path = vim.fn.stdpath('data') .. '/site'
-                -- Windows 上统一使用正斜杠，避免路径解析问题
-                if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
-                    install_path = install_path:gsub("\\", "/")
-                    -- 确保目录存在
-                    if vim.fn.isdirectory(install_path) == 0 then
-                        vim.fn.mkdir(install_path, "p")
-                    end
-                end
-                return install_path
-            end)(),
-            
             -- 语法高亮（由 Neovim 内置提供）
             highlight = {
                 enable = true,
@@ -49,36 +35,16 @@ return {
                 disable = {},
             },
             
-            -- 自动安装解析器
-            -- 注意: 如果遇到网络问题导致卡住，可以设置为 false，然后手动执行 :TSInstall <language>
+            -- 禁用自动安装（Windows 上有路径兼容问题）
             auto_install = false,
             
             -- 忽略解析器安装错误，避免启动时崩溃
             ignore_install = {},
             
-            -- 确保安装的解析器列表
-            -- 这些解析器会在插件安装时自动安装（如果 auto_install = true）
-            ensure_installed = {
-                "bash",
-                "c",
-                "html",
-                "javascript",
-                "jsdoc",
-                "json",
-                "lua",
-                "luadoc",
-                "luap",
-                "markdown",
-                "markdown_inline",
-                "python",
-                "query",
-                "regex",
-                "tsx",
-                "typescript",
-                "vim",
-                -- "vimdoc",  -- 已禁用：编译失败，如需要可取消注释
-                "yaml",
-            },
+            -- Windows 环境：禁用 ensure_installed 避免触发自动编译
+            -- 解析器已手动编译并放置在 %LOCALAPPDATA%/nvim-data/site/parser/
+            -- 如需添加新解析器，使用脚本手动编译或参考 README
+            ensure_installed = {},
             
             -- 增量选择功能
             -- 允许逐步扩展或缩小文本选择范围

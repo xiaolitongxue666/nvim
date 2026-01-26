@@ -2,6 +2,23 @@
 vim.g.encoding = "UTF-8"
 vim.o.fileencoding = "utf-8"
 
+-- Windows 环境变量路径修复（处理 Git Bash 环境下的引号问题）
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+    -- 清理环境变量中的引号
+    local function clean_env_path(env_name)
+        local value = vim.env[env_name]
+        if value and value:match('["\']') then
+            vim.env[env_name] = value:gsub('["\']', "")
+        end
+    end
+    
+    -- 修复可能包含引号的 XDG 环境变量
+    clean_env_path("XDG_DATA_HOME")
+    clean_env_path("XDG_CONFIG_HOME")
+    clean_env_path("XDG_STATE_HOME")
+    clean_env_path("XDG_CACHE_HOME")
+end
+
 -- 代理环境变量设置（跨平台兼容）
 -- 优先级：系统环境变量 > NVIM_PROXY_URL 环境变量 > 不设置（保持兼容性）
 -- 注意：nvim-treesitter 使用 Git 下载，需要确保 Git 和 Neovim 都能使用代理
@@ -176,16 +193,16 @@ vim.g.loaded_perl_provider = 0
 
 -- 根据操作系统设置shell
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
-	-- Windows 系统使用 Git Bash
-	-- 设置正确的 Git Bash 路径
-	vim.opt.shell = "\"D:\\Program Files\\Git\\bin\\bash.exe\""
-	vim.opt.shellcmdflag = "-c"
+	-- Windows 系统：使用 PowerShell 或 CMD（更好的路径兼容性）
+	-- 注意：Git Bash + shellslash 会导致 nvim-treesitter 等插件的路径解析问题
+	-- 如果需要使用 Git Bash，请在外部终端中运行，而不是作为 Neovim 的内置 shell
+	vim.opt.shell = "pwsh.exe"
+	vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
 	vim.opt.shellquote = ""
 	vim.opt.shellxquote = ""
-	vim.opt.shellpipe = "|"
-	vim.opt.shellredir = ">"
-	-- 使用正斜杠路径，避免插件在解析 runtimepath 时出错
-	vim.opt.shellslash = true
+	vim.opt.shellpipe = "| Out-File -Encoding UTF8 %s"
+	vim.opt.shellredir = "| Out-File -Encoding UTF8 %s"
+	-- 注意：不要设置 shellslash = true，这会导致路径解析问题
 else
 	-- macOS 和 Linux 使用默认 shell
 	-- 不需要特殊设置，使用系统默认

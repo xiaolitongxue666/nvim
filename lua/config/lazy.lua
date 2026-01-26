@@ -5,16 +5,10 @@
 -- https://github.com/folke/lazy.nvim
 
 -- 引导 lazy.nvim
--- 获取数据目录路径，并确保路径格式正确（去除可能的引号）
+-- 获取数据目录路径
 local datapath = vim.fn.stdpath("data")
--- 去除路径两端的引号（如果环境变量值包含引号）
-datapath = string.gsub(datapath, "^[\"']+", "")
-datapath = string.gsub(datapath, "[\"']+$", "")
--- 规范化路径，确保使用正斜杠（Neovim 内部使用正斜杠）
-datapath = vim.fn.fnamemodify(datapath, ":p")
-datapath = string.gsub(datapath, "\\", "/")
--- 移除末尾的斜杠（如果有）
-datapath = string.gsub(datapath, "/+$", "")
+-- 清理路径中可能存在的引号（Windows 环境变量问题）
+datapath = string.gsub(tostring(datapath), '["\']', "")
 local lazypath = datapath .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -38,6 +32,14 @@ vim.opt.rtp:prepend(lazypath)
 -- 禁用 LazyVim 导入顺序检查（不使用 LazyVim）
 vim.g.lazyvim_check_order = false
 
+-- 清理路径函数（处理 Windows + Git Bash 环境变量问题）
+local function clean_path(path)
+    if type(path) == "table" then
+        path = path[1]
+    end
+    return string.gsub(tostring(path), '["\']', "")
+end
+
 -- 设置 lazy.nvim
 require("lazy").setup({
     spec = {
@@ -49,4 +51,17 @@ require("lazy").setup({
     install = { colorscheme = { "habamax" } },
     -- 自动检查插件更新
     checker = { enabled = true },
+    -- 显式设置路径（修复 Windows + Git Bash 路径问题）
+    root = clean_path(vim.fn.stdpath("data")) .. "/lazy",
+    state = clean_path(vim.fn.stdpath("state")) .. "/lazy/state.json",
+    lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json",
+    performance = {
+        cache = {
+            enabled = false, -- 禁用 vim.loader 缓存（修复 Windows + Git Bash 路径问题）
+        },
+    },
+    -- 显式设置 pkg.cache 路径（修复 Windows 路径解析问题）
+    pkg = {
+        cache = clean_path(vim.fn.stdpath("state")) .. "/lazy/pkg-cache.lua",
+    },
 })
