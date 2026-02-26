@@ -20,3 +20,16 @@ require("keybindings")
 require("window_control").setup_keymaps()
 -- lazy.nvim插件管理
 require("config.lazy")
+
+-- ==========================================
+-- Auto-configured paths (do not edit manually)
+-- ==========================================
+
+-- Python interpreter path (auto-configured by install.sh)
+vim.g.python3_host_prog = "/root/.config/nvim/venv/nvim-python/bin/python"
+-- Add virtual environment site-packages to pythonpath
+local venv_path = "/root/.config/nvim/venv/nvim-python"
+vim.opt.pp:prepend(venv_path .. "/lib/python*/site-packages")
+
+-- Node.js host script path (auto-configured by install.sh; must be path to neovim/bin/cli.js)
+vim.g.node_host_prog = "/root/.local/share/fnm/node-versions/v24.14.0/installation/lib/node_modules/neovim/bin/cli.js"

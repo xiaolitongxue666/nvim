@@ -190,6 +190,8 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
 -- 禁用不需要的 provider（消除健康检查警告）
 -- Perl provider: 版本太旧，不需要
 vim.g.loaded_perl_provider = 0
+-- Ruby provider: 本配置未使用 Ruby 插件，可不安装 Ruby
+vim.g.loaded_ruby_provider = 0
 
 -- 根据操作系统设置shell
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then

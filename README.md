@@ -743,11 +743,17 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 
 ### 前置要求
 
-- Neovim >= 0.8.0 (需要 LuaJIT 支持)
-- **推荐使用 Neovim 0.10+** 以获得完整的 XDG 目录规范支持
+- **Neovim 0.11.0+**（本配置使用 `vim.lsp.config`、nvim-notify 等 0.11 API；需 LuaJIT 支持）
 - Git >= 2.19.0
-- [Nerd Font](https://www.nerdfonts.com/) 字体 (可选，用于图标显示)
-- C 编译器 (用于 nvim-treesitter)
+- [Nerd Font](https://www.nerdfonts.com/) 字体（可选，用于图标显示）
+- C 编译器（用于 nvim-treesitter）
+
+**配套工具与版本**（由 `install.sh` 或 run_once 脚本协助安装）：
+
+- **uv**：Python 环境与 pynvim 安装；升级 Neovim 后建议执行 `uv pip install -U pynvim`
+- **Node.js / fnm**：LSP、mason 等；无与 Neovim 0.11 绑定的特定版本要求
+- **tree-sitter-cli**：建议 >= 0.26.1（nvim-treesitter 可选）
+- 系统 Lua 为可选：Neovim 运行依赖其内置 LuaJIT
 
 ### 安装步骤
 
@@ -1449,10 +1455,25 @@ Neovim 提供了 `:checkhealth` 命令来检查配置和插件的健康状态。
 
 #### 方法二：非交互式命令（一行命令）
 
-在终端中直接执行：
+在终端中直接执行（会打开一次 nvim 窗口后退出）：
 
 ```bash
 nvim --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "q"
+```
+
+**无界面执行（推荐在脚本/CI 中使用）**：使用 `--headless` 不弹窗，适合脚本或 cron：
+
+```bash
+nvim --headless --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "qa!"
+```
+
+#### 方法三：使用项目脚本保存日志
+
+在仓库根目录执行，将 checkhealth 结果写入指定文件（不指定则写入当前目录的 `nvim_checkhealth.log`）：
+
+```bash
+./scripts/common/utils/nvim_checkhealth_to_log.sh
+./scripts/common/utils/nvim_checkhealth_to_log.sh /tmp/my_health.log
 ```
 
 ### 自动修复健康检查问题
@@ -1471,9 +1492,29 @@ nvim --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "q"
    - neovim Ruby gem（如果 Ruby 可用）
 
 3. **修复配置问题**：
-   - 禁用不需要的 provider（如 Perl）
-   - 配置 DAP 适配器路径
+   - 禁用不需要的 provider（Perl、Ruby 等，见 `lua/basic.lua`）
+   - 配置 `g:python3_host_prog`、`g:node_host_prog`（node_host_prog 指向 neovim host 脚本 `neovim/bin/cli.js`）
    - 确保环境变量正确传递
+
+### 修复后记录：工具列表与脚本顺序
+
+为通过 `:checkhealth` 所安装的工具与推荐执行顺序如下，便于新环境复现。
+
+**安装的工具**
+
+| 类别 | 工具 |
+|------|------|
+| 系统包（按需） | xclip / xsel（clipboard）、go、ruby、composer、julia |
+| Python venv（`install.sh`） | pynvim、pyright、ruff-lsp、debugpy、black、isort、flake8、mypy |
+| Mason LSP（`ensure_installed`） | lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman |
+| 可选 | tree-sitter-cli、pnpm（npm 全局） |
+
+**推荐脚本执行顺序**
+
+1. 生成健康检查日志：`./scripts/common/utils/nvim_checkhealth_to_log.sh`（可选指定路径，如 `/tmp/nvim_health.log`）
+2. 安装环境与 provider：`./dotfiles/nvim/install.sh`（需先安装 uv、fnm、nvim）
+3. 可选：headless 安装 Mason LSP：`nvim --headless -c "lua vim.wait(10000)" -c "MasonInstall lua_ls bashls clangd pyright rust_analyzer jsonls yamlls marksman" -c "qa!"`
+4. 再次执行步骤 1 验证：`./scripts/common/utils/nvim_checkhealth_to_log.sh`
 
 ### 代理支持
 

@@ -4,6 +4,12 @@
 # 支持 macOS、Linux、Windows 系统
 # 使用 Git Submodule 管理配置
 # 使用 uv 管理 Python 环境，使用 fnm 管理 Node.js 环境
+#
+# 版本与前置要求（与本仓库配置一致）：
+#   - Neovim 0.11.0+（本配置使用 vim.lsp.config、nvim-notify 等 0.11 API）
+#   - 升级 Neovim 后建议执行：uv pip install -U pynvim
+#   - tree-sitter-cli 建议 >= 0.26.1（nvim-treesitter 可选）
+#   - 系统 Lua 为可选：Neovim 运行依赖其内置 LuaJIT，系统 Lua 仅用于部分构建/脚本
 
 # 启用严格模式：遇到错误立即退出，未定义变量报错，管道中任一命令失败则整个管道失败
 set -euo pipefail
@@ -43,6 +49,7 @@ fi
 NVIM_CONFIG_DIR=""
 VENV_PATH=""
 NODE_PATH=""
+NODE_HOST_PATH=""   # neovim host 脚本路径（g:node_host_prog 应指向此，而非 node 可执行文件）
 BACKUP_DIR=""
 
 # 错误处理：捕获 ERR 信号并记录错误信息
@@ -73,7 +80,7 @@ check_submodule() {
     log_success "Neovim submodule check passed"
 }
 
-# 检查前置依赖（uv, fnm, lua）
+# 检查前置依赖（uv, fnm；系统 Lua 为可选，Neovim 运行依赖内置 LuaJIT）
 check_prerequisites() {
     log_info "Checking prerequisites..."
 
@@ -89,7 +96,7 @@ check_prerequisites() {
     fi
     log_success "fnm found: $(fnm --version)"
 
-    # 检查 Lua（通过 lua 命令或 pacman）
+    # 检查 Lua（可选：用于部分构建/脚本；Neovim 运行依赖其内置 LuaJIT，不依赖系统 Lua）
     local lua_installed=0
     if command -v lua >/dev/null 2>&1; then
         lua_installed=1
@@ -408,7 +415,7 @@ install_language_tools() {
     fi
 }
 
-# 安装 Lua（如果需要）
+# 安装 Lua（可选；Neovim 运行不依赖系统 Lua，仅部分构建/脚本可能用到）
 install_lua() {
     log_info "Installing Lua..."
 
@@ -730,18 +737,25 @@ setup_nodejs_environment() {
     # 重新初始化 fnm 环境以确保 Node.js 在 PATH 中
     eval "$(fnm env --use-on-cd)" || true
 
-    # 获取 Node.js 路径
+    # 获取 Node.js 路径（优先使用 fnm 稳定路径，避免 fnm_multishells 临时路径在 headless/其他 shell 中失效）
+    local fnm_dir="${HOME}/.local/share/fnm"
     NODE_PATH="$(command -v node 2>/dev/null || echo "")"
-    if [[ -z "${NODE_PATH}" ]]; then
-        # 尝试从 fnm 目录查找
+    if [[ -n "${NODE_PATH}" ]] && [[ "${NODE_PATH}" == *"fnm_multishells"* ]]; then
         local fnm_node_path
         fnm_node_path=$(fnm list 2>/dev/null | grep -E "lts|default" | head -n 1 | awk '{print $2}' || echo "")
-        if [[ -n "${fnm_node_path}" ]]; then
-            # 构建完整路径
-            local fnm_dir="${HOME}/.local/share/fnm"
-            if [[ -d "${fnm_dir}/aliases/${fnm_node_path}" ]]; then
-                NODE_PATH="${fnm_dir}/aliases/${fnm_node_path}/bin/node"
-            fi
+        if [[ -n "${fnm_node_path}" ]] && [[ -f "${fnm_dir}/aliases/${fnm_node_path}/bin/node" ]]; then
+            NODE_PATH="${fnm_dir}/aliases/${fnm_node_path}/bin/node"
+        elif [[ -f "${fnm_dir}/aliases/default/bin/node" ]]; then
+            NODE_PATH="${fnm_dir}/aliases/default/bin/node"
+        fi
+    fi
+    if [[ -z "${NODE_PATH}" ]]; then
+        local fnm_node_path
+        fnm_node_path=$(fnm list 2>/dev/null | grep -E "lts|default" | head -n 1 | awk '{print $2}' || echo "")
+        if [[ -n "${fnm_node_path}" ]] && [[ -d "${fnm_dir}/aliases/${fnm_node_path}" ]]; then
+            NODE_PATH="${fnm_dir}/aliases/${fnm_node_path}/bin/node"
+        elif [[ -f "${fnm_dir}/aliases/default/bin/node" ]]; then
+            NODE_PATH="${fnm_dir}/aliases/default/bin/node"
         fi
     fi
 
@@ -773,10 +787,18 @@ setup_nodejs_environment() {
                 log_info "You can install it manually later: npm install -g neovim"
             fi
         fi
+        # g:node_host_prog 需指向 neovim host 脚本（neovim/bin/cli.js），而非 node 可执行文件
+        # npm root -g 返回全局 node_modules 目录，故 neovim 位于 ${npm_global_root}/neovim/bin/cli.js
+        local npm_global_root
+        npm_global_root="$(npm root -g 2>/dev/null | tr -d '\r\n')"
+        if [[ -n "${npm_global_root}" ]] && [[ -f "${npm_global_root}/neovim/bin/cli.js" ]]; then
+            NODE_HOST_PATH="${npm_global_root}/neovim/bin/cli.js"
+            log_info "Neovim node host script: ${NODE_HOST_PATH}"
+        fi
 
-        # 安装 tree-sitter CLI 和 pnpm（用于健康检查）
+        # 安装 tree-sitter CLI（建议 >= 0.26.1）和 pnpm（用于健康检查）
         if ! command -v tree-sitter >/dev/null 2>&1; then
-            log_info "Installing tree-sitter CLI..."
+            log_info "Installing tree-sitter CLI (recommended >= 0.26.1)..."
             if npm install -g tree-sitter-cli >/dev/null 2>&1; then
                 log_success "tree-sitter CLI installed"
             else
@@ -860,10 +882,10 @@ vim.opt.pp:prepend(venv_path .. \"/lib/python*/site-packages\")
 "
     fi
 
-    if [[ ${node_configured} -eq 0 ]] && [[ -n "${NODE_PATH:-}" ]]; then
+    if [[ ${node_configured} -eq 0 ]] && [[ -n "${NODE_HOST_PATH:-}" ]] && [[ -f "${NODE_HOST_PATH}" ]]; then
         config_snippet="${config_snippet}
--- Node.js interpreter path (auto-configured by install.sh)
-vim.g.node_host_prog = \"${NODE_PATH}\"
+-- Node.js host script path (auto-configured by install.sh; must be path to neovim/bin/cli.js)
+vim.g.node_host_prog = \"${NODE_HOST_PATH}\"
 "
     fi
 

@@ -64,4 +64,6 @@ require("lazy").setup({
     pkg = {
         cache = clean_path(vim.fn.stdpath("state")) .. "/lazy/pkg-cache.lua",
     },
+    -- 禁用 luarocks/hererocks，消除 checkhealth 中 lazy 的 ERROR（无插件依赖 luarocks）
+    rocks = { enabled = false },
 })
