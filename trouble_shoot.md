@@ -1,6 +1,6 @@
 # 故障排查记录
 
-本文档记录在 Windows + Git Bash 环境下执行 `install.sh` 时遇到的问题及解决办法。
+本文档记录在 Windows + Git Bash 环境下执行 `install.sh` 时遇到的问题及解决办法；也记录在 Neovim 内使用 Mason 时出现的同类问题及配置内解决办法。
 
 ---
 
@@ -182,3 +182,7 @@
 |------|------|
 | `lua/basic.lua`（Windows 分支） | 启动时设置 `vim.env.APPDATA` 为已展开路径 |
 | `lua/basic.lua`（文件末尾） | `clean_appdata_in_config_dir`、VimEnter 自动清理、`:NvimConfigCleanAppdata` 命令 |
+
+### 验证说明
+
+用户确认：在配置目录下执行 :Mason 并按 U 更新后，项目根下不再出现（或明显减少）`%APPDATA%` 目录。若偶发仍出现，可使用 **:NvimConfigCleanAppdata** 手动清理，或下次启动 Neovim 时 VimEnter 会自动清理。

@@ -24,56 +24,73 @@ git pull
 ./install.sh
 ```
 
+## 其他文档
+
+- **故障排查**：见 [trouble_shoot.md](trouble_shoot.md)（如 Windows 下 %APPDATA% 目录、install.sh 与 Mason 相关说明）。
+- **LSP 查看与管理**：见 [docs/lsp_view_and_manage.md](docs/lsp_view_and_manage.md)。
+
 ## 项目结构
 
 ```
 ~/.config/nvim/  (或 $XDG_CONFIG_HOME/nvim/)
 ├── .gitignore                          # Git 忽略文件
-├── .idea/                              # JetBrains IDE 项目配置（可选）
-│   ├── .gitignore
-│   ├── modules.xml
-│   ├── nvim.iml
-│   └── vcs.xml
-├── README.md                           # 项目说明文档
-├── install.sh                          # 安装脚本（包含健康检查修复功能）
-├── init.lua                            # Neovim 主配置入口
-├── lua/                                # Lua 配置文件目录
-│   ├── basic.lua                       # 基础设置配置
-│   ├── config/                         # 配置模块
-│   │   └── lazy.lua                    # lazy.nvim 插件管理器配置
-│   ├── keybindings.lua                 # 按键绑定配置
-│   ├── window_control.lua              # 智能窗口控制模块
-│   └── plugins/                        # 插件配置目录
+├── README.md                            # 项目说明文档
+├── trouble_shoot.md                     # 故障排查记录（%APPDATA%、Mason 等）
+├── install.sh                           # 安装脚本（包含健康检查修复功能）
+├── init.lua                             # Neovim 主配置入口
+├── docs/                                # 说明文档
+│   └── lsp_view_and_manage.md           # LSP 查看与管理
+├── scripts/                             # 辅助脚本
+│   └── bash.cmd                         # Windows 下 Git Bash 入口（可选）
+├── lua/                                 # Lua 配置文件目录
+│   ├── basic.lua                        # 基础设置配置
+│   ├── config/                          # 配置模块
+│   │   └── lazy.lua                     # lazy.nvim 插件管理器配置
+│   ├── keybindings.lua                  # 按键绑定配置
+│   ├── window_control.lua               # 智能窗口控制模块
+│   └── plugins/                         # 插件配置目录
+│       ├── code_ai_opencode.lua                  # AI 补全 (opencode)
 │       ├── code_completion_nvim-autopairs.lua    # 自动括号配对
-│       ├── code_completion_nvim-cmp.lua           # 代码补全
+│       ├── code_completion_nvim-cmp.lua          # 代码补全
+│       ├── code_format_conform.lua               # 代码格式化
 │       ├── code_git_decorations_gitsigns.lua     # Git 装饰
 │       ├── code_highlight_nvim-treesitter.lua    # 语法高亮
-│       ├── code_snip_LuaSnip.lua                  # 代码片段
+│       ├── code_snip_LuaSnip.lua                 # 代码片段
 │       ├── colorscheme_catppuccin.lua            # 主题配色
-│       ├── comment.lua                            # 代码注释
+│       ├── comment.lua                           # 代码注释
 │       ├── dap_lua_one-small-step-for-vimkind.lua # Lua 调试适配器
-│       ├── dap_nvim-dap.lua                       # 调试适配器协议
-│       ├── finder_telescope.lua                   # 模糊查找
-│       ├── greeter_dashboard_mini-starter.lua     # 启动页面
-│       ├── help_document_lazydev.lua              # Neovim 开发帮助
-│       ├── indent_guides_indent-blankline.lua     # 缩进指示线
-│       ├── keytips_which-key.lua                  # 按键提示
+│       ├── dap_nvim-dap.lua                      # 调试适配器协议
+│       ├── finder_telescope.lua                  # 模糊查找
+│       ├── greeter_dashboard_mini-starter.lua    # 启动页面
+│       ├── help_document_lazydev.lua             # Neovim 开发帮助
+│       ├── indent_guides_indent-blankline.lua    # 缩进指示线
+│       ├── keytips_which-key.lua                 # 按键提示
 │       ├── lsp_server_manager_mason-lspconfig.lua # LSP 服务器配置
-│       ├── lsp_server_manager_mason.lua           # LSP 服务器管理
-│       ├── lsp_server_nvim-lspconfig.lua          # LSP 配置
-│       ├── practice_typr.lua                      # 打字练习
-│       ├── ui_buffer_tabpage_bufferline.lua       # 缓冲区标签页
-│       ├── ui_component_lib_nui.lua               # UI 组件库
-│       ├── ui_dressing.lua                        # UI 界面美化
-│       ├── ui_icons_nvim-web-devicons.lua         # 文件图标
-│       ├── ui_notice.lua                          # 通知系统
-│       ├── ui_outline.lua                         # 代码大纲 (Outline)
-│       └── ui_status_line_lualine.lua             # 状态栏
-└── test_dir/                           # 测试目录
-    ├── test.c
-    ├── test.cpp
-    ├── test.lua
-    └── test.py
+│       ├── lsp_server_manager_mason.lua          # LSP 服务器管理
+│       ├── lsp_server_nvim-lspconfig.lua         # LSP 配置
+│       ├── practice_hardtime.lua                 # 刻意练习（按键约束）
+│       ├── practice_typr.lua                     # 打字练习
+│       ├── search_and_replace_nvim-spectre.lua   # 搜索替换
+│       ├── session_manager_persistence.lua       # 会话持久化
+│       ├── task_runner_overseer.lua               # 任务运行器
+│       ├── terminal_toggleterm.lua                # 终端
+│       ├── ui_buffer_tabpage_bufferline.lua      # 缓冲区标签页
+│       ├── ui_component_lib_nui.lua              # UI 组件库
+│       ├── ui_dressing.lua                       # UI 界面美化
+│       ├── ui_file_explorer_neo-tree.lua         # 文件浏览器
+│       ├── ui_icons_mini.lua                     # 图标 (mini)
+│       ├── ui_icons_nvim-web-devicons.lua       # 文件图标
+│       ├── ui_notice.lua                         # 通知系统
+│       ├── ui_notification_manager_nvim-notify.lua # 通知管理
+│       ├── ui_outline.lua                        # 代码大纲
+│       ├── ui_smear_cursor.lua                   # 光标拖尾
+│       ├── ui_snacks.lua                        # 轻量提示
+│       └── ui_status_line_lualine.lua            # 状态栏
+└── test_dir/                            # 测试目录（install.sh 部署时排除）
+    ├── c_test.c
+    ├── file_control_test.txt
+    ├── json_test.json
+    └── lua_test.lua
 ```
 
 ## 启动流程
