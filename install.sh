@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # Neovim 配置安装脚本
-# 支持 macOS、Linux、Windows 系统
+# 支持 macOS、Linux、Windows 系统（推荐/测试环境含 Windows 10 + Git Bash）
 # 使用 Git Submodule 管理配置
-# 使用 uv 管理 Python 环境，使用 fnm 管理 Node.js 环境
+# 前置：uv（管理 Python）、fnm（管理 Node）；各平台均需先安装。
 #
 # 版本与前置要求（与本仓库配置一致）：
 #   - Neovim 0.11.0+（本配置使用 vim.lsp.config、nvim-notify 等 0.11 API）
@@ -57,6 +57,8 @@ fi
 # 全局变量
 NVIM_CONFIG_DIR=""
 VENV_PATH=""
+VENV_ACTIVATE=""    # venv activate 脚本路径（Windows 为 Scripts/activate，macOS/Linux 为 bin/activate）
+VENV_PYTHON=""      # venv 内 python 可执行路径（供 init.lua 与校验用）
 NODE_PATH=""
 NODE_HOST_PATH=""   # neovim host 脚本路径（g:node_host_prog 应指向此，而非 node 可执行文件）
 BACKUP_DIR=""
@@ -95,6 +97,63 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+# Windows：规范化 HOME 为 Windows 用户目录的 Unix 形式（如 /c/Users/xxx），
+# 避免 MSYS2 等环境下 HOME=/home/xxx 导致配置装到错误目录。仅 PLATFORM=windows 时执行。
+normalize_windows_home() {
+    [[ "${PLATFORM}" != "windows" ]] && return 0
+    local need_export=0
+    # 仅当 HOME 未设置、为空或为 MSYS2 风格 /home/* 时才覆盖
+    if [[ -z "${HOME:-}" ]] || [[ "${HOME}" == /home/* ]]; then
+        local userprofile="${USERPROFILE:-}"
+        if [[ -z "${userprofile}" ]]; then
+            userprofile=$(cmd //c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r\n' || true)
+        fi
+        userprofile="${userprofile//[$'\r\n']}"
+        userprofile="${userprofile#"${userprofile%%[![:space:]]*}"}"
+        userprofile="${userprofile%"${userprofile##*[![:space:]]}"}"
+        if [[ -n "${userprofile}" ]]; then
+            # 优先手写转换为 /c/Users/xxx（与 Git Bash 一致）；cygpath 在 MSYS2 可能返回 /home/xxx
+            if [[ "${userprofile}" =~ ^([A-Za-z]):(.*) ]]; then
+                local rest="${BASH_REMATCH[2]//\\//}"
+                rest="${rest#/}"
+                HOME="/${BASH_REMATCH[1],,}/${rest}"
+                need_export=1
+            elif command -v cygpath >/dev/null 2>&1; then
+                HOME=$(cygpath -u "${userprofile}" 2>/dev/null || true)
+                [[ -n "${HOME:-}" ]] && need_export=1
+            fi
+        fi
+        # 备用：从脚本路径推导（脚本在 /c/Users/xxx/.config/nvim 等时，如 Git Bash）
+        if [[ ${need_export} -eq 0 ]] && [[ "${SCRIPT_DIR}" =~ ^(/[a-z]/[Uu]sers/[^/]+)/.config/nvim$ ]]; then
+            HOME="${BASH_REMATCH[1]}"
+            need_export=1
+        fi
+    fi
+    if [[ ${need_export} -eq 1 ]] && [[ -n "${HOME:-}" ]]; then
+        export HOME
+    fi
+}
+
+# Windows：获取已展开的 APPDATA 路径（供 npm 使用，避免 npm 在 cwd 下创建字面量 %APPDATA% 目录）
+get_windows_appdata() {
+    [[ "${PLATFORM}" != "windows" ]] && return 0
+    local val=""
+    if [[ -n "${APPDATA:-}" ]] && [[ "${APPDATA}" != *%* ]]; then
+        val="${APPDATA}"
+    fi
+    if [[ -z "${val}" ]] && command -v cmd.exe >/dev/null 2>&1; then
+        val="$(cmd.exe //c "echo %APPDATA%" 2>/dev/null | tr -d '\r\n' || echo "")"
+    fi
+    if [[ -z "${val}" ]] && command -v node >/dev/null 2>&1; then
+        val="$(node -e "try{const c=require('child_process').execSync('cmd /c echo %APPDATA%',{encoding:'utf8',windowsHide:true}); process.stdout.write((c||'').trim().replace(/\r\n?/g,''))}catch(e){}" 2>/dev/null || echo "")"
+    fi
+    val="${val//[$'\r\n']}"
+    val="${val#"${val%%[![:space:]]*}"}"
+    val="${val%"${val##*[![:space:]]}"}"
+    val="${val//\\//}"
+    [[ -n "${val}" ]] && echo "${val}"
+}
 
 # 检查配置目录是否完整（init.lua 或 lua/ 存在）
 check_submodule() {
@@ -523,34 +582,17 @@ install_lua() {
     fi
 }
 
-# 确定配置目录
+# 确定配置目录（多 OS 统一：一律使用 $HOME/.config/nvim）
 determine_config_dir() {
-    if [[ "${PLATFORM}" == "windows" ]] && [[ -n "${XDG_CONFIG_HOME:-}" ]]; then
-        # Windows 使用 XDG_CONFIG_HOME
-        NVIM_CONFIG_DIR="${XDG_CONFIG_HOME}/nvim"
-        # 转换路径格式（如果包含反斜杠）
-        NVIM_CONFIG_DIR="${NVIM_CONFIG_DIR//\\//}"
-    else
-        # macOS/Linux 使用标准路径
-        NVIM_CONFIG_DIR="${HOME}/.config/nvim"
-    fi
-
+    NVIM_CONFIG_DIR="${HOME}/.config/nvim"
     log_info "Neovim config directory: ${NVIM_CONFIG_DIR}"
 }
 
-# 检查 Windows XDG_CONFIG_HOME
+# Windows：可选提示设置 XDG_CONFIG_HOME（与 Neovim 行为一致），不影响本脚本的配置目录（已统一为 $HOME/.config/nvim）
 check_windows_config() {
     if [[ "${PLATFORM}" == "windows" ]] && [[ -z "${XDG_CONFIG_HOME:-}" ]]; then
-        log_info "XDG_CONFIG_HOME not set on Windows"
-        log_info "To use Neovim on Windows, you need to configure XDG_CONFIG_HOME"
-        log_info "Configuration steps:"
-        log_info "1. Open System Properties -> Advanced System Settings -> Environment Variables"
-        log_info "2. Add user variable:"
-        log_info "   - Variable name: XDG_CONFIG_HOME"
-        log_info "   - Variable value: C:\\Users\\<username>\\.config\\"
-        log_info "     Example: C:\\Users\\Administrator\\.config\\"
-        log_info "3. Restart terminal"
-        log_info "Config files may not be at the expected location"
+        log_info "XDG_CONFIG_HOME not set; config directory is \$HOME/.config/nvim"
+        log_info "Optional: set XDG_CONFIG_HOME to match Neovim (e.g. C:\\Users\\<username>\\.config\\) in Environment Variables and restart terminal"
     fi
 }
 
@@ -575,14 +617,20 @@ backup_existing_config() {
 deploy_config() {
     log_info "Deploying Neovim configuration..."
 
+    # Windows：若目标下存在误建的 %APPDATA% 目录则删除，避免 cp 报 same file
+    if [[ "${PLATFORM}" == "windows" ]] && [[ -d "${NVIM_CONFIG_DIR}/%APPDATA%" ]]; then
+        rm -rf "${NVIM_CONFIG_DIR}/%APPDATA%"
+        log_info "Removed stray %APPDATA% directory from config"
+    fi
+
     # 创建配置目录
     ensure_directory "${NVIM_CONFIG_DIR}"
 
     # 复制配置文件
     log_info "Copying configuration files..."
     if command -v rsync >/dev/null 2>&1; then
-        # 使用 rsync（更高效，支持排除模式）
-        rsync -av --exclude='.git' --exclude='.gitignore' --exclude='test_dir' \
+        # 使用 rsync（更高效，支持排除模式）；排除 %APPDATA% 等误建目录
+        rsync -av --exclude='.git' --exclude='.gitignore' --exclude='test_dir' --exclude='%APPDATA%' \
             "${SCRIPT_DIR}/" "${NVIM_CONFIG_DIR}/" >/dev/null 2>&1 || {
             log_info "rsync failed, trying alternative method"
             deploy_config_cp
@@ -596,9 +644,9 @@ deploy_config() {
 
 # 使用 cp 部署配置（rsync 不可用时的备选方案）
 deploy_config_cp() {
-    # 使用 find 和 cp 复制文件（排除不需要的目录）
+    # 使用 find 和 cp 复制文件（排除不需要的目录及误建的 %APPDATA%）
     find "${SCRIPT_DIR}" -mindepth 1 -maxdepth 1 \
-        ! -name '.git' ! -name '.gitignore' ! -name 'test_dir' \
+        ! -name '.git' ! -name '.gitignore' ! -name 'test_dir' ! -name '%APPDATA%' \
         -exec cp -r {} "${NVIM_CONFIG_DIR}/" \;
 }
 
@@ -648,12 +696,30 @@ setup_python_environment() {
         log_success "Virtual environment created"
     fi
 
+    # Windows 上 uv 使用 Scripts/activate、Scripts/python.exe；macOS/Linux 使用 bin/
+    if [[ "${PLATFORM}" == "windows" ]]; then
+        if [[ -f "${VENV_PATH}/Scripts/activate" ]]; then
+            VENV_ACTIVATE="${VENV_PATH}/Scripts/activate"
+            if [[ -f "${VENV_PATH}/Scripts/python.exe" ]]; then
+                VENV_PYTHON="${VENV_PATH}/Scripts/python.exe"
+            else
+                VENV_PYTHON="${VENV_PATH}/Scripts/python"
+            fi
+        else
+            VENV_ACTIVATE="${VENV_PATH}/bin/activate"
+            VENV_PYTHON="${VENV_PATH}/bin/python"
+        fi
+    else
+        VENV_ACTIVATE="${VENV_PATH}/bin/activate"
+        VENV_PYTHON="${VENV_PATH}/bin/python"
+    fi
+
     # 确保 pip 已安装（使用 uv pip）
     log_info "Ensuring pip is installed..."
-    if [[ -f "${VENV_PATH}/bin/activate" ]]; then
+    if [[ -f "${VENV_ACTIVATE}" ]]; then
         # 检查 pip 是否可用
         local pip_available=0
-        if source "${VENV_PATH}/bin/activate" 2>/dev/null; then
+        if source "${VENV_ACTIVATE}" 2>/dev/null; then
             if python -m pip --version >/dev/null 2>&1; then
                 pip_available=1
             fi
@@ -668,14 +734,14 @@ setup_python_environment() {
 
         if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
             # 系统级：以 root 运行
-            (source "${VENV_PATH}/bin/activate" && uv pip install --upgrade pip >/dev/null 2>&1) || true
+            (source "${VENV_ACTIVATE}" && uv pip install --upgrade pip >/dev/null 2>&1) || true
         else
             # 用户级：以当前用户运行
-            (source "${VENV_PATH}/bin/activate" && uv pip install --upgrade pip >/dev/null 2>&1) || true
+            (source "${VENV_ACTIVATE}" && uv pip install --upgrade pip >/dev/null 2>&1) || true
         fi
 
         # 验证 pip 是否可用
-        if source "${VENV_PATH}/bin/activate" 2>/dev/null; then
+        if source "${VENV_ACTIVATE}" 2>/dev/null; then
             if python -m pip --version >/dev/null 2>&1; then
                 local pip_version
                 pip_version=$(python -m pip --version 2>&1 | head -n 1)
@@ -708,8 +774,8 @@ setup_python_environment() {
     local installed_packages=""
 
     # 获取已安装的包列表
-    if [[ -f "${VENV_PATH}/bin/activate" ]]; then
-        installed_packages=$(source "${VENV_PATH}/bin/activate" && \
+    if [[ -f "${VENV_ACTIVATE}" ]]; then
+        installed_packages=$(source "${VENV_ACTIVATE}" && \
             uv pip list --format=freeze 2>/dev/null | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]' || echo "")
     fi
 
@@ -731,7 +797,7 @@ setup_python_environment() {
         for pkg in "${packages_to_install[@]}"; do
             idx=$((idx + 1))
             progress_sub "${idx}" "${total}" "pip: ${pkg}"
-            local install_cmd="source '${VENV_PATH}/bin/activate' && uv pip install -U ${pkg}"
+            local install_cmd="source '${VENV_ACTIVATE}' && uv pip install -U ${pkg}"
             if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
                 timeout 120 bash -c "${install_cmd}" >/dev/null 2>&1 || log_info "  ${pkg} install skipped or failed"
             else
@@ -837,38 +903,60 @@ setup_nodejs_environment() {
 
     # 检查 neovim npm 包是否已安装
     if command -v npm >/dev/null 2>&1; then
-        # 确保 Windows 环境变量正确传递（Git Bash 需要）
-        if [[ "${PLATFORM}" == "windows" ]] && [[ -z "${APPDATA:-}" ]]; then
-            # 尝试从 Windows 环境获取 APPDATA
-            if command -v cmd.exe >/dev/null 2>&1; then
-                export APPDATA="$(cmd.exe //c "echo %APPDATA%" 2>/dev/null | tr -d '\r\n' || echo "")"
+        # Windows：先删误建目录，再取 APPDATA，且每次调用 npm 都显式传入 APPDATA（npm 为 Windows 进程不继承 bash export）
+        local appdata_for_npm=""
+        if [[ "${PLATFORM}" == "windows" ]]; then
+            if [[ -d "${SCRIPT_DIR}/%APPDATA%" ]]; then
+                rm -rf "${SCRIPT_DIR}/%APPDATA%"
+                log_info "Removed stray %APPDATA% directory from repo"
+            fi
+            appdata_for_npm="$(get_windows_appdata)"
+            if [[ -z "${appdata_for_npm}" ]]; then
+                log_info "Could not get Windows APPDATA path, npm may create %APPDATA% in cwd"
             fi
         fi
 
-        if npm list -g neovim >/dev/null 2>&1; then
+        _npm() {
+            if [[ "${PLATFORM}" == "windows" ]] && [[ -n "${appdata_for_npm}" ]]; then
+                env APPDATA="${appdata_for_npm}" npm "$@"
+            else
+                npm "$@"
+            fi
+        }
+
+        if _npm list -g neovim >/dev/null 2>&1; then
             log_success "neovim npm package already installed"
         else
             log_info "Installing neovim npm package..."
-            if npm install -g neovim >/dev/null 2>&1; then
+            if _npm install -g neovim >/dev/null 2>&1; then
                 log_success "neovim npm package installed"
             else
                 log_info "neovim npm package install failed, continuing"
                 log_info "You can install it manually later: npm install -g neovim"
             fi
         fi
-        # g:node_host_prog 需指向 neovim host 脚本（neovim/bin/cli.js），而非 node 可执行文件
-        # npm root -g 返回全局 node_modules 目录，故 neovim 位于 ${npm_global_root}/neovim/bin/cli.js
+        # g:node_host_prog 需指向 neovim host 脚本（neovim/bin/cli.js）；仅使用展开路径，禁止字面量 %APPDATA%
         local npm_global_root
-        npm_global_root="$(npm root -g 2>/dev/null | tr -d '\r\n')"
-        if [[ -n "${npm_global_root}" ]] && [[ -f "${npm_global_root}/neovim/bin/cli.js" ]]; then
+        npm_global_root="$(_npm root -g 2>/dev/null | tr -d '\r\n')"
+        npm_global_root="${npm_global_root//\\//}"
+        if [[ "${PLATFORM}" == "windows" ]]; then
+            if [[ -z "${npm_global_root}" ]] || [[ "${npm_global_root}" == *%* ]]; then
+                if [[ -n "${appdata_for_npm}" ]]; then
+                    npm_global_root="${appdata_for_npm}/npm/node_modules"
+                fi
+            fi
+        fi
+        if [[ -n "${npm_global_root}" ]] && [[ "${npm_global_root}" != *%* ]] && [[ -f "${npm_global_root}/neovim/bin/cli.js" ]]; then
             NODE_HOST_PATH="${npm_global_root}/neovim/bin/cli.js"
             log_info "Neovim node host script: ${NODE_HOST_PATH}"
+        elif [[ "${PLATFORM}" == "windows" ]] && [[ -n "${appdata_for_npm}" ]] && [[ -z "${NODE_HOST_PATH:-}" ]]; then
+            log_info "Neovim node host path not set (no valid cli.js in npm global)"
         fi
 
         # 安装 tree-sitter CLI（建议 >= 0.26.1）和 pnpm（用于健康检查）
         if ! command -v tree-sitter >/dev/null 2>&1; then
             log_info "Installing tree-sitter CLI (recommended >= 0.26.1)..."
-            if npm install -g tree-sitter-cli >/dev/null 2>&1; then
+            if _npm install -g tree-sitter-cli >/dev/null 2>&1; then
                 log_success "tree-sitter CLI installed"
             else
                 log_info "tree-sitter CLI installation failed, continuing"
@@ -879,13 +967,18 @@ setup_nodejs_environment() {
 
         if ! command -v pnpm >/dev/null 2>&1; then
             log_info "Installing pnpm..."
-            if npm install -g pnpm >/dev/null 2>&1; then
+            if _npm install -g pnpm >/dev/null 2>&1; then
                 log_success "pnpm installed"
             else
                 log_info "pnpm installation failed, continuing"
             fi
         else
             log_success "pnpm already installed"
+        fi
+        # Windows：若 npm 仍在本目录下创建了 %APPDATA%，脚本结束前清理掉
+        if [[ "${PLATFORM}" == "windows" ]] && [[ -d "${SCRIPT_DIR}/%APPDATA%" ]]; then
+            rm -rf "${SCRIPT_DIR}/%APPDATA%"
+            log_info "Removed stray %APPDATA% directory created by npm"
         fi
     else
         log_info "npm not found, skipping npm package installation"
@@ -974,12 +1067,13 @@ configure_neovim_paths() {
     # 创建配置片段
     local config_snippet=""
 
-    if [[ ${python_configured} -eq 0 ]] && [[ -n "${VENV_PATH:-}" ]] && [[ -f "${VENV_PATH}/bin/python" ]]; then
+    if [[ ${python_configured} -eq 0 ]] && [[ -n "${VENV_PYTHON:-}" ]] && [[ -f "${VENV_PYTHON}" ]]; then
+        local python_prog_slash="${VENV_PYTHON//\\//}"
         config_snippet="${config_snippet}
 -- Python interpreter path (auto-configured by install.sh)
-vim.g.python3_host_prog = \"${VENV_PATH}/bin/python\"
+vim.g.python3_host_prog = \"${python_prog_slash}\"
 -- Add virtual environment site-packages to pythonpath
-local venv_path = \"${VENV_PATH}\"
+local venv_path = \"${VENV_PATH//\\//}\"
 vim.opt.pp:prepend(venv_path .. \"/lib/python*/site-packages\")
 "
     fi
@@ -1062,7 +1156,7 @@ verify_installation() {
     fi
 
     # 验证 Python 环境
-    if [[ -n "${VENV_PATH:-}" ]] && [[ -f "${VENV_PATH}/bin/python" ]]; then
+    if [[ -n "${VENV_PYTHON:-}" ]] && [[ -f "${VENV_PYTHON}" ]]; then
         log_success "Python environment found: ${VENV_PATH}"
     else
         log_info "Python environment not configured"
@@ -1307,6 +1401,8 @@ main() {
 
     progress_step 1 "${TOTAL_MAIN_STEPS}" "Checking config directory..."
     check_submodule
+
+    normalize_windows_home
 
     progress_step 2 "${TOTAL_MAIN_STEPS}" "Determining config directory..."
     determine_config_dir

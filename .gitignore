@@ -99,6 +99,7 @@ composer.phar
 composer-installer.php
 
 # Error directories (created by npm when APPDATA env var not set)
+%APPDATA%/
 \$\{APPDATA\}/
 ${APPDATA}/
 

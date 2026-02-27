@@ -741,6 +741,8 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 - **tree-sitter-cli**：建议 >= 0.26.1（nvim-treesitter 可选）
 - 系统 Lua 为可选：Neovim 运行依赖其内置 LuaJIT
 
+**环境检查**：运行 `install.sh` 前可用 `command -v uv`、`command -v fnm` 确认已安装；未安装时脚本会报错并退出。
+
 ### 安装步骤
 
 #### 1. 安装 Neovim
@@ -765,7 +767,8 @@ sudo apt-get install neovim
 
 ##### Windows
 
-下载安装包：https://github.com/neovim/neovim/releases
+下载安装包：https://github.com/neovim/neovim/releases  
+推荐/测试环境：Windows 10 + Git Bash；安装脚本在该环境下会规范化 `HOME` 并统一使用 `$HOME/.config/nvim`。
 
 #### 2. 安装配置文件
 

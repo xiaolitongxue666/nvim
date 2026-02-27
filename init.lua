@@ -33,3 +33,10 @@ vim.opt.pp:prepend(venv_path .. "/lib/python*/site-packages")
 
 -- Node.js host script path (auto-configured by install.sh; must be path to neovim/bin/cli.js)
 vim.g.node_host_prog = "/root/.local/share/fnm/node-versions/v24.14.0/installation/lib/node_modules/neovim/bin/cli.js"
+
+-- ==========================================
+-- Auto-configured paths (do not edit manually)
+-- ==========================================
+
+-- opencode CLI path (auto-configured by install.sh when found in PATH)
+vim.g.opencode_cmd = "/c/opencode/opencode"
