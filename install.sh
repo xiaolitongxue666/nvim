@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
 
 # Neovim 配置安装脚本
-# 支持 macOS、Linux、Windows 系统
-# 使用 Git Submodule 管理配置
-# 使用 uv 管理 Python 环境，使用 fnm 管理 Node.js 环境
+# 支持 macOS、Linux、Windows、WSL
+# 独立仓库，使用 uv 管理 Python 环境，使用 fnm 管理 Node.js 环境
 
 # 启用严格模式：遇到错误立即退出，未定义变量报错，管道中任一命令失败则整个管道失败
 set -euo pipefail
 # 设置默认文件权限掩码
 umask 022
 
-# 获取脚本所在目录的绝对路径
+# 本仓库根目录（安装脚本所在目录）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# 获取项目根目录的绝对路径
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-# 通用脚本库路径
-COMMON_LIB="${PROJECT_ROOT}/scripts/common.sh"
+# 通用脚本库路径（本仓库 scripts/ 下）
+COMMON_LIB="${SCRIPT_DIR}/scripts/common.sh"
 
 # 检查通用脚本库是否存在
 if [[ ! -f "${COMMON_LIB}" ]]; then
@@ -59,18 +56,25 @@ cleanup() {
 
 trap cleanup EXIT
 
-# 检查 submodule 是否存在
-check_submodule() {
+# 带超时运行命令（macOS 默认无 timeout，则直接执行）
+run_with_timeout() {
+    local seconds="$1"
+    shift
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "${seconds}" "$@"
+    else
+        "$@"
+    fi
+}
+
+# 检查配置完整性（init.lua 或 lua/ 至少存在其一）
+check_config_integrity() {
     if [[ ! -f "${SCRIPT_DIR}/init.lua" ]] && [[ ! -d "${SCRIPT_DIR}/lua" ]]; then
-        log_error "Neovim submodule not initialized"
-        log_info "Please initialize Git submodule first:"
-        log_info "  cd script_tool_and_config"
-        log_info "  git submodule update --init --recursive"
-        log_info "Or:"
-        log_info "  git submodule update --init dotfiles/nvim"
+        log_error "Configuration incomplete: init.lua or lua/ not found"
+        log_info "Please run this script from the root of the nvim config repository."
         exit 1
     fi
-    log_success "Neovim submodule check passed"
+    log_success "Configuration integrity check passed"
 }
 
 # 检查前置依赖（uv, fnm, lua）
@@ -79,13 +83,13 @@ check_prerequisites() {
 
     # 检查 uv
     if ! command -v uv >/dev/null 2>&1; then
-        error_exit "uv is not installed. Please run install_common_tools.sh first to install uv"
+        error_exit "uv is not installed. See README for install commands (e.g. macOS: brew install uv; Linux: see https://github.com/astral-sh/uv)"
     fi
     log_success "uv found: $(uv --version | head -n 1)"
 
     # 检查 fnm
     if ! command -v fnm >/dev/null 2>&1; then
-        error_exit "fnm is not installed. Please run install_common_tools.sh first to install fnm"
+        error_exit "fnm is not installed. See README for install commands (e.g. macOS: brew install fnm; Linux: see https://github.com/Schniz/fnm)"
     fi
     log_success "fnm found: $(fnm --version)"
 
@@ -109,7 +113,7 @@ check_prerequisites() {
     log_success "All prerequisites checked"
 }
 
-# 安装语言工具（Go, Ruby, Composer, julia）
+# 安装语言工具（Go, Ruby, Composer）
 install_language_tools() {
     log_info "Installing language tools for mason.nvim..."
 
@@ -137,13 +141,6 @@ install_language_tools() {
         log_success "Composer already installed: $(composer --version 2>&1 | head -n 1)"
     fi
 
-    # 检查并安装 julia
-    if ! command -v julia >/dev/null 2>&1; then
-        tools_to_install+=("julia")
-    else
-        log_success "julia already installed: $(julia --version 2>&1 | head -n 1)"
-    fi
-
     # 如果所有工具都已安装，直接返回
     if [[ ${#tools_to_install[@]} -eq 0 ]]; then
         log_success "All language tools are already installed"
@@ -168,9 +165,6 @@ install_language_tools() {
                         ;;
                     "composer")
                         pacman_packages+=("php" "composer")
-                        ;;
-                    "julia")
-                        pacman_packages+=("julia")
                         ;;
                 esac
             done
@@ -199,9 +193,6 @@ install_language_tools() {
                     "composer")
                         apt_packages+=("composer")
                         ;;
-                    "julia")
-                        apt_packages+=("julia")
-                        ;;
                 esac
             done
 
@@ -229,9 +220,6 @@ install_language_tools() {
                         ;;
                     "composer")
                         yum_packages+=("php-composer")
-                        ;;
-                    "julia")
-                        yum_packages+=("julia")
                         ;;
                 esac
             done
@@ -264,9 +252,6 @@ install_language_tools() {
                         ;;
                     "composer")
                         brew_packages+=("composer")
-                        ;;
-                    "julia")
-                        brew_packages+=("julia")
                         ;;
                 esac
             done
@@ -356,45 +341,6 @@ install_language_tools() {
                 fi
             else
                 log_warning "Composer download failed, please install manually: https://getcomposer.org/download/"
-            fi
-        fi
-
-        # 安装 julia
-        if [[ " ${tools_to_install[*]} " =~ " julia " ]]; then
-            log_info "Installing julia..."
-            if command -v winget >/dev/null 2>&1; then
-                # 检查是否已安装但不在 PATH
-                local julia_search_dirs=(
-                    "${HOME}/AppData/Local/Programs"
-                    "/c/Users/Administrator/AppData/Local/Programs"
-                )
-                local julia_found=""
-                for search_dir in "${julia_search_dirs[@]}"; do
-                    if [[ -d "${search_dir}" ]]; then
-                        local found
-                        found=$(find "${search_dir}" -name "julia.exe" -type f 2>/dev/null | head -n 1 || echo "")
-                        if [[ -n "${found}" ]] && [[ -f "${found}" ]]; then
-                            julia_found="${found}"
-                            break
-                        fi
-                    fi
-                done
-
-                if [[ -n "${julia_found}" ]]; then
-                    log_info "Found julia at: ${julia_found}"
-                    export PATH="${PATH}:$(dirname "${julia_found}")"
-                else
-                    local winget_output
-                    winget_output=$(winget install --id Julialang.Julia --silent --accept-package-agreements --accept-source-agreements 2>&1) || {
-                        if echo "${winget_output}" | grep -q "已安装\|already installed\|找不到可用的升级"; then
-                            log_success "julia already installed (detected by winget)"
-                        else
-                            log_warning "julia installation failed, please install manually: winget install Julialang.Julia"
-                        fi
-                    }
-                fi
-            else
-                log_warning "winget not found, please install julia manually: https://julialang.org/downloads/"
             fi
         fi
 
@@ -631,9 +577,10 @@ setup_python_environment() {
             uv pip list --format=freeze 2>/dev/null | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]' || echo "")
     fi
 
-    # 检查每个包是否需要安装
+    # 检查每个包是否需要安装（使用 tr 兼容 macOS 默认 bash 3.x）
     for pkg in "${python_packages[@]}"; do
-        local pkg_lower="${pkg,,}"  # 转换为小写
+        local pkg_lower
+        pkg_lower=$(echo "${pkg}" | tr '[:upper:]' '[:lower:]')
         if echo "${installed_packages}" | grep -q "^${pkg_lower}$"; then
             log_info "  ${pkg} already installed, skipping"
         else
@@ -652,12 +599,12 @@ setup_python_environment() {
 
         if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
             # 系统级：以 root 运行
-            timeout 600 bash -c "${install_cmd}" || {
+            run_with_timeout 600 bash -c "${install_cmd}" || {
                 log_warning "Some packages may have failed to install, but continuing"
             }
         else
             # 用户级：以当前用户运行
-            timeout 600 bash -c "${install_cmd}" || {
+            run_with_timeout 600 bash -c "${install_cmd}" || {
                 log_warning "Some packages may have failed to install, but continuing"
             }
         fi
@@ -1156,9 +1103,9 @@ print_summary() {
     log_info "3. If using vim-plug, run: :PlugInstall"
     log_info ""
     log_info "To update configuration:"
-    log_info "  cd script_tool_and_config"
-    log_info "  git submodule update --remote dotfiles/nvim"
-    log_info "  Then run this install script again"
+    log_info "  cd <this repo root>"
+    log_info "  git pull"
+    log_info "  ./install.sh"
     log_info ""
 }
 
@@ -1166,8 +1113,8 @@ print_summary() {
 main() {
     start_script "Neovim Configuration Installation"
 
-    # 检查 submodule
-    check_submodule
+    # 检查配置完整性
+    check_config_integrity
 
     # 确定配置目录
     determine_config_dir
@@ -1178,7 +1125,7 @@ main() {
     # 检查前置依赖
     check_prerequisites
 
-    # 安装语言工具（Go, Ruby, Composer, julia）
+    # 安装语言工具（Go, Ruby, Composer）
     install_language_tools
 
     # 检查并安装 clipboard 工具

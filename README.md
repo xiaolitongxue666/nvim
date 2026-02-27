@@ -2,41 +2,7 @@
 
 一个基于 Lua 的现代化 Neovim 配置，使用 lazy.nvim 作为插件管理器。
 
-**注意**: 此配置通过 Git Submodule 方式管理，配置仓库位于独立的 GitHub 仓库。
-
-## Git Submodule 说明
-
-此 Neovim 配置作为 Git Submodule 集成到 script_tool_and_config 项目中。
-
-### 首次克隆项目后初始化 Submodule
-
-```bash
-cd script_tool_and_config
-git submodule update --init --recursive
-```
-
-或者只初始化 nvim submodule：
-
-```bash
-git submodule update --init dotfiles/nvim
-```
-
-### 更新 Submodule
-
-```bash
-# 更新到远程仓库的最新提交
-git submodule update --remote dotfiles/nvim
-
-# 然后重新运行安装脚本
-cd dotfiles/nvim
-./install.sh
-```
-
-### 克隆项目时同时克隆 Submodule
-
-```bash
-git clone --recursive git@github.com:your-username/script_tool_and_config.git
-```
+本配置为**独立 Git 仓库**，可直接克隆使用。支持 macOS、Linux、Windows 及 WSL。
 
 ## 项目结构
 
@@ -83,7 +49,8 @@ git clone --recursive git@github.com:your-username/script_tool_and_config.git
 │       ├── ui_notice.lua                          # 通知系统
 │       ├── ui_outline.lua                         # 代码大纲 (Outline)
 │       └── ui_status_line_lualine.lua             # 状态栏
-└── test_dir/                           # 测试目录
+├── scripts/                           # 脚本（install 用 common.sh；Windows 下 bash.cmd 可启动 Git Bash，路径需自行修改）
+└── test_dir/                           # 测试目录（测试用，部署时可不复制）
     ├── test.c
     ├── test.cpp
     ├── test.lua
@@ -748,6 +715,10 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 - Git >= 2.19.0
 - [Nerd Font](https://www.nerdfonts.com/) 字体 (可选，用于图标显示)
 - C 编译器 (用于 nvim-treesitter)
+- **安装脚本依赖**：安装脚本需要 [uv](https://github.com/astral-sh/uv)（Python 环境）和 [fnm](https://github.com/Schniz/fnm)（Node.js 环境）。若未安装：
+  - **macOS**: `brew install uv fnm`
+  - **Linux**: 见 [uv 安装](https://github.com/astral-sh/uv#installation)、[fnm 安装](https://github.com/Schniz/fnm#installation)
+  - **WSL**：与 Linux 相同，使用 `$HOME/.config/nvim` 与 `$HOME/.local/share/nvim`，无需额外配置（在 WSL 内安装 Neovim 时）。
 
 ### 安装步骤
 
@@ -782,26 +753,26 @@ sudo apt-get install neovim
 使用安装脚本自动检测系统并安装对应配置（包含自动备份）：
 
 ```bash
-cd script_tool_and_config/dotfiles/nvim
+git clone <本仓库 URL> <目标目录>
+cd <目标目录>
 chmod +x install.sh
 ./install.sh
 ```
 
 安装脚本会自动：
-- 检查 Git Submodule 是否已初始化
-- 检测操作系统（macOS/Linux/Windows）
+- 检查配置完整性（init.lua / lua/）
+- 检测操作系统（macOS/Linux/Windows/WSL）
 - 备份现有配置文件（如果存在）
 - 复制配置文件到 XDG 风格的路径：
-  - Linux/macOS: `~/.config/nvim/`
+  - Linux/macOS/WSL: `~/.config/nvim/`
   - Windows: `%XDG_CONFIG_HOME%/nvim/` 或 `~/.config/nvim/`（如果设置了 XDG_CONFIG_HOME）
 - Windows 上检查并提示配置 XDG_CONFIG_HOME 环境变量
 
 ##### 手动安装
 
 ```bash
-# 确保 submodule 已初始化
-cd script_tool_and_config
-git submodule update --init dotfiles/nvim
+# 克隆本仓库后进入仓库根目录
+cd <本仓库根目录>
 
 # 备份现有配置
 mv ~/.config/nvim{,.bak} 2>/dev/null || true
@@ -810,7 +781,7 @@ mv ~/.local/state/nvim{,.bak} 2>/dev/null || true
 mv ~/.cache/nvim{,.bak} 2>/dev/null || true
 
 # 复制配置文件（排除 .git 目录）
-cp -r dotfiles/nvim/* ~/.config/nvim/
+cp -r ./* ~/.config/nvim/
 ```
 
 #### 3. 启动 Neovim
@@ -1223,21 +1194,11 @@ nvim
 
 ## 更新配置
 
-### 方法 1: 使用 Git Submodule 更新
+在本仓库根目录拉取最新代码后重新运行安装脚本：
 
 ```bash
-cd script_tool_and_config
-git submodule update --remote dotfiles/nvim
-cd dotfiles/nvim
-./install.sh
-```
-
-### 方法 2: 直接在 Submodule 目录中更新
-
-```bash
-cd script_tool_and_config/dotfiles/nvim
-git pull origin main  # 或 master，取决于你的分支名
-cd ../..
+cd <本仓库根目录>
+git pull
 ./install.sh
 ```
 
@@ -1335,14 +1296,9 @@ echo $XDG_DATA_HOME
 
 ## 故障排除
 
-### Submodule 未初始化
+### 配置不完整或未在正确目录运行
 
-如果遇到 "Submodule 未初始化" 错误：
-
-```bash
-cd script_tool_and_config
-git submodule update --init dotfiles/nvim
-```
+若提示 "Configuration incomplete" 或找不到 init.lua/lua：请确保在**本仓库根目录**下执行 `./install.sh`，不要在其他路径或未完整克隆的目录中运行。
 
 ### 配置文件冲突
 
@@ -1397,7 +1353,6 @@ git submodule update --init dotfiles/nvim
 2. **手动安装缺失的工具**：
    - Go: `winget install GoLang.Go` (Windows) 或使用系统包管理器
    - Composer: 下载 phar 文件或使用包管理器
-   - julia: `winget install Julialang.Julia` (Windows) 或使用系统包管理器
    - tree-sitter CLI: `npm install -g tree-sitter-cli`
    - pnpm: `npm install -g pnpm`
    - neovim Ruby gem: `gem install neovim` (如果使用 Ruby)
@@ -1462,7 +1417,6 @@ nvim --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "q"
 1. **安装语言工具**：
    - Go（通过 winget 或包管理器）
    - Composer（下载 phar 文件）
-   - julia（通过 winget 或包管理器）
    - Ruby（检查是否已安装）
 
 2. **安装开发工具**：
