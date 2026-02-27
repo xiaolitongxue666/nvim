@@ -18,20 +18,29 @@ umask 022
 
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# 获取项目根目录的绝对路径
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-# 通用脚本库路径
-COMMON_LIB="${PROJECT_ROOT}/scripts/common.sh"
-
-# 检查通用脚本库是否存在
-if [[ ! -f "${COMMON_LIB}" ]]; then
-    echo "[ERROR] Common script library not found: ${COMMON_LIB}" >&2
-    exit 1
+# 项目根与通用脚本库：优先使用环境变量（由父项目 run_once 注入）
+if [[ -n "${PROJECT_ROOT:-}" ]] && [[ -n "${COMMON_LIB:-}" ]] && [[ -f "${COMMON_LIB}" ]]; then
+    :
+elif [[ -n "${COMMON_LIB:-}" ]] && [[ -f "${COMMON_LIB}" ]]; then
+    PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
+else
+    PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
+    COMMON_LIB="${COMMON_LIB:-${PROJECT_ROOT}/scripts/common.sh}"
 fi
-
-# 引入通用日志/错误处理函数
-# shellcheck disable=SC1090
-source "${COMMON_LIB}"
+# 引入通用日志/错误处理函数；若不存在则使用脚本内最小实现
+if [[ -f "${COMMON_LIB:-}" ]]; then
+    # shellcheck disable=SC1090
+    source "${COMMON_LIB}"
+else
+    log_info() { echo "[INFO] $*"; }
+    log_success() { echo "[SUCCESS] $*"; }
+    log_warning() { echo "[WARNING] $*"; }
+    log_error() { echo "[ERROR] $*" >&2; }
+    error_exit() { log_error "$1"; exit "${2:-1}"; }
+    start_script() { echo ""; echo "=========================================="; echo "Starting: $1"; echo "=========================================="; echo ""; }
+    end_script() { echo ""; echo "=========================================="; echo "Script execution completed"; echo "=========================================="; echo ""; trap - EXIT; exit 0; }
+    ensure_directory() { if [[ ! -d "$1" ]]; then mkdir -p "$1"; log_info "Directory created: $1"; fi; }
+fi
 
 # 检测操作系统
 OS="$(uname -s)"
