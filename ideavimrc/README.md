@@ -30,7 +30,7 @@ ideavimrc/
 使用安装脚本自动检测系统并安装对应配置（包含自动备份）：
 
 ```bash
-cd <本仓库根目录>/ideavimrc
+cd ~/.config/nvim/ideavimrc
 chmod +x install.sh
 ./install.sh
 ```
@@ -43,15 +43,14 @@ chmod +x install.sh
 #### 手动安装
 
 ```bash
-# 复制配置文件到用户目录（将 <本仓库根目录> 替换为实际路径）
-cp <本仓库根目录>/ideavimrc/.ideavimrc ~/.ideavimrc
+# 复制配置文件到用户目录
+cp ~/.config/nvim/ideavimrc/.ideavimrc ~/.ideavimrc
 ```
 
 ## 配置文件位置
 
 - **配置文件**: `~/.ideavimrc`
-- **项目配置**: 本仓库根目录下的 `ideavimrc/.ideavimrc`
-- **注意**: IdeaVim 配置位于本 nvim 配置仓库的 `ideavimrc/` 目录
+- **项目内路径**: `~/.config/nvim/ideavimrc/.ideavimrc`
 
 ## Windows 符号链接配置
 

@@ -33,3 +33,6 @@ vim.opt.pp:prepend(venv_path .. "/lib/python*/site-packages")
 
 -- Node.js interpreter path (auto-configured by install.sh)
 vim.g.node_host_prog = "/usr/local/bin/node"
+
+-- opencode CLI path (auto-configured by install.sh when found in PATH)
+vim.g.opencode_cmd = "/c/opencode/opencode"

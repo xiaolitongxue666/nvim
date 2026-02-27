@@ -1,6 +1,7 @@
 -- 文件以utf8格式加载
 vim.g.encoding = "UTF-8"
-vim.o.fileencoding = "utf-8"
+-- 与 Neovim 0.11 默认一致，注释保留
+-- vim.o.fileencoding = "utf-8"
 
 -- Windows 环境变量路径修复（处理 Git Bash 环境下的引号问题）
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
@@ -17,17 +18,37 @@ if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
     clean_env_path("XDG_CONFIG_HOME")
     clean_env_path("XDG_STATE_HOME")
     clean_env_path("XDG_CACHE_HOME")
+
+    -- 设置已展开的 APPDATA，避免 Mason 等子进程在 cwd 下创建字面量 %APPDATA% 目录
+    local appdata = vim.env.APPDATA or ""
+    if appdata == "" or appdata:find("%%") then
+        local ok, result = pcall(function()
+            return vim.fn.system('cmd /c "echo %APPDATA%"'):gsub("^%s+", ""):gsub("%s+$", ""):gsub("[\r\n]", "")
+        end)
+        if ok and result and result ~= "" then
+            vim.env.APPDATA = result
+        end
+    end
 end
 
 -- 代理环境变量设置（跨平台兼容）
 -- 优先级：系统环境变量 > NVIM_PROXY_URL 环境变量 > 不设置（保持兼容性）
+-- 推荐：在终端中先 export http_proxy=... https_proxy=... 再启动 nvim，这样 lazy/mason/treesitter 等所有子进程都会走代理。
 -- 注意：nvim-treesitter 使用 Git 下载，需要确保 Git 和 Neovim 都能使用代理
 local function setup_proxy()
     -- 如果系统环境变量已设置，直接使用（会自动继承）
     if vim.env.http_proxy or vim.env.HTTP_PROXY then
+        -- 统一设置 all_proxy 与 no_proxy，部分工具只认 all_proxy
+        local proxy = vim.env.https_proxy or vim.env.HTTP_PROXY or vim.env.http_proxy
+        if proxy and (not vim.env.all_proxy or vim.env.all_proxy == "") then
+            vim.env.all_proxy = proxy
+        end
+        if not vim.env.no_proxy or vim.env.no_proxy == "" then
+            vim.env.no_proxy = "127.0.0.1,localhost"
+        end
         return
     end
-    
+
     -- 尝试从 NVIM_PROXY_URL 环境变量获取（如果用户设置了）
     -- 使用方法：在启动 Neovim 前设置 export NVIM_PROXY_URL=http://127.0.0.1:7890
     local proxy_url = os.getenv("NVIM_PROXY_URL")
@@ -36,6 +57,8 @@ local function setup_proxy()
         vim.env.https_proxy = proxy_url
         vim.env.HTTP_PROXY = proxy_url
         vim.env.HTTPS_PROXY = proxy_url
+        vim.env.all_proxy = proxy_url
+        vim.env.no_proxy = "127.0.0.1,localhost"
     end
 end
 
@@ -66,8 +89,8 @@ vim.o.sidescrolloff = 8
 -- 是否使用相对行号
 vim.wo.number = true
 vim.wo.relativenumber = true
--- 同时显示行号和相对行号
-vim.o.statuscolumn = "%s %l %r"
+-- 同时显示行号和相对行号（与 Neovim 0.11 默认一致时注释保留）
+-- vim.o.statuscolumn = "%s %l %r"
 -- 高亮所在行
 vim.wo.cursorline = true
 -- 显示左侧图标指示列
@@ -109,8 +132,8 @@ vim.wo.wrap = false
 vim.o.whichwrap = "b,s,<,>,[,],h,l"
 -- 允许隐藏被修改过的buffer
 vim.o.hidden = true
--- 鼠标支持
-vim.o.mouse = "a"
+-- 与 Neovim 0.11 默认一致，注释保留
+-- vim.o.mouse = "a"
 -- 禁止创建备份文件
 vim.o.backup = false
 vim.o.writebackup = false
@@ -190,6 +213,8 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
 -- 禁用不需要的 provider（消除健康检查警告）
 -- Perl provider: 版本太旧，不需要
 vim.g.loaded_perl_provider = 0
+-- Ruby provider: 本配置未使用 Ruby 插件，可不安装 Ruby
+vim.g.loaded_ruby_provider = 0
 
 -- 根据操作系统设置shell
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
@@ -207,4 +232,34 @@ else
 	-- macOS 和 Linux 使用默认 shell
 	-- 不需要特殊设置，使用系统默认
 end
+
+-- Windows：当 cwd 为配置目录时清理误建的 %APPDATA% 目录（Mason 更新等可能创建）
+local function normalize_path_for_compare(p)
+	if not p or p == "" then return "" end
+	-- 统一反斜杠、末尾斜杠；将 /x/ 或 /X/ 转为 x:/
+	p = p:gsub("\\", "/"):gsub("/+$", ""):lower()
+	p = p:gsub("^/([a-z])/", "%1:/")
+	return p
+end
+
+local function clean_appdata_in_config_dir()
+	if vim.fn.has("win32") ~= 1 and vim.fn.has("win64") ~= 1 then return end
+	local cwd = normalize_path_for_compare(vim.fn.getcwd())
+	local config_dir = normalize_path_for_compare(vim.fn.stdpath("config"))
+	if cwd == "" or config_dir == "" or cwd ~= config_dir then return end
+	local stray = vim.fn.getcwd() .. "/%APPDATA%"
+	if vim.fn.isdirectory(stray) == 1 then
+		vim.fn.delete(stray, "rf")
+		vim.notify("已清理配置目录下的 %APPDATA% 目录", vim.log.levels.INFO, { title = "NvimConfig" })
+	end
+end
+
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+		clean_appdata_in_config_dir()
+	end,
+	once = true,
+})
+
+vim.api.nvim_create_user_command("NvimConfigCleanAppdata", clean_appdata_in_config_dir, { desc = "清理当前配置目录下的 %APPDATA% 目录（仅 Windows 且 cwd 为配置目录时有效）" })
 

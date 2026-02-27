@@ -64,6 +64,10 @@ return {
         },
         -- 插件加载时执行的配置函数
         config = function(_, opts)
+            -- 多 OS 兼容：仅非 Windows 自动安装 noice 等所需的解析器（Windows 存在路径/编译问题）
+            if vim.fn.has("win32") ~= 1 and vim.fn.has("win64") ~= 1 then
+                opts.ensure_installed = { "vim", "regex", "lua", "bash", "markdown", "markdown_inline" }
+            end
             -- 去重 ensure_installed 列表，避免重复安装
             if type(opts.ensure_installed) == "table" then
                 ---@type table<string, boolean>

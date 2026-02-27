@@ -39,9 +39,13 @@ return {
                     lualine_y = {'progress'},
                     lualine_z = {
                         'location',
-                        {
-                            require("opencode").statusline,
-                        },
+                        (function()
+                            local ok, opencode = pcall(require, "opencode")
+                            if ok and opencode and opencode.statusline then
+                                return { opencode.statusline }
+                            end
+                            return {}
+                        end)(),
                     }
                 },
                 inactive_sections = {

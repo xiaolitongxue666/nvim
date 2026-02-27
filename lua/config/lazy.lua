@@ -10,7 +10,7 @@ local datapath = vim.fn.stdpath("data")
 -- 清理路径中可能存在的引号（Windows 环境变量问题）
 datapath = string.gsub(tostring(datapath), '["\']', "")
 local lazypath = datapath .. "/lazy/lazy.nvim"
-if not (vim.uv or vim.loop).fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"
     local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
     if vim.v.shell_error ~= 0 then
@@ -64,4 +64,6 @@ require("lazy").setup({
     pkg = {
         cache = clean_path(vim.fn.stdpath("state")) .. "/lazy/pkg-cache.lua",
     },
+    -- 禁用 luarocks/hererocks，消除 checkhealth 中 lazy 的 ERROR（无插件依赖 luarocks）
+    rocks = { enabled = false },
 })

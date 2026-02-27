@@ -4,57 +4,94 @@
 
 本配置为**独立 Git 仓库**，可直接克隆使用。支持 macOS、Linux、Windows 及 WSL。
 
+## 安装与更新
+
+### 首次安装
+
+将本仓库克隆到 Neovim 配置目录后执行安装脚本，例如：
+
+```bash
+git clone <本仓库地址> ~/.config/nvim
+cd ~/.config/nvim
+./install.sh
+```
+
+### 更新配置
+
+```bash
+cd ~/.config/nvim
+git pull
+./install.sh
+```
+
+## 其他文档
+
+- **故障排查**：见 [trouble_shoot.md](trouble_shoot.md)（如 Windows 下 %APPDATA% 目录、install.sh 与 Mason 相关说明）。
+- **LSP 查看与管理**：见 [docs/lsp_view_and_manage.md](docs/lsp_view_and_manage.md)。
+
 ## 项目结构
 
 ```
 ~/.config/nvim/  (或 $XDG_CONFIG_HOME/nvim/)
 ├── .gitignore                          # Git 忽略文件
-├── .idea/                              # JetBrains IDE 项目配置（可选）
-│   ├── .gitignore
-│   ├── modules.xml
-│   ├── nvim.iml
-│   └── vcs.xml
-├── README.md                           # 项目说明文档
-├── install.sh                          # 安装脚本（包含健康检查修复功能）
-├── init.lua                            # Neovim 主配置入口
-├── lua/                                # Lua 配置文件目录
-│   ├── basic.lua                       # 基础设置配置
-│   ├── config/                         # 配置模块
-│   │   └── lazy.lua                    # lazy.nvim 插件管理器配置
-│   ├── keybindings.lua                 # 按键绑定配置
-│   ├── window_control.lua              # 智能窗口控制模块
-│   └── plugins/                        # 插件配置目录
+├── README.md                            # 项目说明文档
+├── trouble_shoot.md                     # 故障排查记录（%APPDATA%、Mason 等）
+├── install.sh                           # 安装脚本（包含健康检查修复功能）
+├── init.lua                             # Neovim 主配置入口
+├── docs/                                # 说明文档
+│   └── lsp_view_and_manage.md           # LSP 查看与管理
+├── scripts/                             # 辅助脚本
+│   └── bash.cmd                         # Windows 下 Git Bash 入口（可选）
+├── lua/                                 # Lua 配置文件目录
+│   ├── basic.lua                        # 基础设置配置
+│   ├── config/                          # 配置模块
+│   │   └── lazy.lua                     # lazy.nvim 插件管理器配置
+│   ├── keybindings.lua                  # 按键绑定配置
+│   ├── window_control.lua               # 智能窗口控制模块
+│   └── plugins/                         # 插件配置目录
+│       ├── code_ai_opencode.lua                  # AI 补全 (opencode)
 │       ├── code_completion_nvim-autopairs.lua    # 自动括号配对
-│       ├── code_completion_nvim-cmp.lua           # 代码补全
+│       ├── code_completion_nvim-cmp.lua          # 代码补全
+│       ├── code_format_conform.lua               # 代码格式化
 │       ├── code_git_decorations_gitsigns.lua     # Git 装饰
 │       ├── code_highlight_nvim-treesitter.lua    # 语法高亮
-│       ├── code_snip_LuaSnip.lua                  # 代码片段
+│       ├── code_snip_LuaSnip.lua                 # 代码片段
 │       ├── colorscheme_catppuccin.lua            # 主题配色
-│       ├── comment.lua                            # 代码注释
+│       ├── comment.lua                           # 代码注释
 │       ├── dap_lua_one-small-step-for-vimkind.lua # Lua 调试适配器
-│       ├── dap_nvim-dap.lua                       # 调试适配器协议
-│       ├── finder_telescope.lua                   # 模糊查找
-│       ├── greeter_dashboard_mini-starter.lua     # 启动页面
-│       ├── help_document_lazydev.lua              # Neovim 开发帮助
-│       ├── indent_guides_indent-blankline.lua     # 缩进指示线
-│       ├── keytips_which-key.lua                  # 按键提示
+│       ├── dap_nvim-dap.lua                      # 调试适配器协议
+│       ├── finder_telescope.lua                  # 模糊查找
+│       ├── greeter_dashboard_mini-starter.lua    # 启动页面
+│       ├── help_document_lazydev.lua             # Neovim 开发帮助
+│       ├── indent_guides_indent-blankline.lua    # 缩进指示线
+│       ├── keytips_which-key.lua                 # 按键提示
 │       ├── lsp_server_manager_mason-lspconfig.lua # LSP 服务器配置
-│       ├── lsp_server_manager_mason.lua           # LSP 服务器管理
-│       ├── lsp_server_nvim-lspconfig.lua          # LSP 配置
-│       ├── practice_typr.lua                      # 打字练习
-│       ├── ui_buffer_tabpage_bufferline.lua       # 缓冲区标签页
-│       ├── ui_component_lib_nui.lua               # UI 组件库
-│       ├── ui_dressing.lua                        # UI 界面美化
-│       ├── ui_icons_nvim-web-devicons.lua         # 文件图标
-│       ├── ui_notice.lua                          # 通知系统
-│       ├── ui_outline.lua                         # 代码大纲 (Outline)
-│       └── ui_status_line_lualine.lua             # 状态栏
+│       ├── lsp_server_manager_mason.lua          # LSP 服务器管理
+│       ├── lsp_server_nvim-lspconfig.lua         # LSP 配置
+│       ├── practice_hardtime.lua                 # 刻意练习（按键约束）
+│       ├── practice_typr.lua                     # 打字练习
+│       ├── search_and_replace_nvim-spectre.lua   # 搜索替换
+│       ├── session_manager_persistence.lua       # 会话持久化
+│       ├── task_runner_overseer.lua               # 任务运行器
+│       ├── terminal_toggleterm.lua                # 终端
+│       ├── ui_buffer_tabpage_bufferline.lua      # 缓冲区标签页
+│       ├── ui_component_lib_nui.lua              # UI 组件库
+│       ├── ui_dressing.lua                       # UI 界面美化
+│       ├── ui_file_explorer_neo-tree.lua         # 文件浏览器
+│       ├── ui_icons_mini.lua                     # 图标 (mini)
+│       ├── ui_icons_nvim-web-devicons.lua       # 文件图标
+│       ├── ui_notice.lua                         # 通知系统
+│       ├── ui_notification_manager_nvim-notify.lua # 通知管理
+│       ├── ui_outline.lua                        # 代码大纲
+│       ├── ui_smear_cursor.lua                   # 光标拖尾
+│       ├── ui_snacks.lua                        # 轻量提示
+│       └── ui_status_line_lualine.lua            # 状态栏
 ├── scripts/                           # 脚本（install 用 common.sh；Windows 下 bash.cmd 可启动 Git Bash，路径需自行修改）
-└── test_dir/                           # 测试目录（测试用，部署时可不复制）
-    ├── test.c
-    ├── test.cpp
-    ├── test.lua
-    └── test.py
+└── test_dir/                            # 测试目录（install.sh 部署时排除）
+    ├── c_test.c
+    ├── file_control_test.txt
+    ├── json_test.json
+    └── lua_test.lua
 ```
 
 ## 启动流程
@@ -710,15 +747,14 @@ Hardtime 插件推荐的 workflow 本质上是 Vim 设计的核心高效操作�
 
 ### 前置要求
 
-- Neovim >= 0.8.0 (需要 LuaJIT 支持)
-- **推荐使用 Neovim 0.10+** 以获得完整的 XDG 目录规范支持
+- **Neovim 0.11.0+**（本配置使用 `vim.lsp.config`、nvim-notify 等 0.11 API；需 LuaJIT 支持）
 - Git >= 2.19.0
-- [Nerd Font](https://www.nerdfonts.com/) 字体 (可选，用于图标显示)
-- C 编译器 (用于 nvim-treesitter)
-- **安装脚本依赖**：安装脚本需要 [uv](https://github.com/astral-sh/uv)（Python 环境）和 [fnm](https://github.com/Schniz/fnm)（Node.js 环境）。若未安装：
-  - **macOS**: `brew install uv fnm`
-  - **Linux**: 见 [uv 安装](https://github.com/astral-sh/uv#installation)、[fnm 安装](https://github.com/Schniz/fnm#installation)
-  - **WSL**：与 Linux 相同，使用 `$HOME/.config/nvim` 与 `$HOME/.local/share/nvim`，无需额外配置（在 WSL 内安装 Neovim 时）。
+- [Nerd Font](https://www.nerdfonts.com/) 字体（可选，用于图标显示）
+- C 编译器（用于 nvim-treesitter）
+
+**安装脚本依赖**：需要 [uv](https://github.com/astral-sh/uv)（Python 环境）和 [fnm](https://github.com/Schniz/fnm)（Node.js 环境）。若未安装：**macOS** `brew install uv fnm`；**Linux/WSL** 见 [uv 安装](https://github.com/astral-sh/uv#installation)、[fnm 安装](https://github.com/Schniz/fnm#installation)。**WSL** 下与 Linux 相同，使用 `$HOME/.config/nvim`，无需额外配置。
+
+**配套工具与版本**（由 `install.sh` 协助安装）：**uv**（pynvim；升级 Neovim 后建议 `uv pip install -U pynvim`）、**Node.js/fnm**（LSP、mason）、**tree-sitter-cli** 建议 >= 0.26.1；系统 Lua 可选。运行前可用 `command -v uv`、`command -v fnm` 确认；未安装时脚本报错并退出。
 
 ### 安装步骤
 
@@ -744,7 +780,8 @@ sudo apt-get install neovim
 
 ##### Windows
 
-下载安装包：https://github.com/neovim/neovim/releases
+下载安装包：https://github.com/neovim/neovim/releases  
+推荐/测试环境：Windows 10 + Git Bash；安装脚本在该环境下会规范化 `HOME` 并统一使用 `$HOME/.config/nvim`。
 
 #### 2. 安装配置文件
 
@@ -753,11 +790,12 @@ sudo apt-get install neovim
 使用安装脚本自动检测系统并安装对应配置（包含自动备份）：
 
 ```bash
-git clone <本仓库 URL> <目标目录>
-cd <目标目录>
+cd ~/.config/nvim
 chmod +x install.sh
 ./install.sh
 ```
+
+（若尚未克隆，先执行 `git clone <本仓库地址> ~/.config/nvim` 再进入目录。）
 
 安装脚本会自动：
 - 检查配置完整性（init.lua / lua/）
@@ -771,17 +809,16 @@ chmod +x install.sh
 ##### 手动安装
 
 ```bash
-# 克隆本仓库后进入仓库根目录
-cd <本仓库根目录>
-
-# 备份现有配置
+# 如需备份现有配置
 mv ~/.config/nvim{,.bak} 2>/dev/null || true
 mv ~/.local/share/nvim{,.bak} 2>/dev/null || true
 mv ~/.local/state/nvim{,.bak} 2>/dev/null || true
 mv ~/.cache/nvim{,.bak} 2>/dev/null || true
 
-# 复制配置文件（排除 .git 目录）
-cp -r ./* ~/.config/nvim/
+# 克隆本仓库到配置目录并执行安装
+git clone <本仓库地址> ~/.config/nvim
+cd ~/.config/nvim
+./install.sh
 ```
 
 #### 3. 启动 Neovim
@@ -1194,10 +1231,10 @@ nvim
 
 ## 更新配置
 
-在本仓库根目录拉取最新代码后重新运行安装脚本：
+在本仓库目录拉取最新代码后重新运行安装脚本：
 
 ```bash
-cd <本仓库根目录>
+cd ~/.config/nvim
 git pull
 ./install.sh
 ```
@@ -1298,7 +1335,7 @@ echo $XDG_DATA_HOME
 
 ### 配置不完整或未在正确目录运行
 
-若提示 "Configuration incomplete" 或找不到 init.lua/lua：请确保在**本仓库根目录**下执行 `./install.sh`，不要在其他路径或未完整克隆的目录中运行。
+若提示 "Configuration incomplete" 或 "Neovim config directory incomplete"：请确保在**本仓库根目录**（如 `~/.config/nvim`）下执行 `./install.sh`；确认目录内包含 `init.lua` 与 `lua/`，若从别处复制请保证复制了完整目录结构。
 
 ### 配置文件冲突
 
@@ -1364,6 +1401,15 @@ echo $XDG_DATA_HOME
 4. **查看详细日志**：
    保存健康检查日志并查看具体错误信息。
 
+### 依赖与多操作系统说明（Windows / macOS / Linux）
+
+本配置与 `install.sh` 均按操作系统分支，保证在 Windows、macOS、Linux 上行为一致且可预期。
+
+- **Python / DAP**：Python 由 uv 管理，`install.sh` 会将 venv 路径注入 `init.lua` 的 `python3_host_prog`，DAP 使用该 Python（venv 内已安装 debugpy）；无需额外配置。
+- **opencode（可选）**：AI 功能依赖 opencode CLI。`install.sh` 会按系统检测 PATH 中的 `opencode`；若检测到则自动将路径写入 `vim.g.opencode_cmd`。未安装时可忽略 opencode 的 health 报错或暂时禁用 opencode 插件；安装方法见 [opencode](https://github.com/NickvanDyke/opencode)。
+- **snacks**：已通过 `ui_snacks` 在启动时加载（lazy=false, priority=1000），与 opencode 共用，无需用户额外操作。
+- **TreeSitter**：非 Windows 系统会自动安装 noice 等所需的解析器（vim、regex、lua、bash、markdown、markdown_inline）；Windows 因路径/编译兼容性不自动安装，若需 noice 命令行高亮可手动执行 `:TSInstall vim regex lua bash markdown markdown_inline`。
+
 ## 健康检查和诊断
 
 Neovim 提供了 `:checkhealth` 命令来检查配置和插件的健康状态。`install.sh` 脚本已集成健康检查修复功能，会自动安装缺失的工具和依赖。
@@ -1404,10 +1450,25 @@ Neovim 提供了 `:checkhealth` 命令来检查配置和插件的健康状态。
 
 #### 方法二：非交互式命令（一行命令）
 
-在终端中直接执行：
+在终端中直接执行（会打开一次 nvim 窗口后退出）：
 
 ```bash
 nvim --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "q"
+```
+
+**无界面执行（推荐在脚本/CI 中使用）**：使用 `--headless` 不弹窗，适合脚本或 cron：
+
+```bash
+nvim --headless --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "qa!"
+```
+
+#### 方法三：使用项目脚本保存日志
+
+在仓库根目录执行，将 checkhealth 结果写入指定文件（不指定则写入当前目录的 `nvim_checkhealth.log`）：
+
+```bash
+./scripts/common/utils/nvim_checkhealth_to_log.sh
+./scripts/common/utils/nvim_checkhealth_to_log.sh /tmp/my_health.log
 ```
 
 ### 自动修复健康检查问题
@@ -1425,9 +1486,29 @@ nvim --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "q"
    - neovim Ruby gem（如果 Ruby 可用）
 
 3. **修复配置问题**：
-   - 禁用不需要的 provider（如 Perl）
-   - 配置 DAP 适配器路径
+   - 禁用不需要的 provider（Perl、Ruby 等，见 `lua/basic.lua`）
+   - 配置 `g:python3_host_prog`、`g:node_host_prog`（node_host_prog 指向 neovim host 脚本 `neovim/bin/cli.js`）
    - 确保环境变量正确传递
+
+### 修复后记录：工具列表与脚本顺序
+
+为通过 `:checkhealth` 所安装的工具与推荐执行顺序如下，便于新环境复现。
+
+**安装的工具**
+
+| 类别 | 工具 |
+|------|------|
+| 系统包（按需） | xclip / xsel（clipboard）、go、ruby、composer |
+| Python venv（`install.sh`） | pynvim、pyright、ruff-lsp、debugpy、black、isort、flake8、mypy |
+| Mason LSP（`ensure_installed`） | lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman |
+| 可选 | tree-sitter-cli、pnpm（npm 全局） |
+
+**推荐脚本执行顺序**
+
+1. 生成健康检查日志：`./scripts/common/utils/nvim_checkhealth_to_log.sh`（可选指定路径，如 `/tmp/nvim_health.log`）
+2. 安装环境与 provider：`cd ~/.config/nvim && ./install.sh`（需先安装 uv、fnm、nvim）
+3. 可选：headless 安装 Mason LSP：`nvim --headless -c "lua vim.wait(10000)" -c "MasonInstall lua_ls bashls clangd pyright rust_analyzer jsonls yamlls marksman" -c "qa!"`
+4. 再次执行步骤 1 验证：`./scripts/common/utils/nvim_checkhealth_to_log.sh`
 
 ### 代理支持
 
@@ -1439,6 +1520,16 @@ export PROXY_PORT=7890
 export USE_PROXY=1
 ./install.sh
 ```
+
+**Neovim 内使用代理**：为保证 lazy.nvim、mason、treesitter 等所有组件的网络请求走代理，建议在启动 nvim 的终端中先设置代理再打开 nvim，例如：
+
+```bash
+export http_proxy="http://127.0.0.1:7890"
+export https_proxy="http://127.0.0.1:7890"
+nvim
+```
+
+或使用 `NVIM_PROXY_URL`（若未设置 `http_proxy`/`HTTP_PROXY`，basic.lua 会据此自动设置）：`export NVIM_PROXY_URL=http://127.0.0.1:7890`。
 
 或禁用代理：
 ```bash
