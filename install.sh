@@ -143,9 +143,46 @@ check_prerequisites() {
     log_success "All prerequisites checked"
 }
 
-# 安装语言工具（Go, Ruby, Composer）
+# 检测当前 Rust 是否来自 rustup（~/.cargo/bin），否则视为系统/apt 旧版
+is_rust_from_rustup() {
+    local r
+    r="$(command -v rustc 2>/dev/null)"
+    [[ -n "$r" && "$r" == *".cargo"* ]] && return 0
+    r="$(command -v cargo 2>/dev/null)"
+    [[ -n "$r" && "$r" == *".cargo"* ]] && return 0
+    return 1
+}
+
+# 使用官网 rustup 安装 Rust 最新稳定版（https://rustup.rs）
+install_rust_official() {
+    log_info "Installing Rust (official rustup, latest stable)..."
+    if ! command -v curl >/dev/null 2>&1; then
+        log_info "curl not found; cannot install rustup. Install curl or Rust manually: https://rustup.rs/"
+        record_failed "rust"
+        return 1
+    fi
+    local rustup_sh="https://sh.rustup.rs"
+    if curl --proto '=https' --tlsv1.2 -sSf "${rustup_sh}" | sh -s -- -y 2>/dev/null; then
+        # 当前 shell 加载 cargo 环境以便校验
+        if [[ -f "${HOME}/.cargo/env" ]]; then
+            # shellcheck source=/dev/null
+            source "${HOME}/.cargo/env"
+        fi
+        if command -v rustc >/dev/null 2>&1; then
+            log_success "Rust installed (rustup): $(rustc --version 2>&1 | head -n 1)"
+        else
+            log_success "Rust (rustup) installed. Add to PATH: source \$HOME/.cargo/env 或重新打开终端"
+        fi
+    else
+        log_info "Rust (rustup) installation failed. Install manually: https://rustup.rs/"
+        record_failed "rust"
+    fi
+}
+
+# 安装语言工具（与 LSP 配置对应：Go, Ruby, Composer, Rust, C/C++ 编译器）
+# LSP 对应：lua_ls(Lua→install_lua)、pyright/ruff(Python→setup_python)、rust_analyzer(Rust→官网 rustup)、clangd(C/C++)、bashls/jsonls/yamlls/marksman 无需系统编译器
 install_language_tools() {
-    log_info "Installing language tools for mason.nvim..."
+    log_info "Installing language tools for mason.nvim and LSP..."
 
     # 定义需要安装的工具
     local tools_to_install=()
@@ -170,6 +207,31 @@ install_language_tools() {
         tools_to_install+=("composer")
     else
         log_success "Composer already installed"
+    fi
+
+    # 检查并安装 Rust（对应 LSP: rust_analyzer）。无 Rust 或仅有系统/apt 旧版时均安装官网 rustup 以获最新稳定版
+    if ! command -v rustc >/dev/null 2>&1 && ! command -v cargo >/dev/null 2>&1; then
+        tools_to_install+=("rust")
+    elif ! is_rust_from_rustup; then
+        log_info "Rust (system/apt) found, will install official rustup for latest stable: $(command -v rustc 2>/dev/null || true)"
+        tools_to_install+=("rust")
+    else
+        if command -v rustc >/dev/null 2>&1; then
+            log_success "Rust already installed (rustup): $(rustc --version 2>&1 | head -n 1)"
+        else
+            log_success "Cargo already installed (rustup)"
+        fi
+    fi
+
+    # 检查并安装 C/C++ 编译器（对应 LSP: clangd；Mason 装 clangd，系统编译器用于构建/检查）
+    if ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
+        tools_to_install+=("c_compiler")
+    else
+        if command -v gcc >/dev/null 2>&1; then
+            log_success "GCC already installed: $(gcc --version 2>&1 | head -n 1)"
+        else
+            log_success "Clang already installed: $(clang --version 2>&1 | head -n 1)"
+        fi
     fi
 
     # 如果所有工具都已安装，直接返回
@@ -197,6 +259,9 @@ install_language_tools() {
                     "composer")
                         pacman_packages+=("php" "composer")
                         ;;
+                    "c_compiler")
+                        pacman_packages+=("base-devel")
+                        ;;
                 esac
             done
 
@@ -214,6 +279,7 @@ install_language_tools() {
                 "go:golang-go"
                 "ruby:ruby"
                 "composer:composer"
+                "c_compiler:build-essential"
             )
             local apt_to_install=()
             for entry in "${apt_tool_map[@]}"; do
@@ -257,6 +323,9 @@ install_language_tools() {
                     "composer")
                         yum_packages+=("php-composer")
                         ;;
+                    "c_compiler")
+                        yum_packages+=("gcc")
+                        ;;
                 esac
             done
 
@@ -270,6 +339,10 @@ install_language_tools() {
             fi
         else
             log_info "No supported package manager found for Linux; please install language tools manually if needed"
+        fi
+        # Rust 使用官网 rustup 安装最新稳定版（不通过包管理器）
+        if [[ " ${tools_to_install[*]} " =~ " rust " ]]; then
+            install_rust_official
         fi
     elif [[ "${PLATFORM}" == "macos" ]]; then
         # macOS: 使用 Homebrew
@@ -286,6 +359,9 @@ install_language_tools() {
                     "composer")
                         brew_packages+=("composer")
                         ;;
+                    "c_compiler")
+                        brew_packages+=("llvm")
+                        ;;
                 esac
             done
 
@@ -300,6 +376,10 @@ install_language_tools() {
         else
             log_info "Homebrew not found; install language tools manually if needed"
             log_info "Please install Homebrew first: /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+        fi
+        # Rust 使用官网 rustup 安装最新稳定版（不通过 Homebrew）
+        if [[ " ${tools_to_install[*]} " =~ " rust " ]]; then
+            install_rust_official
         fi
     elif [[ "${PLATFORM}" == "windows" ]]; then
         # Windows: 尝试自动安装
@@ -380,6 +460,35 @@ install_language_tools() {
             log_info "Checking Ruby installation..."
             if ! command -v ruby >/dev/null 2>&1; then
                 log_info "Ruby not found; install manually if needed: https://rubyinstaller.org/ or winget install RubyInstallerTeam.Ruby"
+            fi
+        fi
+
+        # 安装 Rust（对应 LSP: rust_analyzer）
+        if [[ " ${tools_to_install[*]} " =~ " rust " ]]; then
+            log_info "Installing Rust..."
+            if command -v winget >/dev/null 2>&1; then
+                if winget install --id Rustlang.Rustup --silent --accept-package-agreements --accept-source-agreements 2>&1; then
+                    log_success "Rust installed successfully (rustup)"
+                    log_info "Please restart the terminal or run: \$env:Path = [System.Environment]::GetEnvironmentVariable('Path','User') + ';' + [System.Environment]::GetEnvironmentVariable('Path','Machine')"
+                else
+                    log_info "Rust installation failed; install manually: winget install Rustlang.Rustup or https://rustup.rs/"
+                fi
+            else
+                log_info "winget not found; install Rust manually: https://rustup.rs/"
+            fi
+        fi
+
+        # C/C++ 编译器（对应 LSP: clangd；Mason 提供 clangd，系统编译器可选）
+        if [[ " ${tools_to_install[*]} " =~ " c_compiler " ]]; then
+            log_info "Checking C/C++ compiler..."
+            if command -v winget >/dev/null 2>&1; then
+                if winget install --id LLVM.LLVM --silent --accept-package-agreements --accept-source-agreements 2>&1; then
+                    log_success "LLVM/Clang installed successfully"
+                else
+                    log_info "C/C++ compiler not found; for clangd LSP you can use Mason. To compile C/C++: install MinGW or Visual Studio Build Tools."
+                fi
+            else
+                log_info "Install MinGW or Visual Studio Build Tools for C/C++ compilation if needed."
             fi
         fi
     fi
@@ -1208,7 +1317,7 @@ main() {
     progress_step 4 "${TOTAL_MAIN_STEPS}" "Checking prerequisites..."
     check_prerequisites
 
-    progress_step 5 "${TOTAL_MAIN_STEPS}" "Installing language tools (Go, Ruby, Composer)..."
+    progress_step 5 "${TOTAL_MAIN_STEPS}" "Installing language tools (Go, Ruby, Composer, Rust, C/C++)..."
     install_language_tools
 
     progress_step 6 "${TOTAL_MAIN_STEPS}" "Checking clipboard tool..."
