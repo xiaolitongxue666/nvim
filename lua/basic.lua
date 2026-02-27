@@ -21,13 +21,22 @@ end
 
 -- 代理环境变量设置（跨平台兼容）
 -- 优先级：系统环境变量 > NVIM_PROXY_URL 环境变量 > 不设置（保持兼容性）
+-- 推荐：在终端中先 export http_proxy=... https_proxy=... 再启动 nvim，这样 lazy/mason/treesitter 等所有子进程都会走代理。
 -- 注意：nvim-treesitter 使用 Git 下载，需要确保 Git 和 Neovim 都能使用代理
 local function setup_proxy()
     -- 如果系统环境变量已设置，直接使用（会自动继承）
     if vim.env.http_proxy or vim.env.HTTP_PROXY then
+        -- 统一设置 all_proxy 与 no_proxy，部分工具只认 all_proxy
+        local proxy = vim.env.https_proxy or vim.env.HTTP_PROXY or vim.env.http_proxy
+        if proxy and (not vim.env.all_proxy or vim.env.all_proxy == "") then
+            vim.env.all_proxy = proxy
+        end
+        if not vim.env.no_proxy or vim.env.no_proxy == "" then
+            vim.env.no_proxy = "127.0.0.1,localhost"
+        end
         return
     end
-    
+
     -- 尝试从 NVIM_PROXY_URL 环境变量获取（如果用户设置了）
     -- 使用方法：在启动 Neovim 前设置 export NVIM_PROXY_URL=http://127.0.0.1:7890
     local proxy_url = os.getenv("NVIM_PROXY_URL")
@@ -36,6 +45,8 @@ local function setup_proxy()
         vim.env.https_proxy = proxy_url
         vim.env.HTTP_PROXY = proxy_url
         vim.env.HTTPS_PROXY = proxy_url
+        vim.env.all_proxy = proxy_url
+        vim.env.no_proxy = "127.0.0.1,localhost"
     end
 end
 

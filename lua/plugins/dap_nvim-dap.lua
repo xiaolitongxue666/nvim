@@ -83,7 +83,8 @@ return {
                     -- 您需要检查是否已安装所需的组件
                     -- 在线查看，请不要问我如何安装它们 :)
                     ensure_installed = {
-                        -- 更新此项以确保您拥有所需语言的调试器
+                        "debugpy",   -- Python 调试
+                        "codelldb", -- C/C++/Rust 调试（可选，安装后需重启 nvim）
                     },
                 },
             },
@@ -144,7 +145,11 @@ return {
                     end
                     return nil
                 else
-                    -- Linux: 检查标准路径或系统路径
+                    -- Linux: 先检查 mason 安装的 codelldb，再检查系统 lldb-vscode
+                    local mason_codelldb = vim.fn.stdpath("data") .. '/mason/packages/codelldb/extension/adapter/codelldb'
+                    if vim.fn.executable(mason_codelldb) == 1 then
+                        return mason_codelldb
+                    end
                     local linux_lldb = '/usr/bin/lldb-vscode'
                     if vim.fn.executable(linux_lldb) == 1 then
                         return linux_lldb
@@ -156,25 +161,46 @@ return {
                     return nil
                 end
             end
-            
-            -- LLDB 适配器配置（用于 C/C++/Rust）
-            local lldb_path = find_lldb()
-            if lldb_path then
-                dap.adapters.lldb = {
-                    type = 'executable',
-                    command = lldb_path,
-                    name = "lldb"
-                }
-            else
-                -- 如果未找到 lldb，不配置适配器（避免错误）
-                vim.notify("LLDB 未找到，C/C++/Rust 调试功能将不可用。可以通过 mason 安装 codelldb。", vim.log.levels.WARN)
+
+            -- 判断是否为 mason 的 codelldb（需用 server 型适配器）
+            local function is_codelldb_path(path)
+                return path and path:find("codelldb", 1, true) and not path:find("lldb%-vscode", 1, true)
             end
             
-            -- C++ 调试配置
+            -- LLDB / CodeLLDB 适配器配置（用于 C/C++/Rust）
+            local lldb_path = find_lldb()
+            if lldb_path then
+                if is_codelldb_path(lldb_path) then
+                    dap.adapters.codelldb = {
+                        type = 'server',
+                        port = "${port}",
+                        executable = {
+                            command = lldb_path,
+                            args = { "--port", "${port}" },
+                            detached = false,
+                        },
+                    }
+                else
+                    dap.adapters.lldb = {
+                        type = 'executable',
+                        command = lldb_path,
+                        name = "lldb",
+                    }
+                end
+            end
+            -- 未找到时不弹窗提示，仅写入日志
+            if not lldb_path then
+                vim.schedule(function()
+                    vim.notify("LLDB 未找到，C/C++/Rust 调试不可用。可用 :DapInstall codelldb 安装。", vim.log.levels.DEBUG)
+                end)
+            end
+            
+            -- C++ 调试配置（根据可用适配器使用 lldb 或 codelldb）
+            local cpp_adapter_type = lldb_path and (is_codelldb_path(lldb_path) and "codelldb" or "lldb") or "lldb"
             dap.configurations.cpp = {
                 {
                     name = "启动程序",
-                    type = "lldb",
+                    type = cpp_adapter_type,
                     request = "launch",
                     program = function()
                         return vim.fn.input('可执行文件路径: ', vim.fn.getcwd() .. '/', 'file')
@@ -186,7 +212,7 @@ return {
                 },
                 {
                     name = "附加到进程",
-                    type = "lldb",
+                    type = cpp_adapter_type,
                     request = "attach",
                     pid = function()
                         return vim.fn.input('进程 ID: ')
@@ -199,7 +225,7 @@ return {
             dap.configurations.rust = {
                 {
                     name = "启动 Rust 程序",
-                    type = "lldb",
+                    type = cpp_adapter_type,
                     request = "launch",
                     program = function()
                         return vim.fn.input('可执行文件路径: ', vim.fn.getcwd() .. '/target/debug/', 'file')
@@ -232,46 +258,42 @@ return {
 
             -- C 语言使用与 C++ 相同的配置
             dap.configurations.c = dap.configurations.cpp
-            
-            -- Python 调试适配器配置
-            dap.adapters.python = {
-                type = 'executable',
-                command = 'python',
-                args = { '-m', 'debugpy.adapter' },
-            }
-            
-            -- Python 调试配置
-            -- 查找 Python 可执行文件的辅助函数
+
+            -- 查找 Python 可执行文件的辅助函数（与 install.sh 注入的 uv venv 一致，优先 python3_host_prog）
             local function find_python()
-                -- 优先使用配置的 Python 路径
                 if vim.g.python3_host_prog and vim.g.python3_host_prog ~= '' then
                     return vim.g.python3_host_prog
                 end
-                
-                -- 尝试查找 python3
                 local python3 = vim.fn.exepath('python3')
                 if python3 and python3 ~= '' then
                     return python3
                 end
-                
-                -- 尝试查找 python
                 local python = vim.fn.exepath('python')
                 if python and python ~= '' then
                     return python
                 end
-                
-                -- Windows 特定路径
                 if is_windows then
                     local win_python = vim.fn.stdpath("data") .. '/mason/packages/debugpy/venv/Scripts/python.exe'
                     if vim.fn.executable(win_python) == 1 then
                         return win_python
                     end
+                elseif is_linux then
+                    local mason_python = vim.fn.stdpath("data") .. '/mason/packages/debugpy/venv/bin/python'
+                    if vim.fn.executable(mason_python) == 1 then
+                        return mason_python
+                    end
                 end
-                
-                -- 默认值（如果都找不到）
                 return is_windows and 'python' or 'python3'
             end
+
+            -- Python 调试适配器配置（使用 find_python 与启动配置共用同一 Python）
+            dap.adapters.python = {
+                type = 'executable',
+                command = find_python(),
+                args = { '-m', 'debugpy.adapter' },
+            }
             
+            -- Python 调试配置
             dap.configurations.python = {
                 {
                     type = 'python',

@@ -30,7 +30,7 @@ ideavimrc/
 使用安装脚本自动检测系统并安装对应配置（包含自动备份）：
 
 ```bash
-cd script_tool_and_config/dotfiles/nvim/ideavimrc
+cd ~/.config/nvim/ideavimrc
 chmod +x install.sh
 ./install.sh
 ```
@@ -44,14 +44,13 @@ chmod +x install.sh
 
 ```bash
 # 复制配置文件到用户目录
-cp script_tool_and_config/dotfiles/nvim/ideavimrc/.ideavimrc ~/.ideavimrc
+cp ~/.config/nvim/ideavimrc/.ideavimrc ~/.ideavimrc
 ```
 
 ## 配置文件位置
 
 - **配置文件**: `~/.ideavimrc`
-- **项目配置**: `script_tool_and_config/dotfiles/nvim/ideavimrc/.ideavimrc`
-- **注意**: IdeaVim 配置位于 nvim submodule 中，通过 Git Submodule 管理
+- **项目内路径**: `~/.config/nvim/ideavimrc/.ideavimrc`
 
 ## Windows 符号链接配置
 

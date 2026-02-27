@@ -2,40 +2,26 @@
 
 一个基于 Lua 的现代化 Neovim 配置，使用 lazy.nvim 作为插件管理器。
 
-**注意**: 此配置通过 Git Submodule 方式管理，配置仓库位于独立的 GitHub 仓库。
+**注意**: 本配置为独立项目，可直接克隆到 `~/.config/nvim` 使用。
 
-## Git Submodule 说明
+## 安装与更新
 
-此 Neovim 配置作为 Git Submodule 集成到 script_tool_and_config 项目中。
+### 首次安装
 
-### 首次克隆项目后初始化 Submodule
-
-```bash
-cd script_tool_and_config
-git submodule update --init --recursive
-```
-
-或者只初始化 nvim submodule：
+将本仓库克隆到 Neovim 配置目录后执行安装脚本，例如：
 
 ```bash
-git submodule update --init dotfiles/nvim
-```
-
-### 更新 Submodule
-
-```bash
-# 更新到远程仓库的最新提交
-git submodule update --remote dotfiles/nvim
-
-# 然后重新运行安装脚本
-cd dotfiles/nvim
+git clone <本仓库地址> ~/.config/nvim
+cd ~/.config/nvim
 ./install.sh
 ```
 
-### 克隆项目时同时克隆 Submodule
+### 更新配置
 
 ```bash
-git clone --recursive git@github.com:your-username/script_tool_and_config.git
+cd ~/.config/nvim
+git pull
+./install.sh
 ```
 
 ## 项目结构
@@ -788,13 +774,13 @@ sudo apt-get install neovim
 使用安装脚本自动检测系统并安装对应配置（包含自动备份）：
 
 ```bash
-cd script_tool_and_config/dotfiles/nvim
+cd ~/.config/nvim
 chmod +x install.sh
 ./install.sh
 ```
 
 安装脚本会自动：
-- 检查 Git Submodule 是否已初始化
+- 检查配置目录是否完整
 - 检测操作系统（macOS/Linux/Windows）
 - 备份现有配置文件（如果存在）
 - 复制配置文件到 XDG 风格的路径：
@@ -805,18 +791,16 @@ chmod +x install.sh
 ##### 手动安装
 
 ```bash
-# 确保 submodule 已初始化
-cd script_tool_and_config
-git submodule update --init dotfiles/nvim
-
-# 备份现有配置
+# 如需备份现有配置（在克隆前执行）
 mv ~/.config/nvim{,.bak} 2>/dev/null || true
 mv ~/.local/share/nvim{,.bak} 2>/dev/null || true
 mv ~/.local/state/nvim{,.bak} 2>/dev/null || true
 mv ~/.cache/nvim{,.bak} 2>/dev/null || true
 
-# 复制配置文件（排除 .git 目录）
-cp -r dotfiles/nvim/* ~/.config/nvim/
+# 克隆本仓库到配置目录并执行安装
+git clone <本仓库地址> ~/.config/nvim
+cd ~/.config/nvim
+./install.sh
 ```
 
 #### 3. 启动 Neovim
@@ -1229,21 +1213,9 @@ nvim
 
 ## 更新配置
 
-### 方法 1: 使用 Git Submodule 更新
-
 ```bash
-cd script_tool_and_config
-git submodule update --remote dotfiles/nvim
-cd dotfiles/nvim
-./install.sh
-```
-
-### 方法 2: 直接在 Submodule 目录中更新
-
-```bash
-cd script_tool_and_config/dotfiles/nvim
-git pull origin main  # 或 master，取决于你的分支名
-cd ../..
+cd ~/.config/nvim
+git pull
 ./install.sh
 ```
 
@@ -1341,14 +1313,12 @@ echo $XDG_DATA_HOME
 
 ## 故障排除
 
-### Submodule 未初始化
+### 配置目录不完整
 
-如果遇到 "Submodule 未初始化" 错误：
+若提示 "Neovim config directory incomplete"：
 
-```bash
-cd script_tool_and_config
-git submodule update --init dotfiles/nvim
-```
+- 确认已将本仓库克隆到 `~/.config/nvim`（或你的 Neovim 配置路径），且目录内包含 `init.lua` 与 `lua/`。
+- 若从别处复制，请保证复制了完整目录结构。
 
 ### 配置文件冲突
 
@@ -1403,7 +1373,6 @@ git submodule update --init dotfiles/nvim
 2. **手动安装缺失的工具**：
    - Go: `winget install GoLang.Go` (Windows) 或使用系统包管理器
    - Composer: 下载 phar 文件或使用包管理器
-   - julia: `winget install Julialang.Julia` (Windows) 或使用系统包管理器
    - tree-sitter CLI: `npm install -g tree-sitter-cli`
    - pnpm: `npm install -g pnpm`
    - neovim Ruby gem: `gem install neovim` (如果使用 Ruby)
@@ -1414,6 +1383,15 @@ git submodule update --init dotfiles/nvim
 
 4. **查看详细日志**：
    保存健康检查日志并查看具体错误信息。
+
+### 依赖与多操作系统说明（Windows / macOS / Linux）
+
+本配置与 `install.sh` 均按操作系统分支，保证在 Windows、macOS、Linux 上行为一致且可预期。
+
+- **Python / DAP**：Python 由 uv 管理，`install.sh` 会将 venv 路径注入 `init.lua` 的 `python3_host_prog`，DAP 使用该 Python（venv 内已安装 debugpy）；无需额外配置。
+- **opencode（可选）**：AI 功能依赖 opencode CLI。`install.sh` 会按系统检测 PATH 中的 `opencode`；若检测到则自动将路径写入 `vim.g.opencode_cmd`。未安装时可忽略 opencode 的 health 报错或暂时禁用 opencode 插件；安装方法见 [opencode](https://github.com/NickvanDyke/opencode)。
+- **snacks**：已通过 `ui_snacks` 在启动时加载（lazy=false, priority=1000），与 opencode 共用，无需用户额外操作。
+- **TreeSitter**：非 Windows 系统会自动安装 noice 等所需的解析器（vim、regex、lua、bash、markdown、markdown_inline）；Windows 因路径/编译兼容性不自动安装，若需 noice 命令行高亮可手动执行 `:TSInstall vim regex lua bash markdown markdown_inline`。
 
 ## 健康检查和诊断
 
@@ -1483,7 +1461,6 @@ nvim --headless --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir 
 1. **安装语言工具**：
    - Go（通过 winget 或包管理器）
    - Composer（下载 phar 文件）
-   - julia（通过 winget 或包管理器）
    - Ruby（检查是否已安装）
 
 2. **安装开发工具**：
@@ -1504,7 +1481,7 @@ nvim --headless --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir 
 
 | 类别 | 工具 |
 |------|------|
-| 系统包（按需） | xclip / xsel（clipboard）、go、ruby、composer、julia |
+| 系统包（按需） | xclip / xsel（clipboard）、go、ruby、composer |
 | Python venv（`install.sh`） | pynvim、pyright、ruff-lsp、debugpy、black、isort、flake8、mypy |
 | Mason LSP（`ensure_installed`） | lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman |
 | 可选 | tree-sitter-cli、pnpm（npm 全局） |
@@ -1512,7 +1489,7 @@ nvim --headless --cmd "redir > nvim_checkhealth.log" -c "checkhealth" -c "redir 
 **推荐脚本执行顺序**
 
 1. 生成健康检查日志：`./scripts/common/utils/nvim_checkhealth_to_log.sh`（可选指定路径，如 `/tmp/nvim_health.log`）
-2. 安装环境与 provider：`./dotfiles/nvim/install.sh`（需先安装 uv、fnm、nvim）
+2. 安装环境与 provider：`cd ~/.config/nvim && ./install.sh`（需先安装 uv、fnm、nvim）
 3. 可选：headless 安装 Mason LSP：`nvim --headless -c "lua vim.wait(10000)" -c "MasonInstall lua_ls bashls clangd pyright rust_analyzer jsonls yamlls marksman" -c "qa!"`
 4. 再次执行步骤 1 验证：`./scripts/common/utils/nvim_checkhealth_to_log.sh`
 
@@ -1526,6 +1503,16 @@ export PROXY_PORT=7890
 export USE_PROXY=1
 ./install.sh
 ```
+
+**Neovim 内使用代理**：为保证 lazy.nvim、mason、treesitter 等所有组件的网络请求走代理，建议在启动 nvim 的终端中先设置代理再打开 nvim，例如：
+
+```bash
+export http_proxy="http://127.0.0.1:7890"
+export https_proxy="http://127.0.0.1:7890"
+nvim
+```
+
+或使用 `NVIM_PROXY_URL`（若未设置 `http_proxy`/`HTTP_PROXY`，basic.lua 会据此自动设置）：`export NVIM_PROXY_URL=http://127.0.0.1:7890`。
 
 或禁用代理：
 ```bash

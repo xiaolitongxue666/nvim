@@ -141,6 +141,8 @@ return {
             },
         },
         config = function()
+            -- 若 install.sh 注入了路径则使用，否则依赖 PATH 中的 opencode（多 OS 兼容）
+            local opencode_cmd = (vim.g.opencode_cmd and vim.g.opencode_cmd ~= "") and vim.g.opencode_cmd or "opencode"
             ---@type opencode.Opts
             vim.g.opencode_opts = {
                 -- Provider 配置
@@ -152,12 +154,12 @@ return {
                     -- 如果已经在终端运行了 opencode --port，插件会自动检测到，不会启动新的实例
                     enabled = "snacks", -- 使用 snacks provider（推荐，更稳定）
                     snacks = {
-                        cmd = "opencode",
+                        cmd = opencode_cmd,
                         args = { "--port", "0" }, -- 使用随机端口
                     },
                     -- terminal provider 配置（作为后备）
                     terminal = {
-                        cmd = "opencode",
+                        cmd = opencode_cmd,
                         args = { "--port", "0" },
                     },
                 },

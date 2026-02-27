@@ -96,6 +96,8 @@ return {
                     "taplo",        -- TOML 格式化工具
                     "stylua",       -- Lua 代码格式化工具
                     "shfmt",        -- Shell 脚本格式化工具
+                    -- DAP 调试器（C/C++/Rust，启动时自动安装）
+                    "codelldb",
                 },
                 auto_update = true,
                 run_on_start = true,

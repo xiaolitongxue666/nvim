@@ -60,6 +60,27 @@ VENV_PATH=""
 NODE_PATH=""
 NODE_HOST_PATH=""   # neovim host 脚本路径（g:node_host_prog 应指向此，而非 node 可执行文件）
 BACKUP_DIR=""
+# 可选安装失败/跳过项（结束时汇总显示）
+INSTALL_FAILED_ITEMS=()
+record_failed() { INSTALL_FAILED_ITEMS+=("$1"); }
+
+# 总进度与子进度（主步骤 1/TOTAL_MAIN_STEPS，子步骤显示进度条）
+readonly TOTAL_MAIN_STEPS=15
+progress_step() {
+    local current="$1" total="$2" msg="$3"
+    log_info "[ $current/$total ] $msg"
+}
+progress_sub() {
+    local current="$1" total="$2" name="$3"
+    local pct=0
+    [[ $total -gt 0 ]] && pct=$((current * 100 / total))
+    local filled=$((pct / 5))
+    local bar=""
+    for ((i=0;i<20;i++)); do
+        [[ $i -lt $filled ]] && bar+="=" || bar+="-"
+    done
+    log_info "[${bar}] (${current}/${total}) ${name}"
+}
 
 # 错误处理：捕获 ERR 信号并记录错误信息
 trap 'log_error "Error detected at line ${LINENO}, exiting script"; exit 1' ERR
@@ -68,25 +89,21 @@ trap 'log_error "Error detected at line ${LINENO}, exiting script"; exit 1' ERR
 cleanup() {
     local exit_code=$?
     if [[ ${exit_code} -ne 0 ]]; then
-        log_warning "Script exited with error code: ${exit_code}"
+        log_info "Script exited with error code: ${exit_code}"
     fi
     trap - EXIT ERR
 }
 
 trap cleanup EXIT
 
-# 检查 submodule 是否存在
+# 检查配置目录是否完整（init.lua 或 lua/ 存在）
 check_submodule() {
     if [[ ! -f "${SCRIPT_DIR}/init.lua" ]] && [[ ! -d "${SCRIPT_DIR}/lua" ]]; then
-        log_error "Neovim submodule not initialized"
-        log_info "Please initialize Git submodule first:"
-        log_info "  cd script_tool_and_config"
-        log_info "  git submodule update --init --recursive"
-        log_info "Or:"
-        log_info "  git submodule update --init dotfiles/nvim"
+        log_error "Neovim config directory incomplete (missing init.lua or lua/)"
+        log_info "Please clone this repo to your config path, e.g.: git clone <this-repo> ~/.config/nvim"
         exit 1
     fi
-    log_success "Neovim submodule check passed"
+    log_success "Neovim config directory check passed"
 }
 
 # 检查前置依赖（uv, fnm；系统 Lua 为可选，Neovim 运行依赖内置 LuaJIT）
@@ -118,14 +135,15 @@ check_prerequisites() {
     fi
 
     if [[ ${lua_installed} -eq 0 ]]; then
-        log_warning "Lua is not installed"
+        log_info "Lua is not installed (optional for Neovim)"
+        record_failed "Lua"
         install_lua
     fi
 
     log_success "All prerequisites checked"
 }
 
-# 安装语言工具（Go, Ruby, Composer, julia）
+# 安装语言工具（Go, Ruby, Composer）
 install_language_tools() {
     log_info "Installing language tools for mason.nvim..."
 
@@ -153,13 +171,6 @@ install_language_tools() {
         log_success "Composer already installed: $(composer --version 2>&1 | head -n 1)"
     fi
 
-    # 检查并安装 julia
-    if ! command -v julia >/dev/null 2>&1; then
-        tools_to_install+=("julia")
-    else
-        log_success "julia already installed: $(julia --version 2>&1 | head -n 1)"
-    fi
-
     # 如果所有工具都已安装，直接返回
     if [[ ${#tools_to_install[@]} -eq 0 ]]; then
         log_success "All language tools are already installed"
@@ -185,9 +196,6 @@ install_language_tools() {
                     "composer")
                         pacman_packages+=("php" "composer")
                         ;;
-                    "julia")
-                        pacman_packages+=("julia")
-                        ;;
                 esac
             done
 
@@ -196,41 +204,43 @@ install_language_tools() {
                 if sudo pacman -S --noconfirm "${pacman_packages[@]}" 2>&1; then
                     log_success "Language tools installed successfully"
                 else
-                    log_warning "Failed to install some language tools via pacman"
-                    log_info "You can install them manually:"
-                    log_info "  sudo pacman -S ${pacman_packages[*]}"
+                    log_info "Some language tools could not be installed via pacman; you can run: sudo pacman -S ${pacman_packages[*]}"
                 fi
             fi
         elif command -v apt-get >/dev/null 2>&1; then
-            # Debian/Ubuntu
-            local apt_packages=()
-            for tool in "${tools_to_install[@]}"; do
-                case "${tool}" in
-                    "go")
-                        apt_packages+=("golang-go")
-                        ;;
-                    "ruby")
-                        apt_packages+=("ruby")
-                        ;;
-                    "composer")
-                        apt_packages+=("composer")
-                        ;;
-                    "julia")
-                        apt_packages+=("julia")
-                        ;;
-                esac
-            done
-
-            if [[ ${#apt_packages[@]} -gt 0 ]]; then
-                log_info "Installing packages via apt-get (requires sudo): ${apt_packages[*]}"
-                if sudo apt-get update >/dev/null 2>&1 && \
-                   sudo apt-get install -y "${apt_packages[@]}" 2>&1; then
-                    log_success "Language tools installed successfully"
-                else
-                    log_warning "Failed to install some language tools via apt-get"
-                    log_info "You can install them manually:"
-                    log_info "  sudo apt-get update && sudo apt-get install -y ${apt_packages[*]}"
+            # Debian/Ubuntu：仅安装仓库中存在的包，避免报错；逐包显示进度
+            local apt_tool_map=(
+                "go:golang-go"
+                "ruby:ruby"
+                "composer:composer"
+            )
+            local apt_to_install=()
+            for entry in "${apt_tool_map[@]}"; do
+                local tool_name="${entry%%:*}"
+                local pkg_name="${entry##*:}"
+                if [[ " ${tools_to_install[*]} " =~ " ${tool_name} " ]]; then
+                    apt_to_install+=("${pkg_name}")
                 fi
+            done
+            if [[ ${#apt_to_install[@]} -gt 0 ]]; then
+                log_info "Updating apt cache (requires sudo)..."
+                sudo apt-get update -qq 2>/dev/null || true
+                local total=${#apt_to_install[@]} idx=0
+                for pkg_name in "${apt_to_install[@]}"; do
+                    idx=$((idx + 1))
+                    progress_sub "${idx}" "${total}" "apt-get: ${pkg_name}"
+                    if apt-cache show "${pkg_name}" >/dev/null 2>&1; then
+                        if sudo apt-get install -y "${pkg_name}" >/dev/null 2>&1; then
+                            log_success "Installed ${pkg_name}"
+                        else
+                            log_info "Skipped ${pkg_name} (install failed)"
+                            record_failed "${pkg_name}"
+                        fi
+                    else
+                        log_info "Skipped ${pkg_name} (not in default repos)"
+                        record_failed "${pkg_name}"
+                    fi
+                done
             fi
         elif command -v yum >/dev/null 2>&1; then
             # CentOS/RHEL
@@ -246,9 +256,6 @@ install_language_tools() {
                     "composer")
                         yum_packages+=("php-composer")
                         ;;
-                    "julia")
-                        yum_packages+=("julia")
-                        ;;
                 esac
             done
 
@@ -257,14 +264,11 @@ install_language_tools() {
                 if sudo yum install -y "${yum_packages[@]}" 2>&1; then
                     log_success "Language tools installed successfully"
                 else
-                    log_warning "Failed to install some language tools via yum"
-                    log_info "You can install them manually:"
-                    log_info "  sudo yum install -y ${yum_packages[*]}"
+                    log_info "Some language tools could not be installed via yum; you can run: sudo yum install -y ${yum_packages[*]}"
                 fi
             fi
         else
-            log_warning "No supported package manager found for Linux"
-            log_info "Please install language tools manually"
+            log_info "No supported package manager found for Linux; please install language tools manually if needed"
         fi
     elif [[ "${PLATFORM}" == "macos" ]]; then
         # macOS: 使用 Homebrew
@@ -281,9 +285,6 @@ install_language_tools() {
                     "composer")
                         brew_packages+=("composer")
                         ;;
-                    "julia")
-                        brew_packages+=("julia")
-                        ;;
                 esac
             done
 
@@ -292,13 +293,11 @@ install_language_tools() {
                 if brew install "${brew_packages[@]}" 2>&1; then
                     log_success "Language tools installed successfully"
                 else
-                    log_warning "Failed to install some language tools via Homebrew"
-                    log_info "You can install them manually:"
-                    log_info "  brew install ${brew_packages[*]}"
+                    log_info "Some language tools could not be installed via Homebrew; you can run: brew install ${brew_packages[*]}"
                 fi
             fi
         else
-            log_warning "Homebrew not found"
+            log_info "Homebrew not found; install language tools manually if needed"
             log_info "Please install Homebrew first: /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
         fi
     elif [[ "${PLATFORM}" == "windows" ]]; then
@@ -345,11 +344,11 @@ install_language_tools() {
                         log_success "Go installed successfully"
                         export PATH="${PATH}:/c/Program Files/Go/bin"
                     else
-                        log_warning "Go installation failed, please install manually: winget install GoLang.Go"
+                        log_info "Go installation failed; you can install manually: winget install GoLang.Go"
                     fi
                 fi
             else
-                log_warning "winget not found, please install Go manually: https://golang.org/dl/"
+                log_info "winget not found; install Go manually if needed: https://golang.org/dl/"
             fi
         fi
 
@@ -368,49 +367,10 @@ install_language_tools() {
                     log_info "Composer path: ${composer_phar_path}"
                     log_info "Please ensure ${composer_dir} is in PATH"
                 else
-                    log_warning "Composer installation verification failed"
+                    log_info "Composer installation verification failed"
                 fi
             else
-                log_warning "Composer download failed, please install manually: https://getcomposer.org/download/"
-            fi
-        fi
-
-        # 安装 julia
-        if [[ " ${tools_to_install[*]} " =~ " julia " ]]; then
-            log_info "Installing julia..."
-            if command -v winget >/dev/null 2>&1; then
-                # 检查是否已安装但不在 PATH
-                local julia_search_dirs=(
-                    "${HOME}/AppData/Local/Programs"
-                    "/c/Users/Administrator/AppData/Local/Programs"
-                )
-                local julia_found=""
-                for search_dir in "${julia_search_dirs[@]}"; do
-                    if [[ -d "${search_dir}" ]]; then
-                        local found
-                        found=$(find "${search_dir}" -name "julia.exe" -type f 2>/dev/null | head -n 1 || echo "")
-                        if [[ -n "${found}" ]] && [[ -f "${found}" ]]; then
-                            julia_found="${found}"
-                            break
-                        fi
-                    fi
-                done
-
-                if [[ -n "${julia_found}" ]]; then
-                    log_info "Found julia at: ${julia_found}"
-                    export PATH="${PATH}:$(dirname "${julia_found}")"
-                else
-                    local winget_output
-                    winget_output=$(winget install --id Julialang.Julia --silent --accept-package-agreements --accept-source-agreements 2>&1) || {
-                        if echo "${winget_output}" | grep -q "已安装\|already installed\|找不到可用的升级"; then
-                            log_success "julia already installed (detected by winget)"
-                        else
-                            log_warning "julia installation failed, please install manually: winget install Julialang.Julia"
-                        fi
-                    }
-                fi
-            else
-                log_warning "winget not found, please install julia manually: https://julialang.org/downloads/"
+                log_info "Composer download failed; install manually if needed: https://getcomposer.org/download/"
             fi
         fi
 
@@ -418,7 +378,7 @@ install_language_tools() {
         if [[ " ${tools_to_install[*]} " =~ " ruby " ]]; then
             log_info "Checking Ruby installation..."
             if ! command -v ruby >/dev/null 2>&1; then
-                log_warning "Ruby not found, please install manually: https://rubyinstaller.org/ or winget install RubyInstallerTeam.Ruby"
+                log_info "Ruby not found; install manually if needed: https://rubyinstaller.org/ or winget install RubyInstallerTeam.Ruby"
             fi
         fi
     fi
@@ -433,7 +393,7 @@ install_lua() {
         if sudo pacman -S --noconfirm lua >/dev/null 2>&1; then
             log_success "Lua installed successfully"
         else
-            log_warning "Failed to install Lua via pacman, please install manually"
+            log_info "Could not install Lua via pacman; install manually if needed"
             log_info "Run: sudo pacman -S lua"
         fi
     elif [[ "${PLATFORM}" == "macos" ]] && command -v brew >/dev/null 2>&1; then
@@ -441,11 +401,11 @@ install_lua() {
         if brew install lua >/dev/null 2>&1; then
             log_success "Lua installed successfully"
         else
-            log_warning "Failed to install Lua via Homebrew, please install manually"
+            log_info "Could not install Lua via Homebrew; install manually if needed"
             log_info "Run: brew install lua"
         fi
     else
-        log_warning "Cannot automatically install Lua on this platform"
+        log_info "Cannot automatically install Lua on this platform"
         log_info "Please install Lua manually for your system"
         log_info "Arch Linux: sudo pacman -S lua"
         log_info "macOS: brew install lua"
@@ -471,7 +431,7 @@ determine_config_dir() {
 # 检查 Windows XDG_CONFIG_HOME
 check_windows_config() {
     if [[ "${PLATFORM}" == "windows" ]] && [[ -z "${XDG_CONFIG_HOME:-}" ]]; then
-        log_warning "XDG_CONFIG_HOME environment variable is not set on Windows"
+        log_info "XDG_CONFIG_HOME not set on Windows"
         log_info "To use Neovim on Windows, you need to configure XDG_CONFIG_HOME"
         log_info "Configuration steps:"
         log_info "1. Open System Properties -> Advanced System Settings -> Environment Variables"
@@ -480,7 +440,7 @@ check_windows_config() {
         log_info "   - Variable value: C:\\Users\\<username>\\.config\\"
         log_info "     Example: C:\\Users\\Administrator\\.config\\"
         log_info "3. Restart terminal"
-        log_warning "Config files may not be installed to the expected location"
+        log_info "Config files may not be at the expected location"
     fi
 }
 
@@ -493,7 +453,7 @@ backup_existing_config() {
         if cp -r "${NVIM_CONFIG_DIR}" "${BACKUP_DIR}" 2>/dev/null; then
             log_success "Configuration backed up to: ${BACKUP_DIR}"
         else
-            log_warning "Backup failed, but continuing with installation"
+            log_info "Backup failed, continuing with installation"
             BACKUP_DIR=""
         fi
     else
@@ -514,7 +474,7 @@ deploy_config() {
         # 使用 rsync（更高效，支持排除模式）
         rsync -av --exclude='.git' --exclude='.gitignore' --exclude='test_dir' \
             "${SCRIPT_DIR}/" "${NVIM_CONFIG_DIR}/" >/dev/null 2>&1 || {
-            log_warning "rsync failed, trying alternative method"
+            log_info "rsync failed, trying alternative method"
             deploy_config_cp
         }
     else
@@ -598,14 +558,10 @@ setup_python_environment() {
 
         if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
             # 系统级：以 root 运行
-            (source "${VENV_PATH}/bin/activate" && uv pip install --upgrade pip >/dev/null 2>&1) || {
-                log_warning "Failed to install/upgrade pip via uv pip, but continuing"
-            }
+            (source "${VENV_PATH}/bin/activate" && uv pip install --upgrade pip >/dev/null 2>&1) || true
         else
             # 用户级：以当前用户运行
-            (source "${VENV_PATH}/bin/activate" && uv pip install --upgrade pip >/dev/null 2>&1) || {
-                log_warning "Failed to install/upgrade pip via uv pip, but continuing"
-            }
+            (source "${VENV_PATH}/bin/activate" && uv pip install --upgrade pip >/dev/null 2>&1) || true
         fi
 
         # 验证 pip 是否可用
@@ -615,10 +571,10 @@ setup_python_environment() {
                 pip_version=$(python -m pip --version 2>&1 | head -n 1)
                 log_success "pip is available: ${pip_version}"
             else
-                log_warning "pip may not be available, but continuing with package installation"
+                log_info "pip may not be available, continuing with package installation"
             fi
         else
-            log_warning "Failed to activate virtual environment for pip verification"
+            log_info "Could not activate venv for pip verification, continuing"
         fi
     fi
 
@@ -661,23 +617,17 @@ setup_python_environment() {
     if [[ ${#packages_to_install[@]} -eq 0 ]]; then
         log_success "All Python packages are already installed"
     else
-        log_info "Installing ${#packages_to_install[@]} packages: ${packages_to_install[*]}"
-
-        # 使用 uv pip 安装包
-        local install_cmd="source '${VENV_PATH}/bin/activate' && uv pip install -U ${packages_to_install[*]}"
-
-        if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
-            # 系统级：以 root 运行
-            timeout 600 bash -c "${install_cmd}" || {
-                log_warning "Some packages may have failed to install, but continuing"
-            }
-        else
-            # 用户级：以当前用户运行
-            timeout 600 bash -c "${install_cmd}" || {
-                log_warning "Some packages may have failed to install, but continuing"
-            }
-        fi
-
+        local total=${#packages_to_install[@]} idx=0
+        for pkg in "${packages_to_install[@]}"; do
+            idx=$((idx + 1))
+            progress_sub "${idx}" "${total}" "pip: ${pkg}"
+            local install_cmd="source '${VENV_PATH}/bin/activate' && uv pip install -U ${pkg}"
+            if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
+                timeout 120 bash -c "${install_cmd}" >/dev/null 2>&1 || log_info "  ${pkg} install skipped or failed"
+            else
+                timeout 120 bash -c "${install_cmd}" >/dev/null 2>&1 || log_info "  ${pkg} install skipped or failed"
+            fi
+        done
         log_success "Python packages installation completed"
     fi
 }
@@ -691,7 +641,7 @@ setup_nodejs_environment() {
     if [[ -f "${HOME}/.local/share/fnm/fnm" ]]; then
         # fnm 安装在用户目录
         eval "$("${HOME}/.local/share/fnm/fnm" env --use-on-cd)" || {
-            log_warning "Failed to initialize fnm from user directory, trying system path"
+            log_info "Fnm user dir failed, trying system path"
             eval "$(fnm env --use-on-cd)" || {
                 log_error "Failed to initialize fnm environment"
                 exit 1
@@ -771,7 +721,7 @@ setup_nodejs_environment() {
     if [[ -n "${NODE_PATH}" ]] && [[ -f "${NODE_PATH}" ]]; then
         log_info "Node.js path: ${NODE_PATH}"
     else
-        log_warning "Could not determine Node.js path, but continuing"
+        log_info "Could not determine Node.js path, continuing"
         NODE_PATH=""
     fi
 
@@ -792,7 +742,7 @@ setup_nodejs_environment() {
             if npm install -g neovim >/dev/null 2>&1; then
                 log_success "neovim npm package installed"
             else
-                log_warning "Failed to install neovim npm package, but continuing"
+                log_info "neovim npm package install failed, continuing"
                 log_info "You can install it manually later: npm install -g neovim"
             fi
         fi
@@ -811,7 +761,7 @@ setup_nodejs_environment() {
             if npm install -g tree-sitter-cli >/dev/null 2>&1; then
                 log_success "tree-sitter CLI installed"
             else
-                log_warning "tree-sitter CLI installation failed, but continuing"
+                log_info "tree-sitter CLI installation failed, continuing"
             fi
         else
             log_success "tree-sitter CLI already installed"
@@ -822,13 +772,13 @@ setup_nodejs_environment() {
             if npm install -g pnpm >/dev/null 2>&1; then
                 log_success "pnpm installed"
             else
-                log_warning "pnpm installation failed, but continuing"
+                log_info "pnpm installation failed, continuing"
             fi
         else
             log_success "pnpm already installed"
         fi
     else
-        log_warning "npm not found, skipping npm package installation"
+        log_info "npm not found, skipping npm package installation"
     fi
 
     # 安装 Ruby neovim gem（如果 Ruby 可用）
@@ -840,7 +790,8 @@ setup_nodejs_environment() {
             if gem install neovim >/dev/null 2>&1; then
                 log_success "neovim Ruby gem installed"
             else
-                log_warning "neovim Ruby gem installation failed, but continuing"
+                record_failed "neovim Ruby gem"
+                log_info "neovim Ruby gem installation failed, continuing"
             fi
         fi
     else
@@ -848,13 +799,38 @@ setup_nodejs_environment() {
     fi
 }
 
-# 配置 Neovim 路径（Python 和 Node.js）
+# 检测 opencode 可执行路径（按 PLATFORM 分支，供 nvim opencode.nvim 使用）
+# 设置全局 OPENCODE_CMD，未检测到则为空
+detect_opencode_path() {
+    OPENCODE_CMD=""
+    if [[ "${PLATFORM}" == "linux" ]] || [[ "${PLATFORM}" == "macos" ]]; then
+        if command -v opencode >/dev/null 2>&1; then
+            OPENCODE_CMD="$(command -v opencode)"
+            log_success "opencode found: ${OPENCODE_CMD}"
+        else
+            record_failed "opencode"
+            log_info "opencode not found in PATH (optional for AI features)"
+        fi
+    elif [[ "${PLATFORM}" == "windows" ]]; then
+        if command -v opencode >/dev/null 2>&1; then
+            OPENCODE_CMD="$(command -v opencode)"
+            log_success "opencode found: ${OPENCODE_CMD}"
+        else
+            record_failed "opencode"
+            log_info "opencode not found in PATH (optional for AI features)"
+        fi
+    fi
+}
+
+# 配置 Neovim 路径（Python、Node.js、opencode）
 configure_neovim_paths() {
     log_info "Configuring Neovim paths for Python and Node.js..."
 
+    detect_opencode_path
+
     local config_file="${NVIM_CONFIG_DIR}/init.lua"
     if [[ ! -f "${config_file}" ]]; then
-        log_warning "init.lua not found, skipping path configuration"
+        log_info "init.lua not found, skipping path configuration"
         return 0
     fi
 
@@ -872,8 +848,15 @@ configure_neovim_paths() {
         log_info "Node.js path already configured in init.lua"
     fi
 
-    # 如果都配置了，直接返回
-    if [[ ${python_configured} -eq 1 ]] && [[ ${node_configured} -eq 1 ]]; then
+    # 检查是否已经配置了 opencode 路径
+    local opencode_configured=0
+    if grep -q "opencode_cmd" "${config_file}" 2>/dev/null; then
+        opencode_configured=1
+        log_info "opencode path already configured in init.lua"
+    fi
+
+    # 若 Python、Node、opencode 均无需写入则直接返回
+    if [[ ${python_configured} -eq 1 ]] && [[ ${node_configured} -eq 1 ]] && { [[ ${opencode_configured} -eq 1 ]] || [[ -z "${OPENCODE_CMD:-}" ]]; }; then
         log_success "All paths already configured"
         return 0
     fi
@@ -895,6 +878,15 @@ vim.opt.pp:prepend(venv_path .. \"/lib/python*/site-packages\")
         config_snippet="${config_snippet}
 -- Node.js host script path (auto-configured by install.sh; must be path to neovim/bin/cli.js)
 vim.g.node_host_prog = \"${NODE_HOST_PATH}\"
+"
+    fi
+
+    if [[ ${opencode_configured} -eq 0 ]] && [[ -n "${OPENCODE_CMD:-}" ]]; then
+        local opencode_escaped="${OPENCODE_CMD//\\/\\\\}"
+        opencode_escaped="${opencode_escaped//\"/\\\"}"
+        config_snippet="${config_snippet}
+-- opencode CLI path (auto-configured by install.sh when found in PATH)
+vim.g.opencode_cmd = \"${opencode_escaped}\"
 "
     fi
 
@@ -920,7 +912,7 @@ check_plugin_manager() {
         log_success "lazy.nvim plugin manager detected"
         log_info "Plugins will be automatically installed on first Neovim startup"
     else
-        log_warning "lazy.nvim not found, checking for vim-plug..."
+        log_info "lazy.nvim not found, checking for vim-plug..."
         local vim_plug_dir="${HOME}/.local/share/nvim/site/autoload"
         if [[ ! -f "${vim_plug_dir}/plug.vim" ]]; then
             log_info "Installing vim-plug..."
@@ -929,7 +921,7 @@ check_plugin_manager() {
                 https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim 2>/dev/null; then
                 log_success "vim-plug installed"
             else
-                log_warning "Failed to install vim-plug"
+                log_info "Failed to install vim-plug"
             fi
         else
             log_success "vim-plug already installed"
@@ -963,27 +955,27 @@ verify_installation() {
     if [[ -n "${VENV_PATH:-}" ]] && [[ -f "${VENV_PATH}/bin/python" ]]; then
         log_success "Python environment found: ${VENV_PATH}"
     else
-        log_warning "Python environment not configured"
+        log_info "Python environment not configured"
     fi
 
     # 验证 Node.js 环境
     if [[ -n "${NODE_PATH:-}" ]] && command -v node >/dev/null 2>&1; then
         log_success "Node.js environment found: ${NODE_PATH}"
     else
-        log_warning "Node.js environment not configured"
+        log_info "Node.js environment not configured"
     fi
 
     # 验证 lazy.nvim
     if [[ -f "${NVIM_CONFIG_DIR}/lua/config/lazy.lua" ]]; then
         log_success "lazy.nvim configuration found"
     else
-        log_warning "lazy.nvim configuration not found"
+        log_info "lazy.nvim configuration not found"
     fi
 
     if [[ ${errors} -eq 0 ]]; then
         log_success "Installation verification completed"
     else
-        log_warning "Installation verification found ${errors} error(s)"
+        log_info "Installation verification found ${errors} issue(s)"
     fi
 }
 
@@ -1034,7 +1026,7 @@ install_clipboard_tool() {
     fi
 
     # 如果没有工具，尝试安装
-    log_warning "No clipboard tool found. Clipboard registers (\"+ and \"*) will not work."
+    log_info "No clipboard tool found; clipboard registers (\"+ and \"*) will not work."
     log_info "Attempting to install clipboard tool..."
 
     if [[ "${PLATFORM}" == "linux" ]]; then
@@ -1047,7 +1039,7 @@ install_clipboard_tool() {
                 clipboard_available=true
                 clipboard_tool="xclip"
             else
-                log_warning "Failed to install xclip via apt-get"
+                log_info "Could not install xclip via apt-get"
                 log_info "You can manually install it: sudo apt-get install -y xclip"
             fi
         elif command -v yum >/dev/null 2>&1; then
@@ -1058,7 +1050,7 @@ install_clipboard_tool() {
                 clipboard_available=true
                 clipboard_tool="xclip"
             else
-                log_warning "Failed to install xclip via yum"
+                log_info "Could not install xclip via yum"
                 log_info "You can manually install it: sudo yum install -y xclip"
             fi
         elif command -v pacman >/dev/null 2>&1; then
@@ -1069,7 +1061,7 @@ install_clipboard_tool() {
                 clipboard_available=true
                 clipboard_tool="xclip"
             else
-                log_warning "Failed to install xclip via pacman"
+                log_info "Could not install xclip via pacman"
                 log_info "You can manually install it: sudo pacman -S xclip"
             fi
         elif command -v dnf >/dev/null 2>&1; then
@@ -1080,11 +1072,11 @@ install_clipboard_tool() {
                 clipboard_available=true
                 clipboard_tool="xclip"
             else
-                log_warning "Failed to install xclip via dnf"
+                log_info "Could not install xclip via dnf"
                 log_info "You can manually install it: sudo dnf install -y xclip"
             fi
         else
-            log_warning "No supported package manager found for Linux"
+            log_info "No supported package manager found for Linux"
             log_info "Please install xclip or xsel manually:"
             log_info "  Debian/Ubuntu: sudo apt-get install -y xclip"
             log_info "  RHEL/CentOS:   sudo yum install -y xclip"
@@ -1093,7 +1085,7 @@ install_clipboard_tool() {
         fi
     elif [[ "${PLATFORM}" == "macos" ]]; then
         # macOS: pbcopy/pbpaste 应该总是可用，如果不可用可能是系统问题
-        log_error "pbcopy/pbpaste not found on macOS. This is unusual."
+        log_info "pbcopy/pbpaste not found on macOS."
         log_info "Please check your macOS installation."
     elif [[ "${PLATFORM}" == "windows" ]]; then
         # Windows: 可以尝试安装 win32yank，但通常不需要
@@ -1106,7 +1098,7 @@ install_clipboard_tool() {
         log_success "Clipboard tool is now available: ${clipboard_tool}"
         log_info "Clipboard registers (\"+ and \"*) should work in Neovim"
     else
-        log_warning "Clipboard tool installation failed or skipped"
+        log_info "Clipboard tool installation failed or skipped"
         log_info "Clipboard registers (\"+ and \"*) will not work in Neovim"
         log_info "You can install it manually later. See: :help clipboard"
     fi
@@ -1118,14 +1110,14 @@ install_treesitter_parsers() {
 
     # 检查 Neovim 是否可用
     if ! command -v nvim >/dev/null 2>&1; then
-        log_warning "Neovim not found, skipping TreeSitter parser installation"
+        log_info "Neovim not found, skipping TreeSitter parser installation"
         log_info "TreeSitter parsers will be installed automatically on first Neovim startup"
         return 0
     fi
 
     # 检查配置文件是否存在
     if [[ ! -f "${NVIM_CONFIG_DIR}/init.lua" ]]; then
-        log_warning "Neovim configuration not found, skipping TreeSitter parser installation"
+        log_info "Neovim configuration not found, skipping TreeSitter parser installation"
         return 0
     fi
 
@@ -1134,7 +1126,7 @@ install_treesitter_parsers() {
 
     # 使用 nvim --headless 执行 TSInstall 和 TSUpdate
     # 使用 -c 参数直接执行命令，等待插件加载
-    log_info "You Shoule Maunal Run TreeSitter installation commands...(TSUpdate)"
+    log_info "You should manually run TreeSitter installation commands (e.g. :TSUpdate)"
 
     # 构建命令：使用 timeout 防止卡住，增加等待时间让插件完全加载
     # local nvim_cmd="nvim --headless"
@@ -1187,59 +1179,65 @@ print_summary() {
     log_info "3. If using vim-plug, run: :PlugInstall"
     log_info ""
     log_info "To update configuration:"
-    log_info "  cd script_tool_and_config"
-    log_info "  git submodule update --remote dotfiles/nvim"
+    log_info "  cd ${NVIM_CONFIG_DIR}"
+    log_info "  git pull"
     log_info "  Then run this install script again"
     log_info ""
+
+    if [[ ${#INSTALL_FAILED_ITEMS[@]} -gt 0 ]]; then
+        log_info "Failed/skipped (optional): ${INSTALL_FAILED_ITEMS[*]}"
+        log_info "  (None of these are required for core Neovim.)"
+        log_info ""
+    fi
 }
 
 # 主函数
 main() {
     start_script "Neovim Configuration Installation"
 
-    # 检查 submodule
+    progress_step 1 "${TOTAL_MAIN_STEPS}" "Checking config directory..."
     check_submodule
 
-    # 确定配置目录
+    progress_step 2 "${TOTAL_MAIN_STEPS}" "Determining config directory..."
     determine_config_dir
 
-    # 检查 Windows 配置
+    progress_step 3 "${TOTAL_MAIN_STEPS}" "Checking Windows config..."
     check_windows_config
 
-    # 检查前置依赖
+    progress_step 4 "${TOTAL_MAIN_STEPS}" "Checking prerequisites..."
     check_prerequisites
 
-    # 安装语言工具（Go, Ruby, Composer, julia）
+    progress_step 5 "${TOTAL_MAIN_STEPS}" "Installing language tools (Go, Ruby, Composer)..."
     install_language_tools
 
-    # 检查并安装 clipboard 工具
+    progress_step 6 "${TOTAL_MAIN_STEPS}" "Checking clipboard tool..."
     install_clipboard_tool
 
-    # 备份现有配置
+    progress_step 7 "${TOTAL_MAIN_STEPS}" "Backing up existing config..."
     backup_existing_config
 
-    # 部署配置文件
+    progress_step 8 "${TOTAL_MAIN_STEPS}" "Deploying config files..."
     deploy_config
 
-    # 设置 Python 环境（使用 uv）
+    progress_step 9 "${TOTAL_MAIN_STEPS}" "Setting up Python environment (uv)..."
     setup_python_environment
 
-    # 设置 Node.js 环境（使用 fnm）
+    progress_step 10 "${TOTAL_MAIN_STEPS}" "Setting up Node.js environment (fnm)..."
     setup_nodejs_environment
 
-    # 配置 Neovim 路径
+    progress_step 11 "${TOTAL_MAIN_STEPS}" "Configuring Neovim paths..."
     configure_neovim_paths
 
-    # 检查插件管理器
+    progress_step 12 "${TOTAL_MAIN_STEPS}" "Checking plugin manager..."
     check_plugin_manager
 
-    # 验证安装
+    progress_step 13 "${TOTAL_MAIN_STEPS}" "Verifying installation..."
     verify_installation
 
-    # 安装 TreeSitter parsers
+    progress_step 14 "${TOTAL_MAIN_STEPS}" "TreeSitter parsers..."
     install_treesitter_parsers
 
-    # 打印摘要
+    progress_step 15 "${TOTAL_MAIN_STEPS}" "Printing summary..."
     print_summary
 
     end_script
