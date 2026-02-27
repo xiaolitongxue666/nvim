@@ -165,10 +165,11 @@ install_language_tools() {
     fi
 
     # 检查并安装 Composer (PHP)
+    # 注：不在此处执行 composer --version，避免因 Composer 自检/网络导致脚本卡住
     if ! command -v composer >/dev/null 2>&1; then
         tools_to_install+=("composer")
     else
-        log_success "Composer already installed: $(composer --version 2>&1 | head -n 1)"
+        log_success "Composer already installed"
     fi
 
     # 如果所有工具都已安装，直接返回

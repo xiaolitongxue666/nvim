@@ -1,6 +1,7 @@
 -- 文件以utf8格式加载
 vim.g.encoding = "UTF-8"
-vim.o.fileencoding = "utf-8"
+-- 与 Neovim 0.11 默认一致，注释保留
+-- vim.o.fileencoding = "utf-8"
 
 -- Windows 环境变量路径修复（处理 Git Bash 环境下的引号问题）
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
@@ -77,8 +78,8 @@ vim.o.sidescrolloff = 8
 -- 是否使用相对行号
 vim.wo.number = true
 vim.wo.relativenumber = true
--- 同时显示行号和相对行号
-vim.o.statuscolumn = "%s %l %r"
+-- 同时显示行号和相对行号（与 Neovim 0.11 默认一致时注释保留）
+-- vim.o.statuscolumn = "%s %l %r"
 -- 高亮所在行
 vim.wo.cursorline = true
 -- 显示左侧图标指示列
@@ -120,8 +121,8 @@ vim.wo.wrap = false
 vim.o.whichwrap = "b,s,<,>,[,],h,l"
 -- 允许隐藏被修改过的buffer
 vim.o.hidden = true
--- 鼠标支持
-vim.o.mouse = "a"
+-- 与 Neovim 0.11 默认一致，注释保留
+-- vim.o.mouse = "a"
 -- 禁止创建备份文件
 vim.o.backup = false
 vim.o.writebackup = false

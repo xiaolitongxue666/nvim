@@ -228,6 +228,9 @@ return {
             local function on_attach(client, bufnr)
                 local keymap_opts = { buffer = bufnr, silent = true }
 
+                -- 解除 0.11 默认 LSP 键位，避免与自定义布局（i/k/j/l 为上下左右）冲突
+                pcall(vim.keymap.del, "n", "K", { buffer = bufnr })
+
                 -- 启用补全
                 vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
 
