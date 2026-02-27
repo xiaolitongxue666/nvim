@@ -148,3 +148,37 @@
 | `deploy_config` | 删除目标下 `%APPDATA%`，rsync/find 排除该名称 |
 
 以上为当前脚本中与「项目根下出现字面量 `%APPDATA%` 目录」相关的完整问题描述与解决办法记录。
+
+---
+
+## 问题：在 Neovim 内使用 Mason 时出现 `%APPDATA%` 文件夹
+
+### 现象
+
+- 从**配置目录**启动 Neovim（如 `cd ~/.config/nvim && nvim`），执行 **:Mason** 打开 Mason 管理界面，按 **U** 更新全部包后，**项目根目录（即配置目录）下再次出现字面量 `%APPDATA%` 文件夹**。
+- Mason 中的 LSP 等更新可能已成功，但该目录会被留在 cwd 下。
+
+### 原因简述
+
+- Neovim 启动时其**当前工作目录（cwd）**为启动时所在目录；从配置目录启动则 cwd 即为配置目录。
+- **:Mason** 后按 **U** 会触发 Mason 启动**外部进程**（如 npm/Node）执行安装或更新；这些子进程继承 Neovim 的 **cwd** 和**环境变量**。
+- 若此时 **APPDATA** 未设置或仍为字面量 `%APPDATA%`（例如从 Git Bash 启动且未在 shell 中导出），子进程可能在**当前目录（配置目录）**下创建名为 `%APPDATA%` 的文件夹，与 install.sh 中「npm 在 cwd 下创建该目录」的根因一致。
+
+### 解决办法（配置内已实现）
+
+1. **启动时为子进程设置 APPDATA（治本）**  
+   在 `lua/basic.lua` 中，Windows 下若 `APPDATA` 为空或含 `%`，会通过 `cmd /c "echo %APPDATA%"` 获取已展开路径并设置 `vim.env.APPDATA`。Neovim 及之后通过 Mason 等启动的子进程会继承该环境变量，从源头减少在 cwd 下创建该目录。
+
+2. **进入配置目录时自动清理（兜底）**  
+   - **VimEnter** 时：若当前目录为配置目录且存在 `%APPDATA%` 目录，则自动删除并提示「已清理配置目录下的 %APPDATA% 目录」。  
+   - **手动清理**：在配置目录下执行 **:NvimConfigCleanAppdata**，可随时删除该目录（仅 Windows 且 cwd 为配置目录时有效）。
+
+3. **可选：启动前导出 APPDATA**  
+   若仍偶发创建，可在启动 nvim 前在 shell 中先导出 APPDATA（参见上文「手动检查与预防」），或使用包装脚本在导出后再 `exec nvim`。
+
+### 相关配置位置
+
+| 位置 | 作用 |
+|------|------|
+| `lua/basic.lua`（Windows 分支） | 启动时设置 `vim.env.APPDATA` 为已展开路径 |
+| `lua/basic.lua`（文件末尾） | `clean_appdata_in_config_dir`、VimEnter 自动清理、`:NvimConfigCleanAppdata` 命令 |

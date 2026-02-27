@@ -18,6 +18,17 @@ if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
     clean_env_path("XDG_CONFIG_HOME")
     clean_env_path("XDG_STATE_HOME")
     clean_env_path("XDG_CACHE_HOME")
+
+    -- 设置已展开的 APPDATA，避免 Mason 等子进程在 cwd 下创建字面量 %APPDATA% 目录
+    local appdata = vim.env.APPDATA or ""
+    if appdata == "" or appdata:find("%%") then
+        local ok, result = pcall(function()
+            return vim.fn.system('cmd /c "echo %APPDATA%"'):gsub("^%s+", ""):gsub("%s+$", ""):gsub("[\r\n]", "")
+        end)
+        if ok and result and result ~= "" then
+            vim.env.APPDATA = result
+        end
+    end
 end
 
 -- 代理环境变量设置（跨平台兼容）
@@ -221,4 +232,34 @@ else
 	-- macOS 和 Linux 使用默认 shell
 	-- 不需要特殊设置，使用系统默认
 end
+
+-- Windows：当 cwd 为配置目录时清理误建的 %APPDATA% 目录（Mason 更新等可能创建）
+local function normalize_path_for_compare(p)
+	if not p or p == "" then return "" end
+	-- 统一反斜杠、末尾斜杠；将 /x/ 或 /X/ 转为 x:/
+	p = p:gsub("\\", "/"):gsub("/+$", ""):lower()
+	p = p:gsub("^/([a-z])/", "%1:/")
+	return p
+end
+
+local function clean_appdata_in_config_dir()
+	if vim.fn.has("win32") ~= 1 and vim.fn.has("win64") ~= 1 then return end
+	local cwd = normalize_path_for_compare(vim.fn.getcwd())
+	local config_dir = normalize_path_for_compare(vim.fn.stdpath("config"))
+	if cwd == "" or config_dir == "" or cwd ~= config_dir then return end
+	local stray = vim.fn.getcwd() .. "/%APPDATA%"
+	if vim.fn.isdirectory(stray) == 1 then
+		vim.fn.delete(stray, "rf")
+		vim.notify("已清理配置目录下的 %APPDATA% 目录", vim.log.levels.INFO, { title = "NvimConfig" })
+	end
+end
+
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+		clean_appdata_in_config_dir()
+	end,
+	once = true,
+})
+
+vim.api.nvim_create_user_command("NvimConfigCleanAppdata", clean_appdata_in_config_dir, { desc = "清理当前配置目录下的 %APPDATA% 目录（仅 Windows 且 cwd 为配置目录时有效）" })
 
