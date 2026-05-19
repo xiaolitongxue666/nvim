@@ -105,15 +105,21 @@ ${APPDATA}/
 
 # Local Python venv (created by install.sh)
 venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # Cursor IDE project metadata
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/*.mdc
 
 # Neovim log
 .nvimlog
 
-# Health check analysis (optional, can be regenerated)
-HEALTH_CHECK_ANALYSIS.md
+# graphify generated artifacts
+graphify-out/
 
 # Windows specific
 Thumbs.db

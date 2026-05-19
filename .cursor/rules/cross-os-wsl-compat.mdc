@@ -1,0 +1,16 @@
+---
+description: Cross-OS and WSL compatibility guardrails
+alwaysApply: true
+---
+
+# Cross-OS + WSL Compatibility
+
+- Treat Windows, Linux/macOS, and WSL as first-class runtime targets.
+- Prefer portable path handling and avoid hardcoded home paths.
+- Keep repo paths in POSIX-style where possible; normalize separators when shelling out on Windows.
+- For shell scripts, gate platform-specific logic with explicit checks and provide a safe fallback branch.
+- Do not assume `/bin/bash` exists on native Windows; use project wrappers when available (for example `scripts/bash.cmd`).
+- Avoid assumptions about `$APPDATA`, `%APPDATA%`, and `$XDG_CONFIG_HOME`; resolve from environment with fallback order.
+- Preserve LF in shell/Lua files and avoid introducing CRLF-only behavior.
+- Any new install/bootstrap behavior must be idempotent and non-destructive across repeated runs on all supported platforms.
+- Document platform-specific caveats in `README.md` or `trouble_shoot.md` when introducing new OS-dependent behavior.
