@@ -13,4 +13,4 @@ alwaysApply: true
 - Avoid assumptions about `$APPDATA`, `%APPDATA%`, and `$XDG_CONFIG_HOME`; resolve from environment with fallback order.
 - Preserve LF in shell/Lua files and avoid introducing CRLF-only behavior.
 - Any new install/bootstrap behavior must be idempotent and non-destructive across repeated runs on all supported platforms.
-- Document platform-specific caveats in `README.md` or `trouble_shoot.md` when introducing new OS-dependent behavior.
+- Document platform-specific caveats in `README.md` or `TROUBLE_SHOOT.md` when introducing new OS-dependent behavior.

@@ -1,4 +1,12 @@
+---
+description: Project memory synced from PROJECT_MEMORY.md
+alwaysApply: true
+---
+
 # Project Memory
+
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-05-19T08:26:22Z. Full file: PROJECT_MEMORY.md
+
 
 ## 2026-05-19
 
@@ -29,4 +37,4 @@
 
 - 新增涉及路径、shell、安装流程的改动时，默认同时验证 Windows + WSL 场景。
 - 新增项目规则时优先放在 `.cursor/rules/*.mdc`，保证可版本化。
-- 变更完成后优先维护 `README.md`、`trouble_shoot.md`、本文件三处一致性。
+- 变更完成后优先维护 `README.md`、`TROUBLE_SHOOT.md`、本文件三处一致性。

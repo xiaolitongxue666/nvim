@@ -26,7 +26,11 @@ else
     start_script() { echo ""; echo "========== $1 =========="; echo ""; }
     end_script() { echo ""; echo "========== Done =========="; echo ""; }
     ensure_directory() { [[ -n "$1" ]] && [[ ! -d "$1" ]] && mkdir -p "$1"; }
-    run_with_timeout() { if command -v timeout >/dev/null 2>&1; then timeout "$@"; else shift; "$@"; fi; }
+    run_with_timeout() {
+        local seconds="$1"
+        shift
+        if command -v timeout >/dev/null 2>&1; then timeout "${seconds}" "$@"; else "$@"; fi
+    }
 fi
 
 # 检测操作系统
@@ -54,7 +58,7 @@ INSTALL_FAILED_ITEMS=()
 record_failed() { INSTALL_FAILED_ITEMS+=("$1"); }
 
 # 总进度与子进度（主步骤 1/TOTAL_MAIN_STEPS，子步骤显示进度条）
-readonly TOTAL_MAIN_STEPS=15
+readonly TOTAL_MAIN_STEPS=16
 progress_step() {
     local current="$1" total="$2" msg="$3"
     log_info "[ $current/$total ] $msg"
@@ -84,17 +88,6 @@ cleanup() {
 }
 
 trap cleanup EXIT
-
-# 带超时运行命令（macOS 默认无 timeout，则直接执行）
-run_with_timeout() {
-    local seconds="$1"
-    shift
-    if command -v timeout >/dev/null 2>&1; then
-        timeout "${seconds}" "$@"
-    else
-        "$@"
-    fi
-}
 
 # 检查配置完整性（init.lua 或 lua/ 至少存在其一）
 check_config_integrity() {
@@ -978,6 +971,7 @@ setup_nodejs_environment() {
         _npm_cleanup_stray() {
             [[ "${PLATFORM}" != "windows" ]] && return 0
             [[ -d "${SCRIPT_DIR}/%APPDATA%" ]] && rm -rf "${SCRIPT_DIR}/%APPDATA%"
+            return 0
         }
 
         if _npm list -g neovim >/dev/null 2>&1; then
@@ -994,7 +988,7 @@ setup_nodejs_environment() {
         _npm_cleanup_stray
         # g:node_host_prog 需指向 neovim host 脚本（neovim/bin/cli.js）；仅使用展开路径，禁止字面量 %APPDATA%
         local npm_global_root
-        npm_global_root="$(_npm root -g 2>/dev/null | tr -d '\r\n')"
+        npm_global_root="$(_npm root -g 2>/dev/null | tr -d '\r\n')" || true
         npm_global_root="${npm_global_root//\\//}"
         _npm_cleanup_stray
         if [[ "${PLATFORM}" == "windows" ]]; then
@@ -1416,6 +1410,112 @@ install_treesitter_parsers() {
     # fi
 }
 
+# 若根目录无 PROJECT_MEMORY.md，则从 docs/PROJECT_MEMORY_LOG.md 生成初始版本
+ensure_project_memory_file() {
+    local target_dir="$1"
+    local memory_file="${target_dir}/PROJECT_MEMORY.md"
+    local log_file="${target_dir}/docs/PROJECT_MEMORY_LOG.md"
+
+    if [[ -f "${memory_file}" ]]; then
+        return 0
+    fi
+
+    if [[ ! -f "${log_file}" ]]; then
+        return 1
+    fi
+
+    {
+        echo "# Project Memory"
+        echo ""
+        echo "> 权威项目记忆文件。\`install.sh\` 结束时会把本文件同步到 \`CLAUDE.md\`、\`AGENTS.md\`、\`.cursor/rules/project-memory.mdc\`。"
+        echo "> 按日期追加的变更日志见 [docs/PROJECT_MEMORY_LOG.md](docs/PROJECT_MEMORY_LOG.md)。"
+        echo ""
+        sed '1,2d' "${log_file}"
+    } > "${memory_file}"
+    log_info "Created ${memory_file} from docs/PROJECT_MEMORY_LOG.md"
+    return 0
+}
+
+# 将 PROJECT_MEMORY.md 同步到单个目录下的 agent 配置入口
+sync_project_memory_to_dir() {
+    local target_dir="$1"
+    local source_file="$2"
+
+    [[ -f "${source_file}" ]] || return 1
+    [[ -d "${target_dir}" ]] || return 1
+
+    local synced_at
+    synced_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date +"%Y-%m-%dT%H:%M:%S")"
+
+    {
+        echo "# Neovim Config — Claude Project Context"
+        echo ""
+        echo "> Auto-synced from PROJECT_MEMORY.md by install.sh at ${synced_at}. Edit PROJECT_MEMORY.md instead."
+        echo ""
+        sed '1,4d' "${source_file}"
+    } > "${target_dir}/CLAUDE.md"
+
+    {
+        echo "# Neovim Config — Agent Instructions"
+        echo ""
+        echo "> Auto-synced from PROJECT_MEMORY.md by install.sh at ${synced_at}. Edit PROJECT_MEMORY.md instead."
+        echo ""
+        sed '1,4d' "${source_file}"
+    } > "${target_dir}/AGENTS.md"
+
+    ensure_directory "${target_dir}/.cursor/rules"
+    {
+        echo "---"
+        echo "description: Project memory synced from PROJECT_MEMORY.md"
+        echo "alwaysApply: true"
+        echo "---"
+        echo ""
+        echo "# Project Memory"
+        echo ""
+        echo "> Auto-synced from PROJECT_MEMORY.md by install.sh at ${synced_at}. Full file: PROJECT_MEMORY.md"
+        echo ""
+        sed '1,4d' "${source_file}"
+    } > "${target_dir}/.cursor/rules/project-memory.mdc"
+
+    return 0
+}
+
+# 同步 PROJECT_MEMORY.md 到 Cursor / Claude / Codex / DeepSeek-tui 可识别的项目级配置
+sync_project_memory() {
+    log_info "Syncing PROJECT_MEMORY.md to agent configs..."
+
+    ensure_project_memory_file "${SCRIPT_DIR}" || true
+    ensure_project_memory_file "${NVIM_CONFIG_DIR}" || true
+
+    local source_file="${NVIM_CONFIG_DIR}/PROJECT_MEMORY.md"
+    if [[ ! -f "${source_file}" ]]; then
+        source_file="${SCRIPT_DIR}/PROJECT_MEMORY.md"
+    fi
+
+    if [[ ! -f "${source_file}" ]]; then
+        log_warning "PROJECT_MEMORY.md not found, skipping agent memory sync"
+        return 0
+    fi
+
+    local sync_errors=0
+    if ! sync_project_memory_to_dir "${NVIM_CONFIG_DIR}" "${source_file}"; then
+        sync_errors=$((sync_errors + 1))
+    fi
+    if [[ "${SCRIPT_DIR}" != "${NVIM_CONFIG_DIR}" ]]; then
+        if ! sync_project_memory_to_dir "${SCRIPT_DIR}" "${source_file}"; then
+            sync_errors=$((sync_errors + 1))
+        fi
+    fi
+
+    if [[ ${sync_errors} -gt 0 ]]; then
+        log_warning "Project memory sync completed with ${sync_errors} error(s)"
+        return 0
+    fi
+
+    log_success "Project memory synced to CLAUDE.md, AGENTS.md, .cursor/rules/project-memory.mdc"
+    return 0
+}
+
 # 打印摘要信息
 print_summary() {
     log_info "=========================================="
@@ -1445,6 +1545,8 @@ print_summary() {
     log_info "  cd ${NVIM_CONFIG_DIR}"
     log_info "  git pull"
     log_info "  ./install.sh"
+    log_info ""
+    log_info "Project memory: edit PROJECT_MEMORY.md, then re-run install.sh to sync agent configs."
     log_info ""
 
     if [[ ${#INSTALL_FAILED_ITEMS[@]} -gt 0 ]]; then
@@ -1515,7 +1617,10 @@ main() {
     progress_step 14 "${TOTAL_MAIN_STEPS}" "TreeSitter parsers..."
     install_treesitter_parsers
 
-    progress_step 15 "${TOTAL_MAIN_STEPS}" "Printing summary..."
+    progress_step 15 "${TOTAL_MAIN_STEPS}" "Syncing project memory to agent configs..."
+    sync_project_memory || log_warning "Project memory sync failed, continuing"
+
+    progress_step 16 "${TOTAL_MAIN_STEPS}" "Printing summary..."
     print_summary
 
     end_script
