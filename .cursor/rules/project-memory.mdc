@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Project Memory
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-05-19T08:26:22Z. Full file: PROJECT_MEMORY.md
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-05-19T09:01:49Z. Full file: PROJECT_MEMORY.md
 
 
 ## 2026-05-19
@@ -38,3 +38,34 @@ alwaysApply: true
 - 新增涉及路径、shell、安装流程的改动时，默认同时验证 Windows + WSL 场景。
 - 新增项目规则时优先放在 `.cursor/rules/*.mdc`，保证可版本化。
 - 变更完成后优先维护 `README.md`、`TROUBLE_SHOOT.md`、本文件三处一致性。
+
+### 安装更新与健康清零（2026-05-19 会话）
+
+**已完成流程**
+
+1. `./install.sh`：部署配置；uv 维护 `venv/nvim-python`（pynvim、pyright、ruff-lsp 等）；fnm 维护 Node LTS 与全局 `neovim`、`tree-sitter-cli`、`pnpm`。
+2. 无头 `Lazy! update`：更新 lazy.nvim 管理的插件。
+3. 无头 `checkhealth`：修复至严格口径 0 条 ERROR/WARNING；证据见 `docs/nvim_checkhealth_final.log`。
+
+**关键修复**
+
+- `nvim-treesitter`：`Lazy update` 将 `main` 拉到需 Neovim 0.12+ 的 rewrite；本机 0.11.5 改回上游兼容分支 **`master`**（`lua/plugins/code_highlight_nvim-treesitter.lua`，`lazy-lock.json` 已同步）。
+- WSL：`tree-sitter` 勿用 Windows npm 路径；无头前 `eval "$(fnm env --use-on-cd)"`，必要时 `npm install -g tree-sitter-cli`（Linux 侧）。
+
+**无头模式经验（详见 `.cursor/rules/headless-testing.mdc`）**
+
+- 必须 `-u init.lua`；结束用 `-c "qa!"`。
+- 健康检查落盘优先：`-c "checkhealth" -c "w! docs/nvim_checkhealth_final.log"`（`redir` 在 headless 下常只得到标题）。
+- 插件未就绪时用 `vim.wait` + `pcall(require, ...)` 再跑 `checkhealth`。
+- `Lazy update` 后若 Mason 仍在安装，立即 `qa!` 会中止安装并报错；需留足时间或分开执行。
+- 验收 grep 用 `^- ERROR|^- WARNING|❌|⚠`，避免把 treesitter 图例里的 `x) errors found in the query` 误判为失败。
+
+**标准复现命令**
+
+```bash
+cd ~/.config/nvim && eval "$(fnm env --use-on-cd)" && ./install.sh
+nvim --headless -u init.lua -c "Lazy! update" -c "qa!"
+nvim --headless -u init.lua \
+  -c "lua vim.wait(25000, function() return pcall(require,'nvim-treesitter.configs') end)" \
+  -c "checkhealth" -c "w! docs/nvim_checkhealth_final.log" -c "qa!"
+```

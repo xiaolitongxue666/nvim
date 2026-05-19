@@ -157,13 +157,17 @@ LSP 与 Mason 详见 [docs/LSP_VIEW_AND_MANAGE.md](docs/LSP_VIEW_AND_MANAGE.md)�
 :checkhealth
 ```
 
-保存日志（无额外脚本）：
+推荐维护顺序（无头，需先 `eval "$(fnm env --use-on-cd)"`）：
 
 ```bash
-nvim --headless --cmd "redir! > nvim_checkhealth.log" -c "checkhealth" -c "redir END" -c "qa!"
+./install.sh
+nvim --headless -u init.lua -c "Lazy! update" -c "qa!"
+nvim --headless -u init.lua \
+  -c "lua vim.wait(25000, function() return pcall(require,'nvim-treesitter.configs') end)" \
+  -c "checkhealth" -c "w! docs/nvim_checkhealth_final.log" -c "qa!"
 ```
 
-缺失工具可由 `./install.sh` 协助安装；代理见 `basic.lua` 中 `NVIM_PROXY_URL` / `http_proxy`。
+细节与排错见 [`.cursor/rules/headless-testing.mdc`](.cursor/rules/headless-testing.mdc)。缺失工具可由 `./install.sh` 安装；代理见 `basic.lua` 中 `NVIM_PROXY_URL` / `http_proxy`。
 
 ## 维护
 

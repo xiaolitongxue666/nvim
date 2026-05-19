@@ -1,0 +1,79 @@
+---
+description: Neovim headless 无头模式维护与验收流程（install / Lazy / checkhealth）
+alwaysApply: true
+---
+
+# Headless 无头测试与维护流程
+
+## 标准三步验收（安装 → 插件 → 健康）
+
+在仓库根目录或 `~/.config/nvim` 执行，**先初始化 fnm**（Node / tree-sitter-cli / npm host）：
+
+```bash
+cd ~/.config/nvim
+eval "$(fnm env --use-on-cd)"
+
+# 1) 脚本安装/更新（Python 用 uv，Node 用 fnm，见 install.sh）
+./install.sh
+
+# 2) 无头更新插件（等价于 :Lazy update）
+nvim --headless -u init.lua -c "Lazy! update" -c "qa!"
+
+# 3) 无头健康检查并落盘（严格口径：无 ERROR / WARNING / ❌ / ⚠）
+nvim --headless -u init.lua \
+  -c "lua vim.wait(25000, function() return pcall(require,'nvim-treesitter.configs') end)" \
+  -c "checkhealth" \
+  -c "w! docs/nvim_checkhealth_final.log" \
+  -c "qa!"
+```
+
+验收扫描（排除图例误报）：
+
+```bash
+grep -iE '^- ERROR|^- WARNING|❌|⚠' docs/nvim_checkhealth_final.log || echo "CLEAN"
+```
+
+## `--headless` 要点
+
+| 场景 | 推荐命令片段 | 说明 |
+|------|----------------|------|
+| 加载完整配置 | `-u init.lua` | 必须，否则 lazy/插件/路径检测不生效 |
+| 退出 | `-c "qa!"` | 强制退出，避免挂起 |
+| Lazy 更新 | `-c "Lazy! update"` | `!` 强制；更新后勿在 Mason 仍在安装时立刻 `qa!` |
+| Lazy 同步/钉版本 | `-c "Lazy! sync"` / `-c "Lazy! sync nvim-treesitter"` | 改 `branch`/`commit` 后必须 sync |
+| 健康检查落盘 | `-c "checkhealth" -c "w! path.log"` | 比 `redir` 更可靠；`redir` 有时只捕获标题行 |
+| 等待插件就绪 | `-c "lua vim.wait(ms, fn)"` | `lazy=false` 的插件也需等待 lazy 引导完成 |
+| Mason 安装 | 勿在 headless 中过早 `qa!` | 退出会中止 Mason 后台安装并打 ERROR |
+
+## 环境前置
+
+- **uv**：`~/.config/nvim/venv/nvim-python` 与 `g:python3_host_prog`（`init.lua` 自动检测）。
+- **fnm**：无头命令前 `eval "$(fnm env --use-on-cd)"`，否则可能落到 Windows 侧重定向的 `tree-sitter`（WSL 下 ENOENT）。
+- **Neovim 版本**：本仓库目标 **0.11.x**；`nvim-treesitter` 的 **`main` 已要求 0.12+**，必须保持 `branch = "master"`（见 `lua/plugins/code_highlight_nvim-treesitter.lua`）。`Lazy update` 不会改 branch，但会更新其它插件。
+
+## 常见问题与修复策略
+
+1. **`nvim-treesitter`：requires Neovim 0.12**  
+   - 原因：`Lazy update` 拉到 `main`。  
+   - 修复：插件 spec 使用 `branch = "master"`，再 `Lazy! sync nvim-treesitter`。
+
+2. **`is not in runtimepath`（仅新 API / main）**  
+   - 0.11 环境应使用 `master` + 旧 API `nvim-treesitter.configs`，通常不出现。
+
+3. **WSL 下 `tree-sitter` spawn ENOENT**  
+   - 原因：PATH 优先 Windows `%APPDATA%/npm`。  
+   - 修复：`fnm env` + `npm install -g tree-sitter-cli`（Linux 侧）；无头前确认 `which tree-sitter` 为 fnm 路径。
+
+4. **Mason 安装被中断**  
+   - 现象：`Neovim is exiting while packages are still installing`。  
+   - 修复：延长 headless 会话或交互式 `:Mason` / `:MasonInstall`，不要在安装未完成时 `qa!`。
+
+5. **checkhealth 图例误报**  
+   - 行内 `x) errors found in the query` 为说明文字，不是 ERROR；用 `^- ERROR` 或 `❌` 行首匹配。
+
+## Agent 执行约束
+
+- 涉及插件升级或 `lazy-lock.json` 变更后，默认跑一遍上述三步或至少第 2、3 步。
+- 严格验收：`checkhealth` 全模块无 WARNING/ERROR（含 `nvim-treesitter`、`lazy`、`vim.provider` 等）。
+- 证据文件放在 `docs/nvim_checkhealth_final.log`（可覆盖更新）。
+- 记忆与规则：改 `PROJECT_MEMORY.md` / `docs/PROJECT_MEMORY_LOG.md`，再 `./install.sh` 同步到 `AGENTS.md`、`CLAUDE.md`、`.cursor/rules/project-memory.mdc`。

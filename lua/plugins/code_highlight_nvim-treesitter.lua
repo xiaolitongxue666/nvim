@@ -12,8 +12,8 @@ return {
     {
         -- 插件名称
         "neovim-treesitter/nvim-treesitter",
-        -- 新仓库默认分支为 main
-        branch = "main",
+        -- main 已要求 Neovim 0.12+；0.11.x 使用上游锁定的 master（旧 API，见上游 README）
+        branch = "master",
         -- 禁用懒加载，官方不支持懒加载
         lazy = false,
         -- Windows 环境：禁用自动构建（使用手动编译的解析器）
@@ -85,7 +85,7 @@ return {
             local ok, treesitter = pcall(require, "nvim-treesitter.configs")
             if ok then
                 treesitter.setup(opts)
-                
+
                 -- Windows 环境下添加诊断命令
                 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
                     -- 诊断命令：检查编译环境和工具

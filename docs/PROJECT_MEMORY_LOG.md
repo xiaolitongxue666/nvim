@@ -32,3 +32,9 @@
 - 新增涉及路径、shell、安装流程的改动时，默认同时验证 Windows + WSL 场景。
 - 新增项目规则时优先放在 `.cursor/rules/*.mdc`，保证可版本化。
 - 变更完成后优先维护 `README.md`、`TROUBLE_SHOOT.md`、`PROJECT_MEMORY.md` 三处一致性。
+
+### 安装更新与健康清零（同日晚间）
+
+- 执行 `./install.sh` → 无头 `Lazy! update` → 无头 `checkhealth`，严格口径全绿。
+- 新增规则 [`.cursor/rules/headless-testing.mdc`](../.cursor/rules/headless-testing.mdc)；`nvim-treesitter` 钉在 `master`（0.11 兼容）；证据 `docs/nvim_checkhealth_final.log`。
+- 经验摘要已写入 `PROJECT_MEMORY.md`「无头模式经验」小节。
