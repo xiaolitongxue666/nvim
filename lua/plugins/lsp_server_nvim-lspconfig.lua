@@ -228,6 +228,11 @@ return {
             local function on_attach(client, bufnr)
                 local keymap_opts = { buffer = bufnr, silent = true }
 
+                -- Python：诊断由 ruff_lsp 负责，避免与 pyright 重复
+                if client.name == "pyright" then
+                    client.server_capabilities.publishDiagnosticsProvider = nil
+                end
+
                 -- 解除 0.11 默认 LSP 键位，避免与自定义布局（i/k/j/l 为上下左右）冲突
                 pcall(vim.keymap.del, "n", "K", { buffer = bufnr })
 
@@ -246,7 +251,7 @@ return {
                 vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, vim.tbl_extend("force", keymap_opts, { desc = "重命名" }))
                 vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", keymap_opts, { desc = "代码操作" }))
                 vim.keymap.set("n", "<leader>cf", function()
-                    vim.lsp.buf.format({ async = true })
+                    require("conform").format({ async = true, bufnr = bufnr })
                 end, vim.tbl_extend("force", keymap_opts, { desc = "格式化代码" }))
 
                 -- 工作区相关键位映射

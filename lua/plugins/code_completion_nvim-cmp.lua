@@ -126,15 +126,6 @@ return {
                 }),
             })
 
-            -- 为特定文件类型设置配置
-            cmp.setup.filetype("gitcommit", {
-                sources = cmp.config.sources({
-                    { name = "cmp_git" }, -- 如果你安装了 `cmp_git` 源，可以指定它
-                }, {
-                    { name = "buffer" },
-                }),
-            })
-
             -- 为 `/` 和 `?` 使用缓冲区源（如果你启用了 `native_menu`，这将不再工作）
             cmp.setup.cmdline({ "/", "?" }, {
                 mapping = cmp.mapping.preset.cmdline(),

@@ -49,7 +49,10 @@ return {
             restriction_mode = "block",
             -- 禁用某些文件类型（可根据需要添加）
             disabled_filetypes = {
-                -- 示例：["typr"] = false, -- 在 typr 文件类型中启用 Hardtime
+                ["neo-tree"] = true,
+                ["neo-tree-popup"] = true,
+                ["mason"] = true,
+                ["DressingSelect"] = true,
             },
         },
     },

@@ -121,8 +121,7 @@ map("n", "<LEADER>b", ":b #<CR>:bd #<CR>", opt)
 -- 显示当前编辑的buffer的文件路径
 map("n", "sp", "1<C-G>", opt)
 
--- 打开一个终端窗口
-map("n", "<LEADER>/", ":set splitbelow<CR>:split<CR>:res +10<CR>:term<CR>", opt)
+-- 终端：<leader>/ 由 toggleterm.nvim 定义（见 plugins/terminal_toggleterm.lua）
 -- 退出终端模式
 map("t", "<C-N>", "<C-\\><C-N>", opt) -- 注意这里使用了 \ 转义符
 -- 关闭终端

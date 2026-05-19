@@ -9,6 +9,75 @@
 vim.g.encoding = "UTF-8"
 vim.o.fileencoding = "utf-8"
 
+-- Windows 环境变量路径修复（处理 Git Bash 环境下的引号问题）
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+    local function clean_env_path(environment_variable_name)
+        local environment_variable_value = vim.env[environment_variable_name]
+        if environment_variable_value and environment_variable_value:match('["\']') then
+            vim.env[environment_variable_name] = environment_variable_value:gsub('["\']', "")
+        end
+    end
+
+    clean_env_path("XDG_DATA_HOME")
+    clean_env_path("XDG_CONFIG_HOME")
+    clean_env_path("XDG_STATE_HOME")
+    clean_env_path("XDG_CACHE_HOME")
+
+    local appdata = vim.env.APPDATA or ""
+    if appdata == "" or appdata:find("%%") then
+        local ok, result = pcall(function()
+            return vim.fn.system('cmd /c "echo %APPDATA%"'):gsub("^%s+", ""):gsub("%s+$", ""):gsub("[\r\n]", "")
+        end)
+        if ok and result and result ~= "" then
+            vim.env.APPDATA = result
+        end
+    end
+end
+
+-- 代理环境变量设置（跨平台兼容）
+local function setup_proxy()
+    if vim.env.http_proxy or vim.env.HTTP_PROXY then
+        local active_proxy = vim.env.https_proxy or vim.env.HTTP_PROXY or vim.env.http_proxy
+        if active_proxy and (not vim.env.all_proxy or vim.env.all_proxy == "") then
+            vim.env.all_proxy = active_proxy
+        end
+        if not vim.env.no_proxy or vim.env.no_proxy == "" then
+            vim.env.no_proxy = "127.0.0.1,localhost"
+        end
+        return
+    end
+
+    local proxy_url = os.getenv("NVIM_PROXY_URL")
+    if proxy_url and proxy_url ~= "" then
+        vim.env.http_proxy = proxy_url
+        vim.env.https_proxy = proxy_url
+        vim.env.HTTP_PROXY = proxy_url
+        vim.env.HTTPS_PROXY = proxy_url
+        vim.env.all_proxy = proxy_url
+        vim.env.no_proxy = "127.0.0.1,localhost"
+    end
+end
+
+setup_proxy()
+
+-- Windows 下确保 gcc 在 PATH 中（供 Treesitter / 构建工具使用）
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+    if vim.fn.executable("gcc") == 0 then
+        local mingw_candidate_paths = {
+            "C:\\msys64\\mingw64\\bin",
+            "C:\\ProgramData\\mingw64\\mingw64\\bin",
+        }
+        local current_environment_path = vim.env.PATH or ""
+        local windows_path_separator = ";"
+        for _, candidate_path in ipairs(mingw_candidate_paths) do
+            if vim.fn.isdirectory(candidate_path) == 1 and not string.find(current_environment_path, candidate_path, 1, true) then
+                vim.env.PATH = candidate_path .. windows_path_separator .. current_environment_path
+                break
+            end
+        end
+    end
+end
+
 -- 光标移动时保留行数
 vim.o.scrolloff = 8
 vim.o.sidescrolloff = 8
@@ -19,6 +88,8 @@ vim.wo.relativenumber = true
 
 -- 高亮当前行
 vim.wo.cursorline = true
+vim.wo.signcolumn = "yes"
+vim.wo.colorcolumn = "80"
 
 -- 缩进设置
 vim.o.tabstop = 4
@@ -47,6 +118,7 @@ vim.o.cmdheight = 2
 vim.o.autoread = true
 vim.bo.autoread = true
 vim.o.wrap = true
+vim.wo.wrap = false
 vim.o.whichwrap = "b,s,<,>,[,],h,l"
 vim.o.hidden = true
 
@@ -84,10 +156,35 @@ vim.opt.listchars = {
 }
 
 -- 恢复光标位置
-vim.cmd([[autocmd BufReadPost * if line("'\""]) >= 1 && line("'\""]) <= line("$") | execute "normal! g`\"" | endif ]])
+vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif ]])
 
 -- 剪贴板设置
 vim.o.clipboard = "unnamed"
+
+-- Clipboard provider 检查（与主配置保持一致）
+vim.schedule(function()
+    local is_ssh_environment = (vim.env.SSH_CLIENT ~= nil or vim.env.SSH_CONNECTION ~= nil) and
+        (vim.env.DISPLAY == nil or vim.env.DISPLAY == "")
+
+    local clipboard_tool_name = nil
+    if vim.fn.executable("xclip") == 1 then
+        clipboard_tool_name = "xclip"
+    elseif vim.fn.executable("xsel") == 1 then
+        clipboard_tool_name = "xsel"
+    elseif vim.fn.executable("pbcopy") == 1 and vim.fn.executable("pbpaste") == 1 then
+        clipboard_tool_name = "pbcopy/pbpaste"
+    end
+
+    if vim.fn.has("clipboard") == 0 then
+        if clipboard_tool_name and not is_ssh_environment then
+            vim.notify(
+                "Clipboard tool found: " .. clipboard_tool_name ..
+                ", but Neovim was not compiled with clipboard support. Reinstall Neovim with clipboard support.",
+                vim.log.levels.WARN
+            )
+        end
+    end
+end)
 
 -- 复制后高亮
 vim.api.nvim_create_autocmd({ "TextYankPost" }, {
@@ -98,6 +195,59 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
         })
     end,
 })
+
+-- 禁用不需要的 provider（与主配置一致）
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+
+-- Windows shell 选项与主配置对齐
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+    vim.opt.shell = "pwsh.exe"
+    vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+    vim.opt.shellquote = ""
+    vim.opt.shellxquote = ""
+    vim.opt.shellpipe = "| Out-File -Encoding UTF8 %s"
+    vim.opt.shellredir = "| Out-File -Encoding UTF8 %s"
+end
+
+-- Windows：当 cwd 为配置目录时清理误建的 %APPDATA% 目录
+local function normalize_path_for_compare(path_text)
+    if not path_text or path_text == "" then
+        return ""
+    end
+    path_text = path_text:gsub("\\", "/"):gsub("/+$", ""):lower()
+    path_text = path_text:gsub("^/([a-z])/", "%1:/")
+    return path_text
+end
+
+local function clean_appdata_in_config_dir()
+    if vim.fn.has("win32") ~= 1 and vim.fn.has("win64") ~= 1 then
+        return
+    end
+    local current_working_directory = normalize_path_for_compare(vim.fn.getcwd())
+    local neovim_config_directory = normalize_path_for_compare(vim.fn.stdpath("config"))
+    if current_working_directory == "" or neovim_config_directory == "" or current_working_directory ~= neovim_config_directory then
+        return
+    end
+    local stray_appdata_directory = vim.fn.getcwd() .. "/%APPDATA%"
+    if vim.fn.isdirectory(stray_appdata_directory) == 1 then
+        vim.fn.delete(stray_appdata_directory, "rf")
+        vim.notify("已清理配置目录下的 %APPDATA% 目录", vim.log.levels.INFO, { title = "NvimConfig" })
+    end
+end
+
+vim.api.nvim_create_autocmd("VimEnter", {
+    callback = function()
+        clean_appdata_in_config_dir()
+    end,
+    once = true,
+})
+
+vim.api.nvim_create_user_command(
+    "NvimConfigCleanAppdata",
+    clean_appdata_in_config_dir,
+    { desc = "清理当前配置目录下的 %APPDATA% 目录（仅 Windows 且 cwd 为配置目录时有效）" }
+)
 
 -- ============================================================================
 -- 按键绑定 (来自 keybindings.lua，移除了 VSCode 不适用的部分)
@@ -219,8 +369,6 @@ if vim.g.vscode then
     -- VSCode 特定的设置可以在这里添加
     -- 例如：禁用某些在 VSCode 中不需要的功能
     vim.o.showtabline = 0  -- VSCode 有自己的标签页
-    vim.wo.signcolumn = "no"  -- VSCode 有自己的符号列
-    vim.wo.colorcolumn = ""  -- VSCode 有自己的参考线
     -- 定义键映射
     
     -- Comment.nvim 快捷键 - 代码注释功能

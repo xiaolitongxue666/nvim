@@ -41,3 +41,14 @@ ensure_directory() {
         mkdir -p "${dir}"
     fi
 }
+
+# 带超时运行命令（macOS 无 timeout 时直接执行）
+run_with_timeout() {
+    local seconds="$1"
+    shift
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "${seconds}" "$@"
+    else
+        "$@"
+    fi
+}

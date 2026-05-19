@@ -56,18 +56,6 @@ return {
             })
             --]]
             
-            -- 在会话加载完成后自动打开文件浏览器
-            vim.api.nvim_create_autocmd("User", {
-                pattern = "PersistenceLoadPost",
-                group = vim.api.nvim_create_augroup("persistence_auto_tree", { clear = true }),
-                callback = function()
-                    -- 延迟打开文件浏览器，确保会话完全加载
-                    vim.defer_fn(function()
-                        require("neo-tree.command").execute({ toggle = true, dir = vim.uv.cwd() })
-                    end, 200)
-                end,
-            })
-            
             -- 在退出时自动保存会话
             vim.api.nvim_create_autocmd("VimLeavePre", {
                 group = vim.api.nvim_create_augroup("persistence_auto_save", { clear = true }),

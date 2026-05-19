@@ -148,12 +148,6 @@ return {
                 once = true,
             })
             
-            -- 在退出时清理
-            vim.api.nvim_create_autocmd("VimLeavePre", {
-                group = vim.api.nvim_create_augroup("outline_cleanup_exit", { clear = true }),
-                callback = aggressive_cleanup_outline,
-            })
-            
             -- 在BufDelete事件时清理
             vim.api.nvim_create_autocmd("BufDelete", {
                 group = vim.api.nvim_create_augroup("outline_cleanup_buf", { clear = true }),

@@ -92,6 +92,8 @@ nvim_checkhealth.log
 *.swp
 *.swo
 *~
+*.orig
+*.rej
 
 # Installation temporary files
 composer-setup.php
@@ -103,25 +105,38 @@ composer-installer.php
 \$\{APPDATA\}/
 ${APPDATA}/
 
-# Local Python venv (created by install.sh)
+# Local Python venv and caches (created by install.sh / tooling)
 venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.python-version
 
-# Cursor IDE project metadata
+# Local overrides and secrets
+*.local.lua
+.env
+.env.*
+!.env.example
+
+# Cursor IDE project metadata (keep versioned rules)
 .cursor/*
 !.cursor/rules/
 !.cursor/rules/*.mdc
 
-# Neovim log
+# Neovim runtime log
 .nvimlog
 
-# graphify generated artifacts
+# graphify generated artifacts (regenerate with: graphify update .)
 graphify-out/
 
 # Windows specific
 Thumbs.db
+ehthumbs.db
 desktop.ini
+*:Zone.Identifier
 

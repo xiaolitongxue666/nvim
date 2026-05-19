@@ -5,12 +5,18 @@
 return {
     {
         "folke/snacks.nvim",
-        lazy = false,
+        event = "VeryLazy",
         priority = 1000,
         opts = {
-            input = {},
-            picker = {},
+            input = { enabled = true },
+            picker = { enabled = true },
+            notifier = { enabled = false },
+            image = { enabled = false },
             terminal = {},
         },
+        config = function(_, opts)
+            local snacks = require("snacks")
+            snacks.setup(opts)
+        end,
     },
 }

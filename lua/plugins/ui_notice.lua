@@ -222,7 +222,7 @@ return {
                 silent = true,
                 expr = true,
                 desc = "向前滚动",
-                mode = { "i", "n", "s" },
+                mode = { "n", "s" },
             },
             {
                 "<c-b>",
@@ -234,7 +234,7 @@ return {
                 silent = true,
                 expr = true,
                 desc = "向后滚动",
-                mode = { "i", "n", "s" },
+                mode = { "n", "s" },
             },
         },
         -- 插件配置函数

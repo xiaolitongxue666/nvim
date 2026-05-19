@@ -1,15 +1,15 @@
--- williamboman/mason.nvim
+-- mason-org/mason.nvim
 
 -- Neovim 的便携式包管理器
 -- 可在 Neovim 运行的任何地方运行
 -- 轻松安装和管理 LSP 服务器、DAP 服务器、代码检查器和格式化工具
 
--- https://github.com/williamboman/mason.nvim
+-- https://github.com/mason-org/mason.nvim
 
 return {
     {
         -- 插件名称
-        "williamboman/mason.nvim",
+        "mason-org/mason.nvim",
         -- 依赖项：自动安装工具
         dependencies = {
             "WhoIsSethDaniel/mason-tool-installer.nvim",

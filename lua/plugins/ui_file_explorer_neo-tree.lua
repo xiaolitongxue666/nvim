@@ -101,7 +101,7 @@ return {
         -- 插件配置选项
         opts = {
             -- 数据源
-            sources = { "filesystem", "buffers", "git_status", "document_symbols" },
+            sources = { "filesystem", "buffers", "git_status" },
             -- 不替换的文件类型（包括 neo-tree 自身，避免缓冲区冲突）
             open_files_do_not_replace_types = { "terminal", "trouble", "qf", "Outline", "neo-tree", "neo-tree-popup" },
             -- 文件系统配置
@@ -208,8 +208,8 @@ return {
                     end,
                     ["j"] = "close_node",         -- 向左/关闭节点/返回父目录（对应 h）
                     ["l"] = "open",               -- 向右/打开节点/进入目录（对应 l）
-                    ["S"] = "open_split",
-                    ["s"] = "open_vsplit",
+                    ["s"] = "open_split",
+                    ["v"] = "open_vsplit",
                     ["t"] = "open_tabnew",
                     ["w"] = "open_with_window_picker",
                     ["C"] = "close_node",
@@ -424,12 +424,6 @@ return {
                 group = vim.api.nvim_create_augroup("neo_tree_cleanup", { clear = true }),
                 callback = cleanup_neo_tree_buffers,
                 once = true,
-            })
-
-            -- 在退出时清理 neo-tree 缓冲区
-            vim.api.nvim_create_autocmd("VimLeavePre", {
-                group = vim.api.nvim_create_augroup("neo_tree_cleanup_exit", { clear = true }),
-                callback = cleanup_neo_tree_buffers,
             })
 
             -- 自动刷新 Git 状态

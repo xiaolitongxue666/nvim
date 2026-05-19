@@ -47,8 +47,7 @@ return {
                         return vim.o.columns * 0.4
                     end
                 end,
-                -- 打开终端的快捷键
-                open_mapping = [[<leader>/]],
+                -- <leader>/ 由 lazy keys 定义，勿重复 open_mapping
                 -- 隐藏行号
                 hide_numbers = true,
                 -- 着色文件类型
@@ -233,10 +232,6 @@ return {
             -- 额外的键位映射
             vim.keymap.set('n', '<leader>ts', '<cmd>lua send_current_line_to_terminal()<cr>', { desc = "发送当前行到终端" })
             vim.keymap.set('v', '<leader>ts', '<cmd>lua send_visual_selection_to_terminal()<cr>', { desc = "发送选中内容到终端" })
-            
-            -- 全局快捷键映射
-            vim.keymap.set('n', '<leader>/', '<cmd>ToggleTerm<cr>', { desc = "终端" })
-            vim.keymap.set('i', '<leader>/', '<esc><cmd>ToggleTerm<cr>', { desc = "终端" })
         end,
     },
 }
