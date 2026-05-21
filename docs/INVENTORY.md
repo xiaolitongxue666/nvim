@@ -1,6 +1,6 @@
 # 仓库清单（当前基线）
 
-生成日期：2026-05-19
+生成日期：2026-05-21
 
 ## 文档
 
@@ -14,6 +14,7 @@
 | `docs/PROJECT_MEMORY_LOG.md` | 按日期追加的项目记忆日志 | 保留 |
 | `docs/plugin_github_audit.txt` | 当前启用插件 GitHub 状态核查原始数据 | 保留 |
 | `ideavimrc/README.md` | IdeaVim 子项目 | 保留（独立） |
+| `vscode_neovim/README.md` | vscode-neovim / Cursor 子项目 | 保留（独立） |
 
 ## 脚本
 
@@ -24,13 +25,17 @@
 | `scripts/bash.cmd` | toggleterm（Windows） | 保留；改为可配置路径 |
 | `scripts/audit_plugins.sh` | 维护用 | 保留 |
 | `ideavimrc/install.sh` | ideavimrc | 保留 |
+| `ideavimrc/install.cmd` | ideavimrc（Windows） | 保留 |
+| `vscode_neovim/install.sh` | vscode_neovim | 保留 |
+| `vscode_neovim/install.cmd` | vscode_neovim（Windows） | 保留 |
 
 ## 可选目录
 
 | 路径 | 说明 | 处置 |
 |------|------|------|
 | `test_dir/` | 手动测试样例；install 部署排除 | 保留 |
-| `vscode_neovim/` | VSCode Neovim 扩展入口 | 保留；README 注明需本地改路径 |
+| `vscode_neovim/` | vscode-neovim：init、无机器路径的 `settings.json` 模板、`install.sh`/`install.cmd`；`neovimInitVimPaths` 由安装脚本写入 | 保留 |
+| `ideavimrc/.ideavimrc` | IdeaVim 用户配置源（与 `basic.lua` / 键位策略对齐） | 保留 |
 
 ## 插件规格
 

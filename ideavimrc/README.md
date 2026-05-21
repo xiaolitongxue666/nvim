@@ -1,33 +1,33 @@
 # IdeaVim 配置
 
-IdeaVim 是 IntelliJ IDEA 系列 IDE（包括 PyCharm、WebStorm、CLion 等）的 Vim 模拟插件，让您可以在 IDE 中使用 Vim 的编辑方式。
+在 IntelliJ IDEA 系列 IDE（PyCharm、WebStorm、CLion 等）中通过 [IdeaVim](https://github.com/JetBrains/ideavim) 使用与本仓库 Neovim 一致的编辑习惯。
 
-## 配置文件结构
+- **选项**：与 [`lua/basic.lua`](../lua/basic.lua) 对齐（IdeaVim 支持的 `set`）
+- **键位**：与 [`lua/keybindings.lua`](../lua/keybindings.lua) / [`vscode_neovim/vscode_neovim_init.lua`](../vscode_neovim/vscode_neovim_init.lua) 对齐（Neovim 优先）
+- **IDE 功能**：`<Action>(...)` 映射；与 Neovim 冲突的项已改前缀
+
+本目录与仓库根 `init.lua`、Lazy 插件**相互独立**；仅部署 `~/.ideavimrc`。
+
+## 文件结构
 
 ```
 ideavimrc/
-├── .ideavimrc          # IdeaVim 配置文件
-├── install.sh          # 自动安装和配置脚本（支持多平台，包含配置同步和备份）
-└── README.md           # 本文件
+├── .ideavimrc          # IdeaVim 配置
+├── install.sh          # 安装脚本（macOS / Linux / Windows Git Bash）
+├── install.cmd         # Windows：调用 Git Bash 执行 install.sh
+└── README.md
 ```
 
-## 安装方法
+## 安装
 
 ### 1. 安装 IdeaVim 插件
 
-在 IntelliJ IDEA / PyCharm / WebStorm 等 IDE 中：
+1. **Settings / Preferences**（Windows/Linux: `Ctrl+Alt+S`，macOS: `Cmd+,`）
+2. **Plugins** → 搜索 **IdeaVim** → Install → 重启 IDE
 
-1. 打开 **Settings / Preferences** (Windows/Linux: `Ctrl+Alt+S`, macOS: `Cmd+,`)
-2. 进入 **Plugins**
-3. 搜索 "IdeaVim"
-4. 点击 **Install** 安装插件
-5. 重启 IDE
-
-### 2. 安装配置文件
+### 2. 部署配置文件
 
 #### 自动安装（推荐）
-
-使用安装脚本自动检测系统并安装对应配置（包含自动备份）：
 
 ```bash
 cd ~/.config/nvim/ideavimrc
@@ -35,127 +35,149 @@ chmod +x install.sh
 ./install.sh
 ```
 
-安装脚本会自动：
-- 检测操作系统（macOS/Linux/Windows）
-- 备份现有配置文件（如果存在）
-- 复制配置文件到 `~/.ideavimrc`
+脚本会：
+
+1. 检测操作系统（macOS / Linux / Windows Git Bash）
+2. 将 `ideavimrc/.ideavimrc` 链接或复制到 `~/.ideavimrc`（优先符号链接，失败则复制）
+3. 备份已有实体文件（`~/.ideavimrc.backup.YYYYMMDD_HHMMSS`）
+
+#### Windows（cmd）
+
+```cmd
+cd %USERPROFILE%\.config\nvim\ideavimrc
+install.cmd
+```
+
+或在 Git Bash：
+
+```bash
+cd ~/.config/nvim/ideavimrc
+./install.sh
+```
+
+`install.cmd` 会查找 `bash` 或环境变量 `NVIM_GIT_BASH`（指向 `bash.exe`），再执行同目录 `install.sh`。
 
 #### 手动安装
 
 ```bash
-# 复制配置文件到用户目录
 cp ~/.config/nvim/ideavimrc/.ideavimrc ~/.ideavimrc
+# 或符号链接
+ln -sf ~/.config/nvim/ideavimrc/.ideavimrc ~/.ideavimrc
+```
+
+### 环境变量
+
+| 变量 | 默认 | 说明 |
+|------|------|------|
+| `IDEAVIM_DRY_RUN` | 空 | 设为 `1` 仅打印将执行的操作，不写文件 |
+| `IDEAVIM_USE_COPY` | 空 | 设为 `1` 强制复制，不创建符号链接 |
+| `IDEAVIM_SKIP_BACKUP` | 空 | 设为 `1` 跳过备份已有 `~/.ideavimrc` |
+
+示例：
+
+```bash
+IDEAVIM_DRY_RUN=1 ./install.sh
+IDEAVIM_USE_COPY=1 ./install.sh
 ```
 
 ## 配置文件位置
 
-- **配置文件**: `~/.ideavimrc`
-- **项目内路径**: `~/.config/nvim/ideavimrc/.ideavimrc`
+| 用途 | 路径 |
+|------|------|
+| 用户配置（IDE 读取） | `~/.ideavimrc` |
+| Windows | `%USERPROFILE%\.ideavimrc` |
+| 仓库源文件 | `~/.config/nvim/ideavimrc/.ideavimrc` |
 
-## Windows 符号链接配置
+重载：`R` 或 `:source ~/.ideavimrc`；编辑：`<leader>rc`。
 
-在 Windows 上使用 Git Bash 创建符号链接需要额外配置：
+## `basic.lua` → `.ideavimrc` 映射
 
-### 1. 重新安装 Git Bash 并勾选 Enable link
+| `basic.lua` | `.ideavimrc` / 说明 |
+|-------------|---------------------|
+| UTF-8 | `set encoding` / `fileencoding` |
+| `scrolloff` / `sidescrolloff` = 8 | `set scrolloff` / `sidescrolloff` |
+| `number` + `relativenumber` | `set number` / `relativenumber` |
+| `cursorline` | `set cursorline` |
+| `colorcolumn` = 80 | `set colorcolumn=80` |
+| tab 4 + `expandtab` | `tabstop` / `shiftwidth` / `expandtab` |
+| `ignorecase` + `smartcase` | 同上 |
+| `hlsearch` / `incsearch` | 同上 |
+| `noshowmode` | `set noshowmode` |
+| `autoread` | `set autoread` |
+| 有效 `wrap` off（`wo.wrap=false`） | `set nowrap` |
+| `whichwrap` | 同上 |
+| `hidden`、无 backup/swap | 同上 |
+| `splitbelow` / `splitright` | 同上 |
+| `list` / `listchars` | 同上 |
+| `clipboard=unnamed` | `set clipboard=unnamed,ideaput` |
+| BufReadPost 恢复光标 | `au BufReadPost` |
 
-在安装 Git for Windows 时，确保勾选 "Enable symbolic links" 选项。
+**不在 `.ideavimrc` 中配置**（由 IDE 或 Neovim 单独处理，见 [`vscode_neovim/README.md`](../vscode_neovim/README.md)）：
 
-### 2. 确保 Git 的配置中启用了符号链接支持
+| `basic.lua` | 说明 |
+|-------------|------|
+| 代理 / `NVIM_PROXY_URL` | Neovim 子进程；IDE 用自身网络设置 |
+| Windows `APPDATA` / MinGW PATH | Neovim/Mason 专用 |
+| `signcolumn` | IdeaVim 无等价 `set` |
+| `termguicolors` / `showtabline` | IDE 主题与标签栏 |
+| `updatetime` | Neovim 专用 |
+| `mouse` | basic 未启用；未在 ideavimrc 中 `set mouse` |
+| `TextYankPost` 高亮 | Neovim API |
+| shell / `loaded_*_provider` | Neovim 专用 |
 
-```shell
-git config --get core.symlinks
-git config --global core.symlinks true
-```
+## 键位分层
 
-### 3. 运行 Git Bash 作为管理员
+### Neovim 习惯（与 keybindings / vscode_neovim 一致）
 
-以管理员权限运行 Git Bash，以便创建符号链接。
+- Leader：空格
+- `i/j/k/l`：方向；`J`/`L`：`b`/`w`；`I`/`K`：5 行
+- `<leader>o`：折叠 `za`
+- `<leader>i/j/k/l`：窗口焦点（`<C-w>`）
+- `<leader>q`：关闭当前编辑器（`<Action>(CloseEditor)`）
+- `S`：`:w`；`R`：重载配置；`<leader>rc`：打开 `~/.ideavimrc`
 
-### 4. Windows 10 开发者模式
+### IDEA 动作（冲突已迁移）
 
-在 Windows 10 中，您可以启用开发者模式，这样可以更轻松地创建符号链接：
+| 功能 | 快捷键 |
+|------|--------|
+| 文件结构 | `<leader>fo`（原 `<leader>o`） |
+| 上一分割 | `<leader>pi`（原 `<leader>i`） |
+| 项目视图中选择 | `<leader>ps` 或 `<leader>pw`（原 `<leader>s`） |
+| 调试 / 运行 / 停止 | `<leader>d` / `<leader>1` / `<leader>2` / `<leader>0` |
+| 重命名 | `<leader>r` |
+| 优化导入 | `<leader>oi` |
+| 跳转文件 | `<leader>gg` |
+| 全局搜索 | `<C-n>` |
 
-1. 打开"设置"
-2. 转到"更新和安全"
-3. 选择"对于开发人员"
-4. 启用"开发者模式"
+完整列表见 [`.ideavimrc`](.ideavimrc) 第 3 节注释。
 
-### 5. 确保磁盘分区格式为 NTFS
+## Windows 符号链接（可选）
 
-符号链接功能仅在 NTFS 文件系统上可用。
+默认先尝试 `ln -sf` 指向仓库内 `.ideavimrc`，失败则自动复制。若需符号链接：
 
-### 6. 添加环境变量
+1. Git for Windows 安装时勾选 **Enable symbolic links**
+2. `git config --global core.symlinks true`
+3. 可选环境变量 `MSYS=winsymlinks:nativestrict`
+4. NTFS 分区；必要时以管理员运行 Git Bash
 
-#### 添加环境变量步骤
+无法配置时：`IDEAVIM_USE_COPY=1 ./install.sh`。
 
-1. **打开系统属性**：
-   - 右键单击"此电脑"或"计算机"图标，选择"属性"
-   - 在左侧菜单中，点击"高级系统设置"
-
-2. **打开环境变量设置**：
-   - 在"系统属性"窗口中，点击"环境变量"按钮
-
-3. **添加新环境变量**：
-   - 在"环境变量"窗口中，您会看到两个部分：用户变量和系统变量
-   - 如果您希望为所有用户添加变量，请在"系统变量"部分点击"新建"按钮。如果只想为当前用户添加变量，请在"用户变量"部分点击"新建"按钮
-
-4. **输入变量名和变量值**：
-   - 在弹出的对话框中，输入以下内容：
-     - **变量名**：`MSYS`
-     - **变量值**：`winsymlinks:nativestrict`
-   - 点击"确定"保存
-
-5. **确认更改**：
-   - 关闭所有窗口，确保更改已保存
-
-6. **重新启动 Git Bash**：
-   - 关闭并重新打开 Git Bash，以使新环境变量生效
-
-#### 验证环境变量
-
-您可以通过在 Git Bash 中运行以下命令来验证环境变量是否已成功添加：
+## 验收
 
 ```bash
-echo $MSYS
+cd ~/.config/nvim/ideavimrc
+IDEAVIM_DRY_RUN=1 ./install.sh
+./install.sh
 ```
 
-如果输出为 `winsymlinks:nativestrict`，则表示环境变量已成功设置。
+IDE 内：
 
-## 配置说明
+1. `:source ~/.ideavimrc` 或按 `R` 无报错
+2. `set scrolloff?` 为 8；编辑区不软换行（`nowrap`）
+3. `J`/`L` 按词移动；`<leader>o` 折叠；`<leader>fo` 文件结构
 
-### 主要特性
+## 参考
 
-- **Vim 键位映射**: 完整的 Vim 编辑体验
-- **IDEA 动作集成**: 将 Vim 命令映射到 IDEA 功能（如调试、重构、跳转等）
-- **自定义 Leader 键**: 空格键作为 Leader 键
-- **窗口管理**: 支持分屏、窗口切换等操作
-- **代码导航**: 快速跳转、搜索、书签等功能
-
-### 常用快捷键
-
-- `<LEADER>rc`: 打开配置文件
-- `R`: 重载配置文件
-- `<LEADER>d`: 调试
-- `<LEADER>r`: 重命名元素
-- `<LEADER>oi`: 优化导入
-- `<LEADER>q`: 关闭编辑器
-- `<LEADER>1`: 运行
-- `<LEADER>2`: 调试
-- `<LEADER>0`: 停止
-
-更多快捷键请查看 `.ideavimrc` 文件中的注释。
-
-## 重新加载配置
-
-在 IDE 中，您可以：
-
-1. 使用快捷键 `R` 重载配置
-2. 或使用命令 `:source ~/.ideavimrc`
-
-## 参考链接
-
-- [IdeaVim GitHub](https://github.com/JetBrains/ideavim)
-- [IdeaVim 官方文档](https://github.com/JetBrains/ideavim/wiki)
-- [参考配置 1](https://github.com/OptimusCrime/ideavim/blob/main/ideavimrc)
-- [参考配置 2](https://www.cyberwizard.io/posts/the-ultimate-ideavim-setup/)
-
+- [JetBrains/ideavim](https://github.com/JetBrains/ideavim)
+- [IdeaVim set commands](https://github.com/JetBrains/ideavim/wiki/set-commands)
+- [vscode_neovim](../vscode_neovim/)（同仓库嵌入 Neovim 配置）

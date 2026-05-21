@@ -186,3 +186,17 @@
 ### 验证说明
 
 用户确认：在配置目录下执行 :Mason 并按 U 更新后，项目根下不再出现（或明显减少）`%APPDATA%` 目录。若偶发仍出现，可使用 **:NvimConfigCleanAppdata** 手动清理，或下次启动 Neovim 时 VimEnter 会自动清理。
+
+---
+
+## 可选：vscode-neovim / IdeaVim 安装排错
+
+子目录与主 Neovim 配置独立；完整安装步骤见 [vscode_neovim/README.md](vscode_neovim/README.md)、[ideavimrc/README.md](ideavimrc/README.md)。
+
+| 现象 | 处理 |
+|------|------|
+| Windows 下无法直接运行 `install.sh` | 使用子目录 `install.cmd`，或设置 `NVIM_GIT_BASH` 指向 Git Bash 的 `bash.exe`（与 [scripts/bash.cmd](scripts/bash.cmd) 思路一致） |
+| 合并设置后路径仍错误或含 `%APPDATA%` | 复用上文「项目根目录下出现字面量 `%APPDATA%` 文件夹」；[vscode_neovim/install.sh](vscode_neovim/install.sh) 内 `resolve_appdata` 会尝试展开 Windows Roaming 路径 |
+| vscode-neovim 扩展找不到 init | 在 `vscode_neovim` 目录重跑 `./install.sh`；编辑器 **Developer: Reload Window**；查看 Output → `vscode-neovim logs` |
+| WSL 内 `nvim` + Windows 版 Cursor/VS Code | 需在编辑器设置中配置官方 `vscode-neovim.useWSL` 等，见 [vscode_neovim/README.md](vscode_neovim/README.md)「路径注意」 |
+| IdeaVim 符号链接失败 | `IDEAVIM_USE_COPY=1 ./install.sh` 强制复制；Windows 符号链接前提见 [ideavimrc/README.md](ideavimrc/README.md)「Windows 符号链接」 |
