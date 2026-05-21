@@ -42,8 +42,9 @@ chmod +x install.sh
 2. 默认目标 **Cursor**；合并 `settings.json` 到 Cursor 的 `User/settings.json`
 3. 按本机路径写入 `vscode-neovim.neovimInitVimPaths.{win32,darwin,linux}`
 4. 备份已有 `settings.json`（若存在）
-5. 安装 Marketplace 扩展 `asvetliakov.vscode-neovim`
-6. 检查 `nvim` 版本并尝试 headless 加载 init
+5. 安装 Marketplace 扩展 `asvetliakov.vscode-neovim`（必需）
+6. 默认安装 `llvm-vs-code-extensions.vscode-clangd`（C/C++ 语言服务，与主配置 Mason `clangd` 对齐；可用 `VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS=1` 跳过）
+7. 检查 `nvim` 版本并尝试 headless 加载 init
 
 ### 使用 VS Code 而非 Cursor
 
@@ -58,6 +59,7 @@ VSCODE_NEOVIM_EDITOR=code ./install.sh
 | `VSCODE_NEOVIM_EDITOR` | `cursor` | `cursor` 或 `code` |
 | `VSCODE_NEOVIM_DRY_RUN` | 空 | 设为 `1` 仅打印将执行的操作 |
 | `VSCODE_NEOVIM_SKIP_EXTENSION` | 空 | 设为 `1` 跳过扩展安装 |
+| `VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS` | 空 | 设为 `1` 跳过 clangd 等语言扩展 |
 | `VSCODE_NEOVIM_SKIP_NEOVIM_CHECK` | 空 | 设为 `1` 跳过 nvim 版本检查 |
 
 ### Windows
@@ -125,7 +127,30 @@ cd ~/.config/nvim/vscode_neovim
 
 安装脚本合并 `settings.json` 时写入 `vscode-neovim.neovimInitVimPaths.*`（不含机器路径的模板见仓库内 `settings.json`）。
 
-官方建议 vscode 环境使用轻量 init，避免 LSP、高亮、文件树等与 VS Code 重复的插件。
+官方建议 vscode 环境使用轻量 init，避免 LSP、高亮、文件树等与 VS Code 重复的插件。本仓库**不**在嵌入 init 中加载 `lspconfig`，而是用编辑器扩展提供语言服务，Neovim 侧仅映射快捷键。
+
+### LSP 导航键位（与主配置 `lsp_server_nvim-lspconfig.lua` 对齐）
+
+| 键位 | 终端 `nvim` | Cursor / VS Code（`vscode_neovim_init.lua`） |
+|------|-------------|---------------------------------------------|
+| `gd` | `vim.lsp.buf.definition` | `editor.action.revealDefinition` |
+| `gD` | `vim.lsp.buf.declaration` | `editor.action.revealDeclaration` |
+| `gr` | `vim.lsp.buf.references` | `editor.action.goToReferences` |
+| `gI` | `vim.lsp.buf.implementation` | `editor.action.goToImplementation` |
+| `gy` | `vim.lsp.buf.type_definition` | `editor.action.goToTypeDefinition` |
+| `D` | `vim.lsp.buf.hover` | `editor.action.showHover` |
+| `<leader>cr` | `vim.lsp.buf.rename` | `editor.action.rename` |
+| `<leader>ca` | `vim.lsp.buf.code_action` | `editor.action.quickFix` |
+| `<leader>cf` | conform 格式化 | `editor.action.formatDocument` |
+
+修改上表键位时：终端侧改 `lua/plugins/lsp_server_nvim-lspconfig.lua`，嵌入侧改 `vscode_neovim_init.lua` 中 `VSCodeNotify(...)` 映射。
+
+**C/C++**：需安装 **clangd** 扩展（安装脚本默认安装）。macOS 需系统有 `clangd`（Xcode CLT 或 `brew install llvm`）。改键位或扩展后执行 **Developer: Reload Window**。
+
+### macOS 注意
+
+- `install.sh` 须为 **LF** 行尾；若 `./install.sh` 报 `env: bash\r`，在仓库内执行 `sed -i '' 's/\r$//' install.sh` 后重试。
+- 与 Windows 相同：安装脚本会写入三个 `neovimInitVimPaths.*` 键；若使用 Settings Sync，注意 `win32` 勿被 Mac 路径覆盖（见主 [README.md](../README.md) 维护建议）。
 
 ## 参考
 

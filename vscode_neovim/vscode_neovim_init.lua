@@ -1,5 +1,7 @@
 -- VSCode Neovim 配置文件
--- 基础选项与仓库 lua/basic.lua 保持单一来源；按键与 VSCode 命令见下文
+-- 基础选项与仓库 lua/basic.lua 保持单一来源；按键与 VSCode 命令见下文。
+-- 不加载主 init.lua / lspconfig：LSP 导航（gd、gD、gr 等）在 vim.g.vscode 下经 VSCodeNotify 转发到
+-- 编辑器语言服务（如 clangd 扩展）；与终端 nvim 的 vim.lsp.buf.* 键位表对齐，见 lsp_server_nvim-lspconfig.lua。
 
 -- ============================================================================
 -- 基础设置：直接加载 basic.lua（与 init.lua 相同）
@@ -156,6 +158,17 @@ if vim.g.vscode then
     -- ============================================================================
     -- 从 keybindings.lua 添加的快捷键 (使用 VSCode 命令实现)
     -- ============================================================================
+
+    -- LSP 导航（对齐 lua/plugins/lsp_server_nvim-lspconfig.lua；由 Cursor/VS Code 语言服务提供）
+    vim.keymap.set('n', 'gD', '<Cmd>call VSCodeNotify("editor.action.revealDeclaration")<CR>', { silent = true, desc = "跳转到声明" })
+    vim.keymap.set('n', 'gd', '<Cmd>call VSCodeNotify("editor.action.revealDefinition")<CR>', { silent = true, desc = "跳转到定义" })
+    vim.keymap.set('n', 'gr', '<Cmd>call VSCodeNotify("editor.action.goToReferences")<CR>', { silent = true, desc = "查找引用" })
+    vim.keymap.set('n', 'gI', '<Cmd>call VSCodeNotify("editor.action.goToImplementation")<CR>', { silent = true, desc = "跳转到实现" })
+    vim.keymap.set('n', 'gy', '<Cmd>call VSCodeNotify("editor.action.goToTypeDefinition")<CR>', { silent = true, desc = "跳转到类型定义" })
+    vim.keymap.set('n', 'D', '<Cmd>call VSCodeNotify("editor.action.showHover")<CR>', { silent = true, desc = "悬停文档" })
+    vim.keymap.set('n', '<leader>cr', '<Cmd>call VSCodeNotify("editor.action.rename")<CR>', { silent = true, desc = "重命名" })
+    vim.keymap.set({ 'n', 'v' }, '<leader>ca', '<Cmd>call VSCodeNotify("editor.action.quickFix")<CR>', { silent = true, desc = "代码操作" })
+    vim.keymap.set('n', '<leader>cf', '<Cmd>call VSCodeNotify("editor.action.formatDocument")<CR>', { silent = true, desc = "格式化" })
 
     -- 文件保存 (S 键)
     vim.keymap.set('', 'S', '<Cmd>call VSCodeNotify("workbench.action.files.save")<CR>', { silent = true })

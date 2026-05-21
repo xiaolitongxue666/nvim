@@ -34,7 +34,8 @@
 | 路径 | 说明 | 处置 |
 |------|------|------|
 | `test_dir/` | 手动测试样例；install 部署排除 | 保留 |
-| `vscode_neovim/` | vscode-neovim：init、无机器路径的 `settings.json` 模板、`install.sh`/`install.cmd`；`neovimInitVimPaths` 由安装脚本写入 | 保留 |
+| `vscode_neovim/` | vscode-neovim：init（含 `VSCodeNotify` LSP 键位）、settings 模板、`install.sh`（vscode-neovim + 默认 clangd）/`install.cmd` | 保留 |
+| `.cursor/rules/vscode-neovim.mdc` | Agent：嵌入 Neovim / LSP 键位双份维护约束 | 保留 |
 | `ideavimrc/.ideavimrc` | IdeaVim 用户配置源（与 `basic.lua` / 键位策略对齐） | 保留 |
 
 ## 插件规格

@@ -1,0 +1,45 @@
+---
+description: Cursor/VS Code 嵌入 Neovim（vscode-neovim）与终端 nvim 的分工与键位维护
+globs:
+  - vscode_neovim/**
+  - lua/plugins/lsp_server_nvim-lspconfig.lua
+alwaysApply: false
+---
+
+# vscode-neovim（嵌入 Neovim）
+
+## 配置边界
+
+- 仅加载 [vscode_neovim/vscode_neovim_init.lua](vscode_neovim/vscode_neovim_init.lua)，**不**加载主 [init.lua](init.lua) / Lazy / `lspconfig`。
+- 编辑器选项：`require("basic")` + [vscode_neovim/settings.json](vscode_neovim/settings.json) 合并到用户 `User/settings.json`（本机路径由 [vscode_neovim/install.sh](vscode_neovim/install.sh) 写入，**勿**提交到仓库）。
+- 语言服务由 **Cursor/VS Code 扩展**提供（C/C++ 默认 [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)），与终端 Mason `clangd` 并行、互不替代。
+
+## LSP 键位双份维护
+
+| 键位 | 终端 | 嵌入（`vim.g.vscode`） |
+|------|------|------------------------|
+| `gd` / `gD` / `gr` / `gI` / `gy` / `D` | `vim.lsp.buf.*` in [lsp_server_nvim-lspconfig.lua](lua/plugins/lsp_server_nvim-lspconfig.lua) | `VSCodeNotify("editor.action.*")` in [vscode_neovim_init.lua](vscode_neovim/vscode_neovim_init.lua) |
+
+改终端 LSP 键位时必须同步嵌入 init 与子 [README](vscode_neovim/README.md) 键位表。
+
+## 安装与排错
+
+```bash
+cd ~/.config/nvim/vscode_neovim
+./install.sh                              # Cursor（默认）
+VSCODE_NEOVIM_EDITOR=code ./install.sh    # VS Code
+```
+
+- macOS：`install.sh` 须 **LF**；CRLF 会导致 `env: bash\r`（`sed -i '' 's/\r$//' install.sh`）。
+- 可选：`VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS=1` 跳过 clangd；`VSCODE_NEOVIM_DRY_RUN=1` 预检。
+- 改 init 或扩展后：**Developer: Reload Window**。
+- `gd` 不跳转：见 [TROUBLE_SHOOT.md](TROUBLE_SHOOT.md)「vscode-neovim / IdeaVim 安装排错」。
+
+## Settings Sync
+
+安装脚本会写入 `neovimInitVimPaths.{win32,darwin,linux}` 三键。在 mac 安装可能把 `win32` 写成 Mac 路径；若多机同步，Windows 上需重跑 `install.cmd` / `install.sh`。
+
+## 相关文档
+
+- [vscode_neovim/README.md](vscode_neovim/README.md)
+- [PROJECT_MEMORY.md](PROJECT_MEMORY.md)（2026-05-21）

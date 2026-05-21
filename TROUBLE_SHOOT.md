@@ -199,4 +199,6 @@
 | 合并设置后路径仍错误或含 `%APPDATA%` | 复用上文「项目根目录下出现字面量 `%APPDATA%` 文件夹」；[vscode_neovim/install.sh](vscode_neovim/install.sh) 内 `resolve_appdata` 会尝试展开 Windows Roaming 路径 |
 | vscode-neovim 扩展找不到 init | 在 `vscode_neovim` 目录重跑 `./install.sh`；编辑器 **Developer: Reload Window**；查看 Output → `vscode-neovim logs` |
 | WSL 内 `nvim` + Windows 版 Cursor/VS Code | 需在编辑器设置中配置官方 `vscode-neovim.useWSL` 等，见 [vscode_neovim/README.md](vscode_neovim/README.md)「路径注意」 |
+| **`gd` 无法跳转定义** | 嵌入 init **不**加载 `lspconfig`；需 `vscode_neovim_init.lua` 中 `VSCodeNotify` 映射 + 编辑器语言扩展（C/C++ 默认 **clangd**）。重跑 [vscode_neovim/install.sh](vscode_neovim/install.sh)；**Reload Window**；用 F12 验证语言服务；见子 README「LSP 导航键位」 |
+| macOS `./install.sh` 报 `env: bash\r` | 脚本 CRLF：在 `vscode_neovim` 目录 `sed -i '' 's/\r$//' install.sh`，或 `bash install.sh` |
 | IdeaVim 符号链接失败 | `IDEAVIM_USE_COPY=1 ./install.sh` 强制复制；Windows 符号链接前提见 [ideavimrc/README.md](ideavimrc/README.md)「Windows 符号链接」 |

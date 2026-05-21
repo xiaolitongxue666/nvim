@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # VSCode Neovim / Cursor 配置安装脚本
-# 支持 macOS、Linux、Windows（Git Bash）
+# 支持 macOS、Linux、Windows（Git Bash）；脚本须为 LF 行尾（macOS 下 CRLF 会导致 shebang 失败）
 # 默认目标编辑器：Cursor（VSCODE_NEOVIM_EDITOR=code 可切换 VS Code）
+#
+# 安装内容：
+#   1. 合并 settings.json 模板并写入本机 neovimInitVimPaths.*
+#   2. 扩展 asvetliakov.vscode-neovim（必需）
+#   3. 可选语言扩展（默认安装 clangd，供 gd 等 LSP 导航；键位在 vscode_neovim_init.lua 经 VSCodeNotify 转发）
+# 嵌入 init 不加载主 init.lua / lspconfig；LSP 由编辑器扩展提供，与终端 nvim + Mason clangd 并行存在。
 
 set -euo pipefail
 
@@ -10,10 +16,15 @@ NVIM_CONFIG_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 INIT_FILE="${SCRIPT_DIR}/vscode_neovim_init.lua"
 FRAGMENT_SETTINGS="${SCRIPT_DIR}/settings.json"
 EXTENSION_ID="asvetliakov.vscode-neovim"
+# 与 lua/plugins/lsp_server_manager_mason-lspconfig.lua 中 clangd 对齐；可用 VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS=1 跳过
+LANG_EXTENSION_IDS=(
+    "llvm-vs-code-extensions.vscode-clangd"
+)
 
 : "${VSCODE_NEOVIM_EDITOR:=cursor}"
 : "${VSCODE_NEOVIM_DRY_RUN:=}"
 : "${VSCODE_NEOVIM_SKIP_EXTENSION:=}"
+: "${VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS:=}"
 : "${VSCODE_NEOVIM_SKIP_NEOVIM_CHECK:=}"
 
 log_info() { printf '[INFO] %s\n' "$*"; }
@@ -327,23 +338,38 @@ ensure_windows_user_env() {
     fi
 }
 
-install_extension() {
+install_one_extension() {
+    local cli="$1"
+    local ext_id="$2"
+    if [[ "${VSCODE_NEOVIM_DRY_RUN}" == "1" ]]; then
+        log_info "[dry-run] ${cli} --install-extension ${ext_id} --force"
+        return 0
+    fi
+    log_info "Installing extension ${ext_id} via ${cli} ..."
+    if run_with_timeout 120 "${cli}" --install-extension "${ext_id}" --force; then
+        log_ok "Extension installed: ${ext_id}"
+        return 0
+    fi
+    log_warn "Failed to install optional extension: ${ext_id} (continue)"
+    return 1
+}
+
+install_extensions() {
     local cli="$1"
     ensure_windows_user_env
     if [[ "${VSCODE_NEOVIM_SKIP_EXTENSION}" == "1" ]]; then
         log_warn "Skipping extension install (VSCODE_NEOVIM_SKIP_EXTENSION=1)"
         return 0
     fi
-    if [[ "${VSCODE_NEOVIM_DRY_RUN}" == "1" ]]; then
-        log_info "[dry-run] ${cli} --install-extension ${EXTENSION_ID} --force"
+    install_one_extension "${cli}" "${EXTENSION_ID}" || die "Failed to install ${EXTENSION_ID}. Ensure ${VSCODE_NEOVIM_EDITOR} CLI is on PATH (Shell Command: Install '${VSCODE_NEOVIM_EDITOR}' command)."
+    if [[ "${VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS}" == "1" ]]; then
+        log_warn "Skipping language extensions (VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS=1)"
         return 0
     fi
-    log_info "Installing extension ${EXTENSION_ID} via ${cli} ..."
-    if run_with_timeout 120 "${cli}" --install-extension "${EXTENSION_ID}" --force; then
-        log_ok "Extension installed: ${EXTENSION_ID}"
-    else
-        die "Failed to install extension. Ensure ${VSCODE_NEOVIM_EDITOR} CLI is on PATH (Shell Command: Install '${VSCODE_NEOVIM_EDITOR}' command)."
-    fi
+    local ext_id
+    for ext_id in "${LANG_EXTENSION_IDS[@]}"; do
+        install_one_extension "${cli}" "${ext_id}" || true
+    done
 }
 
 main() {
@@ -385,14 +411,14 @@ main() {
     echo "=========================================="
     echo "安装扩展"
     echo "=========================================="
-    install_extension "${editor_cli}"
+    install_extensions "${editor_cli}"
 
     echo ""
     echo "=========================================="
     echo "安装完成"
     echo "=========================================="
     echo "编辑器: ${VSCODE_NEOVIM_EDITOR}"
-    echo "扩展: ${EXTENSION_ID}"
+    echo "扩展: ${EXTENSION_ID} (+ 语言扩展，见 LANG_EXTENSION_IDS)"
     echo "Init: ${INIT_FILE}"
     echo "Settings: ${user_settings}"
     echo ""

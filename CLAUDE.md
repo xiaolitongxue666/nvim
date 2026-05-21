@@ -1,6 +1,6 @@
 # Neovim Config — Claude Project Context
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-05-21T08:06:05Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-05-21T10:44:31Z. Edit PROJECT_MEMORY.md instead.
 
 
 ## 2026-05-21
@@ -10,12 +10,18 @@
 - **vscode_neovim/**：`vscode_neovim_init.lua` 改为 `require("basic")`；`settings.json` 去除硬编码 `neovimInitVimPaths` 并补充与 basic 对齐的 editor 项；新增 README + `install.sh`/`install.cmd`（默认 Cursor，跨平台合并用户设置）。
 - **ideavimrc/**：`.ideavimrc` 精简并与 `lua/basic.lua`、键位策略对齐；README 与 `install.sh` 重写；新增 `install.cmd`。
 - **主项目文档**：`README.md`（跨编辑器小节、结构树、维护建议）、`docs/INVENTORY.md`、`TROUBLE_SHOOT.md`（子安装排错）已同步。
+- **macOS vscode-neovim 落地**：在 Cursor/VS Code 执行子目录 `install.sh`（Cursor + `VSCODE_NEOVIM_EDITOR=code` 各一次）；`install.sh` 修正 CRLF（macOS 须 LF）；默认额外安装 **clangd** 扩展。
+- **嵌入 LSP 导航**：`vscode_neovim_init.lua` 增加 `gd`/`gD`/`gr`/`gI`/`gy`/`D` 及 `<leader>cr|ca|cf`，经 `VSCodeNotify` 对齐 `lsp_server_nvim-lspconfig.lua`（不加载 lspconfig，语言服务由编辑器扩展提供）。
 
 ### 后续执行约束（记忆化）
 
 - 跨编辑器**选项**变更优先改 `lua/basic.lua`，再核对 vscode 嵌入覆盖与 ideavim `set` 映射表（见子 README）。
 - 提交前 `vscode_neovim/settings.json` 不得含本机 `neovimInitVimPaths`。
 - 子目录安装脚本或 Windows/Git Bash 行为变更时，同步主 `README.md`、`docs/INVENTORY.md`、`TROUBLE_SHOOT.md`。
+- **LSP 键位双份维护**：终端 `gd` 等 → `lua/plugins/lsp_server_nvim-lspconfig.lua`；Cursor/VS Code → `vscode_neovim_init.lua` 的 `VSCodeNotify`；改一处须核对另一处与子 README 键位表。
+- **vscode-neovim 语言服务**：不在嵌入 init 加载 Mason/lspconfig；C/C++ 依赖编辑器 **clangd** 扩展（`install.sh` 默认安装，可用 `VSCODE_NEOVIM_SKIP_LANG_EXTENSIONS=1` 跳过）。
+- **macOS**：`vscode_neovim/install.sh` 保持 LF；`./install.sh` 失败时检查 CRLF 或改用 `bash install.sh`。
+- **Settings Sync**：mac 安装会写入三平台 `neovimInitVimPaths.*`；若同步到 Windows 导致 `win32` 路径错误，在 Windows 重跑 `install.cmd`。
 
 ## 2026-05-19
 

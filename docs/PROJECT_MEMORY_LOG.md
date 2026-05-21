@@ -9,12 +9,14 @@
 - **vscode_neovim/**：`vscode_neovim_init.lua` 改为 `require("basic")`；`settings.json` 去除硬编码 `neovimInitVimPaths` 并补充与 basic 对齐的 editor 项；新增 README + `install.sh`/`install.cmd`（默认 Cursor，跨平台合并用户设置）。
 - **ideavimrc/**：`.ideavimrc` 精简并与 `lua/basic.lua`、键位策略对齐；README 与 `install.sh` 重写；新增 `install.cmd`。
 - **主项目文档**：`README.md`（跨编辑器小节、结构树、维护建议）、`docs/INVENTORY.md`、`TROUBLE_SHOOT.md`（子安装排错）已同步。
+- **macOS vscode-neovim**：子目录 `install.sh` 落地 Cursor/VS Code；`install.sh` LF 行尾与默认 **clangd** 扩展；`vscode_neovim_init.lua` 增加 LSP 导航 `VSCodeNotify` 键位（与 `lsp_server_nvim-lspconfig.lua` 对齐）。
 
 ### 后续执行约束（记忆化）
 
 - 跨编辑器**选项**变更优先改 `lua/basic.lua`，再核对 vscode 嵌入覆盖与 ideavim `set` 映射表（见子 README）。
 - 提交前 `vscode_neovim/settings.json` 不得含本机 `neovimInitVimPaths`。
 - 子目录安装脚本或 Windows/Git Bash 行为变更时，同步主 `README.md`、`docs/INVENTORY.md`、`TROUBLE_SHOOT.md`。
+- LSP 键位：终端 `lsp_server_nvim-lspconfig.lua` ↔ 嵌入 `vscode_neovim_init.lua`；语言服务由编辑器扩展（clangd）提供，不加载 lspconfig。
 
 ## 2026-05-19
 
