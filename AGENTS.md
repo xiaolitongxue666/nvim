@@ -1,6 +1,6 @@
 # Neovim Config — Agent Instructions
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-05-21T10:44:31Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-02T05:18:28Z. Edit PROJECT_MEMORY.md instead.
 
 
 ## 2026-05-21
