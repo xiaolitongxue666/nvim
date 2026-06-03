@@ -52,3 +52,39 @@ run_with_timeout() {
         "$@"
     fi
 }
+
+# Windows 路径 → Git Bash Unix 绝对路径
+# 例：C:\Users\foo → /c/Users/foo
+windows_path_to_unix() {
+    local p="$1"
+    p="${p//\\//}"
+    if [[ "$p" =~ ^/([a-zA-Z])/(.*)$ ]]; then
+        printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+    elif [[ "$p" =~ ^([a-zA-Z]):/(.*)$ ]]; then
+        printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+    elif [[ "$p" =~ ^([a-zA-Z]):(.*)$ ]]; then
+        printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+    else
+        printf '%s\n' "$p"
+    fi
+}
+
+# Git Bash Unix 绝对路径 → Windows 路径（供 cmd.exe / mklink）
+# 例：/c/Users/foo → C:\Users\foo
+unix_path_to_windows() {
+    local p="$1"
+    p="${p//\\//}"
+    if [[ "$p" =~ ^/([a-z])/(.*)$ ]]; then
+        local drive
+        drive="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')"
+        printf '%s:\\%s\n' "${drive}" "${BASH_REMATCH[2]//\//\\}"
+    else
+        printf '%s\n' "$p"
+    fi
+}
+
+# 校验 Git Bash 绝对路径（必须以 /x/ 开头，防止相对路径误建目录）
+is_gitbash_absolute_path() {
+    local p="$1"
+    [[ "$p" =~ ^/[a-zA-Z]/ ]]
+}

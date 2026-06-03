@@ -27,7 +27,7 @@
 
 9) **跨编辑器选项变更流程**：优先改 `lua/basic.lua` → 核对 vscode 嵌入覆盖（`vscode_neovim_init.lua` 顶部）→ 核对 ideavim `set` 映射表（`.ideavimrc` 第一节）。
 
-10) **Windows 路径**：`%APPDATA%`、`XDG_CONFIG_HOME`、WSL 路径语义不同；`install.sh` 在 Windows 侧有 `normalize_windows_home()` 和 `get_windows_appdata()` 做路径展开。提交前 `settings.json` 不得含本机 `neovimInitVimPaths`。
+10) **Windows 路径（Git Bash）**（2026-06-03）：`scripts/common.sh` 提供 `windows_path_to_unix` / `unix_path_to_windows` / `is_gitbash_absolute_path`；`setup_windows_config_redirect` 须探测含/不含 `XDG_CONFIG_HOME` 的 stdpath 并用 **PowerShell** `New-Item -ItemType Junction` 建联接（Git Bash 下 `cmd mklink` 易挂起或转义错误）。未设 XDG 时 stdpath 可能为 `C:\msys64\home\...\AppData\Local\nvim`（非 `~/.config/nvim`）；`~/.bashrc` 应设 `export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"`。旧 sed `C:`→`c` 缺 `/` 前缀会误建 `~/.config/nvim/c/`。提交前 `settings.json` 不得含本机 `neovimInitVimPaths`。
 
 ## 安装排错记录
 
@@ -46,6 +46,12 @@
 17) **无头模式测试经验**：必须 `-u init.lua`；健康检查用 `-c "checkhealth" -c "w! docs/..."`（`redir` 在 headless 下常只得到标题）；插件未就绪时用 `vim.wait` + `pcall(require, ...)`；验收 grep 用 `^- ERROR|^- WARNING|❌|⚠`（避免误判 treesitter 图例）。
 
 18) **Settings Sync 注意**（2026-05-21）：mac 安装会写入三平台 `neovimInitVimPaths.*`；若同步到 Windows 导致 `win32` 路径错误，在 Windows 重跑 `install.cmd` 或 `install.sh`。
+
+19) **collect_plugin_specs**（2026-06-03）：`lua/config/lazy.lua` 手动 glob 插件规格（不依赖 rtp）。Windows glob 返回反斜杠路径，modname 须用 `^.+[\\/]lua[\\/]`。单条 spec 简写 `{ "plugin/name", config = ... }` 若误判为多 spec（`result[1]` 为 string 时仍应整表插入），会导致 **config 从不执行**（mini.starter 等仅加载默认行为）。
+
+20) **mini.starter 启动页**（2026-06-03）：Neovim 0.11 内置 intro 或空 buffer 可能触发 `is_something_shown()`，跳过 `autoopen`。`basic.lua` 的 `shortmess` 加 `I` 禁用 intro；`greeter_dashboard_mini-starter.lua` 设 `autoopen = false`，在 `UIEnter` 调用 `starter.open()`。
+
+21) **init.lua 路径自愈**（2026-06-03）：`find_our_config_dir` 在 `require("basic")` 前修 `package.path`，在 `require("config.lazy")` 前修 `runtimepath`；`VimEnter` 防 rtp 被重置；`our_config` 用于 venv 路径检测。
 
 # 已修复的历史问题（参考）
 

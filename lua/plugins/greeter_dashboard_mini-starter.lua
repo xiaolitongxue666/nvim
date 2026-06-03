@@ -92,8 +92,8 @@ return {
         
         -- 设置 mini.starter
         starter.setup({
-            -- 自动打开启动页面
-            autoopen = true,
+            -- 由下方 UIEnter 统一打开（内置 autoopen 在 Neovim 0.11 空 buffer 下仍可能误判跳过）
+            autoopen = false,
             -- 不自动执行单个活动项目
             evaluate_single = false,
             -- 启动项目配置
@@ -132,6 +132,22 @@ return {
                 if vim.bo.filetype == "starter" then
                     require("mini.starter").refresh()
                 end
+            end,
+        })
+
+        -- 交互式终端就绪后打开启动页（VimEnter 时 bufferline 等可能尚未就绪，UIEnter 更可靠）
+        vim.api.nvim_create_autocmd("UIEnter", {
+            group = vim.api.nvim_create_augroup("MiniStarterOpen", { clear = true }),
+            once = true,
+            callback = function()
+                if vim.fn.argc(-1) > 0 then
+                    return
+                end
+                local ft = vim.bo.filetype
+                if ft == "ministarter" or ft == "starter" then
+                    return
+                end
+                starter.open()
             end,
         })
     end,

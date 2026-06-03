@@ -31,6 +31,34 @@ else
         shift
         if command -v timeout >/dev/null 2>&1; then timeout "${seconds}" "$@"; else "$@"; fi
     }
+    windows_path_to_unix() {
+        local p="$1"
+        p="${p//\\//}"
+        if [[ "$p" =~ ^/([a-zA-Z])/(.*)$ ]]; then
+            printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+        elif [[ "$p" =~ ^([a-zA-Z]):/(.*)$ ]]; then
+            printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+        elif [[ "$p" =~ ^([a-zA-Z]):(.*)$ ]]; then
+            printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+        else
+            printf '%s\n' "$p"
+        fi
+    }
+    unix_path_to_windows() {
+        local p="$1"
+        p="${p//\\//}"
+        if [[ "$p" =~ ^/([a-z])/(.*)$ ]]; then
+            local drive
+            drive="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')"
+            printf '%s:\\%s\n' "${drive}" "${BASH_REMATCH[2]//\//\\}"
+        else
+            printf '%s\n' "$p"
+        fi
+    }
+    is_gitbash_absolute_path() {
+        local p="$1"
+        [[ "$p" =~ ^/[a-zA-Z]/ ]]
+    }
 fi
 
 # 检测操作系统
@@ -596,11 +624,148 @@ determine_config_dir() {
     log_info "Neovim config directory: ${NVIM_CONFIG_DIR}"
 }
 
-# Windows：可选提示设置 XDG_CONFIG_HOME（与 Neovim 行为一致），不影响本脚本的配置目录（已统一为 $HOME/.config/nvim）
-check_windows_config() {
-    if [[ "${PLATFORM}" == "windows" ]] && [[ -z "${XDG_CONFIG_HOME:-}" ]]; then
-        log_info "XDG_CONFIG_HOME not set; config directory is \$HOME/.config/nvim"
-        log_info "Optional: set XDG_CONFIG_HOME to match Neovim (e.g. C:\\Users\\<username>\\.config\\) in Environment Variables and restart terminal"
+# 查询 Neovim stdpath('config')；unset_var 非空时临时取消该环境变量（探测 Git Bash 原生路径）
+query_nvim_stdpath_config() {
+    local unset_var="${1:-}"
+    local nvim_stdpath_config="" nvim_query_log
+    nvim_query_log="$(mktemp /tmp/nvim_stdpath_query.XXXXXX 2>/dev/null || echo "${SCRIPT_DIR}/.nvim_stdpath_query.log")"
+    if command -v nvim >/dev/null 2>&1; then
+        if [[ -n "${unset_var}" ]]; then
+            run_with_timeout 10 env -u "${unset_var}" nvim --headless -u NONE \
+                -c "lua io.write(vim.fn.stdpath('config'))" -c "qa!" \
+                > "${nvim_query_log}" 2>/dev/null || true
+        else
+            run_with_timeout 10 nvim --headless -u NONE \
+                -c "lua io.write(vim.fn.stdpath('config'))" -c "qa!" \
+                > "${nvim_query_log}" 2>/dev/null || true
+        fi
+        if [[ -s "${nvim_query_log}" ]]; then
+            nvim_stdpath_config="$(cat "${nvim_query_log}" | tr -d '\r')"
+        fi
+        rm -f "${nvim_query_log}"
+    fi
+    printf '%s' "${nvim_stdpath_config}"
+}
+
+# 为单个 stdpath 目标创建 junction（或跳过已存在/已一致的路径）
+try_redirect_nvim_config_path() {
+    local nvim_stdpath_config="$1"
+    local actual_unix="${NVIM_CONFIG_DIR}"
+
+    [[ -z "${nvim_stdpath_config}" ]] && return 0
+
+    local nvim_config_unix
+    nvim_config_unix="$(windows_path_to_unix "${nvim_stdpath_config}")"
+
+    if [[ "${nvim_config_unix}" == "${actual_unix}" ]]; then
+        log_info "Neovim 配置路径一致（${nvim_stdpath_config}），无需处理"
+        return 0
+    fi
+
+    log_info "Neovim 期望的配置路径: ${nvim_config_unix}"
+    log_info "实际配置路径: ${actual_unix}"
+
+    if [[ -d "${nvim_config_unix}" ]] || [[ -L "${nvim_config_unix}" ]]; then
+        log_info "目标路径已存在，跳过重定向: ${nvim_config_unix}"
+        return 0
+    fi
+
+    local win_target win_source parent_dir_unix
+    win_target="$(unix_path_to_windows "${nvim_config_unix}")"
+    win_source="$(unix_path_to_windows "${actual_unix}")"
+
+    parent_dir_unix="$(windows_path_to_unix "$(dirname "${win_target}")")"
+    if ! is_gitbash_absolute_path "${parent_dir_unix}"; then
+        log_error "路径转换异常，拒绝创建目录: ${parent_dir_unix}"
+        log_error "原始 stdpath: ${nvim_stdpath_config}"
+        return 1
+    fi
+    ensure_directory "${parent_dir_unix}"
+
+    log_info "尝试创建目录联接 (junction): ${win_target}"
+    if create_nvim_config_junction_powershell "${win_target}" "${win_source}"; then
+        log_success "已创建目录联接: ${win_target} → ${win_source}"
+        return 0
+    fi
+    if cmd.exe /c "mklink /J \"${win_target}\" \"${win_source}\"" >/dev/null 2>&1; then
+        log_success "已创建目录联接: ${win_target} → ${win_source}"
+        return 0
+    fi
+    log_info "目录联接创建失败: ${win_target}（可能需要管理员权限或开发者模式）"
+    return 1
+}
+
+# 使用 PowerShell 创建 junction（Git Bash 下比 cmd mklink 转义更可靠）
+create_nvim_config_junction_powershell() {
+    local win_target="$1"
+    local win_source="$2"
+    powershell.exe -NoProfile -Command \
+        "New-Item -ItemType Junction -Force -Path '${win_target}' -Target '${win_source}' | Out-Null" \
+        >/dev/null 2>&1
+}
+
+# Git Bash：写入 ~/.bashrc，确保未继承系统 XDG 时仍能找到 ~/.config/nvim
+setup_gitbash_xdg_config_home() {
+    [[ "${PLATFORM}" != "windows" ]] && return 0
+    local bashrc="${HOME}/.bashrc"
+    local marker="# nvim: XDG_CONFIG_HOME for Git Bash"
+    [[ -f "${bashrc}" ]] && grep -qF "${marker}" "${bashrc}" && return 0
+    {
+        echo ""
+        echo "${marker}"
+        echo 'export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"'
+    } >> "${bashrc}"
+    log_success "已在 ~/.bashrc 设置 XDG_CONFIG_HOME（Git Bash 新开终端生效）"
+}
+
+# Windows：自动修复 Neovim 配置路径不匹配
+# 当 stdpath('config') ≠ $HOME/.config/nvim 时，自动创建目录联接 (junction)。
+# Git Bash 在未设置 XDG_CONFIG_HOME 时 stdpath 可能指向 C:\msys64\home\...\nvim，需单独探测。
+setup_windows_config_redirect() {
+    # 仅 Windows 需要处理；Linux/macOS/WSL 的 stdpath('config') 天然匹配 ~/.config/nvim
+    [[ "${PLATFORM}" != "windows" ]] && return 0
+
+    log_info "检测 Neovim 配置路径..."
+
+    local candidates=() seen="" p fallback_appdata
+    for p in \
+        "$(query_nvim_stdpath_config "")" \
+        "$(query_nvim_stdpath_config "XDG_CONFIG_HOME")"; do
+        if [[ -n "${p}" ]] && [[ " ${seen} " != *" ${p} "* ]]; then
+            candidates+=("${p}")
+            seen="${seen} ${p}"
+        fi
+    done
+
+    if [[ ${#candidates[@]} -eq 0 ]]; then
+        fallback_appdata="$(get_windows_appdata)"
+        candidates+=("${fallback_appdata:-${LOCALAPPDATA:-${USERPROFILE:-$HOME}/AppData/Local}}\\nvim")
+        log_info "无法查询 Neovim stdpath('config')，使用默认值"
+    fi
+
+    local redirected=0
+    for p in "${candidates[@]}"; do
+        if try_redirect_nvim_config_path "${p}"; then
+            redirected=1
+        fi
+    done
+
+    # 若 junction 均失败且未设置 XDG，尝试 setx（需重启终端）
+    if [[ ${redirected} -eq 0 ]] && [[ -z "${XDG_CONFIG_HOME:-}" ]]; then
+        local win_source
+        win_source="$(unix_path_to_windows "${NVIM_CONFIG_DIR}")"
+        local xdg_win_path
+        xdg_win_path="$(dirname "${win_source}")"
+        if cmd.exe /c "setx XDG_CONFIG_HOME \"${xdg_win_path}\"" >/dev/null 2>&1; then
+            log_success "已通过 setx 设置 XDG_CONFIG_HOME=${xdg_win_path}（重启终端后生效）"
+            return 0
+        fi
+        log_warning "无法自动修复 Windows 配置路径。手动修复方式（以管理员身份运行）："
+        for p in "${candidates[@]}"; do
+            log_info "  mklink /J \"$(unix_path_to_windows "$(windows_path_to_unix "${p}")")\" \"${win_source}\""
+        done
+        log_info "或设置环境变量（重启终端后生效）："
+        log_info "  setx XDG_CONFIG_HOME \"${xdg_win_path}\""
     fi
 }
 
@@ -1581,8 +1746,9 @@ main() {
     progress_step 2 "${TOTAL_MAIN_STEPS}" "Determining config directory..."
     determine_config_dir
 
-    progress_step 3 "${TOTAL_MAIN_STEPS}" "Checking Windows config..."
-    check_windows_config
+    progress_step 3 "${TOTAL_MAIN_STEPS}" "Setting up Windows config redirect..."
+    setup_windows_config_redirect
+    setup_gitbash_xdg_config_home
 
     progress_step 4 "${TOTAL_MAIN_STEPS}" "Checking prerequisites..."
     check_prerequisites

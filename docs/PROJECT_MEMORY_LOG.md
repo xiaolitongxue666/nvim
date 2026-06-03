@@ -2,6 +2,23 @@
 
 按日期追加的变更与问题记录。权威摘要见根目录 [PROJECT_MEMORY.md](../PROJECT_MEMORY.md)。
 
+## 2026-06-03
+
+### Windows + Git Bash 从头测试
+
+- **install.sh 路径转换**：sed 把 `C:/Users/...` 转成 `c/Users/...`（缺 `/c/` 前缀），`ensure_directory` 在仓库内误建 `~/.config/nvim/c/`；改用 `scripts/common.sh` 路径函数 + 绝对路径守卫。
+- **Git Bash stdpath 双路径**：无 `XDG_CONFIG_HOME` 时 stdpath 为 `C:\msys64\home\Administrator\AppData\Local\nvim`；PowerShell junction + `~/.bashrc` 设置 XDG；禁用 cmd `mklink`（曾产生 `msys64homeAdministratorAppDataLocalnvim` 错误链接）。
+- **collect_plugin_specs**：Windows 反斜杠 glob + 单 spec `{ "name", config }` 被 ipairs 误判，导致 mini.starter 等 config 未执行。
+- **mini.starter**：Neovim 0.11 intro / `is_something_shown()` 跳过 autoopen；`shortmess` 加 `I`；`UIEnter` 强制打开。
+- **init.lua**：路径自愈（package.path / runtimepath / VimEnter）。
+- **验收**：`install.sh` exit 0；`lazy-lock.json` 回填；checkhealth 核心 CLEAN（luasnip jsregexp 可选 ⚠）。
+
+### 后续约束
+
+- 改 `lua/config/lazy.lua` 的 `collect_plugin_specs` 时须同时测 Windows glob 与 `{ "plugin", config }` 简写 spec。
+- Windows junction 创建优先 PowerShell，勿在 Git Bash 直接调交互式 `cmd.exe`。
+- 新 Git Bash 终端确认 `:echo stdpath('config')` 与 `:echo $XDG_CONFIG_HOME`。
+
 ## 2026-05-21
 
 ### 今日已发生的修改

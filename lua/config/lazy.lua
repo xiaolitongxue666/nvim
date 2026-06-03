@@ -1,4 +1,5 @@
 -- lazy.nvim
+-- vim: noet ts=2 sts=2 sw=2
 
 -- Neovim 的现代插件管理器
 
@@ -40,12 +41,33 @@ local function clean_path(path)
     return string.gsub(tostring(path), '["\']', "")
 end
 
+-- 手动收集所有插件规格（不依赖 runtimepath，解决路径不匹配时找不到插件的问题）
+local function collect_plugin_specs()
+    local our_config = vim.fn.expand("~/.config/nvim")
+    local plugin_files = vim.fn.glob(our_config .. "/lua/plugins/*.lua", false, true)
+    local specs = {}
+    for _, file in ipairs(plugin_files) do
+        -- Windows glob 返回 C:\...\lua\plugins\foo.lua，需兼容正反斜杠
+        local modname = file:gsub("^.+[\\/]lua[\\/]", ""):gsub("%.lua$", ""):gsub("[/\\]", ".")
+        local ok, result = pcall(require, modname)
+        if ok and type(result) == "table" then
+            -- 多 spec 文件：return { { spec1 }, { spec2 } }（首元素为 table）
+            -- 单 spec 简写：return { "plugin/name", lazy = false, config = ... }（首元素为 string）
+            if type(result[1]) == "table" then
+                for _, spec in ipairs(result) do
+                    table.insert(specs, spec)
+                end
+            else
+                table.insert(specs, result)
+            end
+        end
+    end
+    return specs
+end
+
 -- 设置 lazy.nvim
 require("lazy").setup({
-    spec = {
-        -- 导入你的插件
-        { import = "plugins" },
-    },
+    spec = collect_plugin_specs(),
     -- 在这里配置任何其他设置。查看文档了解更多详情。
     -- 安装插件时使用的配色方案。
     install = { colorscheme = { "habamax" } },
@@ -54,7 +76,8 @@ require("lazy").setup({
     -- 显式设置路径（修复 Windows + Git Bash 路径问题）
     root = clean_path(vim.fn.stdpath("data")) .. "/lazy",
     state = clean_path(vim.fn.stdpath("state")) .. "/lazy/state.json",
-    lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json",
+    -- 锁文件路径：使用实际配置目录而非 stdpath('config')（Windows 路径不匹配时修正）
+    lockfile = vim.fn.expand("~/.config/nvim") .. "/lazy-lock.json",
     performance = {
         cache = {
             enabled = false, -- 禁用 vim.loader 缓存（修复 Windows + Git Bash 路径问题）

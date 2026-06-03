@@ -163,8 +163,8 @@ vim.opt.listchars = {
 }
 -- 补全增强
 vim.o.wildmenu = true
--- 不向插入补全菜单传递消息
-vim.o.shortmess = vim.o.shortmess .. "c"
+-- 不向插入补全菜单传递消息；I = 跳过 Neovim 0.11 内置 intro（否则 mini.starter autoopen 被误判跳过）
+vim.o.shortmess = vim.o.shortmess .. "cI"
 vim.o.pumheight = 10
 -- 始终显示标签栏
 vim.o.showtabline = 2
