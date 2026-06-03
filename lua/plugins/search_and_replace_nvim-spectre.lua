@@ -1,6 +1,5 @@
--- 强大的搜索和替换工具
--- 支持正则表达式、多文件搜索替换、实时预览等功能
-
+-- nvim-pack/nvim-spectre
+-- 多文件搜索与替换，支持正则与实时预览
 -- https://github.com/nvim-pack/nvim-spectre
 
 return {

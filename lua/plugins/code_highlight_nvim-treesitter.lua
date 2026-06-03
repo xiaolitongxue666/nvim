@@ -1,11 +1,7 @@
 -- nvim-treesitter/nvim-treesitter
---
--- Nvim Treesitter 配置和抽象层
--- 提供语法高亮、缩进、增量选择等功能
---
--- 官方文档: https://github.com/neovim-treesitter/nvim-treesitter
--- 要求: Neovim 0.11.0+, tar, curl, tree-sitter-cli (0.26.1+), C 编译器
---
+-- 语法高亮、缩进与增量选择（Neovim 0.11+，须 tree-sitter-cli 与 C 编译器）
+-- https://github.com/nvim-treesitter/nvim-treesitter
+
 -- 注意: 此插件不支持懒加载，必须在启动时加载
 
 return {

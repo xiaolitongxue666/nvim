@@ -1,7 +1,5 @@
 -- L3MON4D3/LuaSnip
-
--- 用 Lua 编写的 Neovim 代码片段引擎
-
+-- Neovim 代码片段引擎
 -- https://github.com/L3MON4D3/LuaSnip
 
 return {

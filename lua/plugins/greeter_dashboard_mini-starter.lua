@@ -1,5 +1,5 @@
--- 基于 mini.starter 的启动页面配置
--- 替代 alpha-nvim，提供快速灵活的启动界面
+-- echasnovski/mini.starter
+-- 启动页面，替代 alpha-nvim，提供快速灵活的启动界面
 -- https://github.com/echasnovski/mini.starter
 
 return {

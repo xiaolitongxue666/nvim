@@ -1,6 +1,5 @@
--- Neovim 文件图标插件
--- 为文件类型提供美观的图标显示
-
+-- nvim-tree/nvim-web-devicons
+-- 为文件类型提供图标显示
 -- https://github.com/nvim-tree/nvim-web-devicons
 
 return {

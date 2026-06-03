@@ -1,6 +1,5 @@
--- 美观的 Neovim 缓冲区标签页插件
--- 提供类似现代编辑器的标签页体验，支持图标、关闭按钮等功能
-
+-- akinsho/bufferline.nvim
+-- 缓冲区标签页，支持图标与关闭按钮
 -- https://github.com/akinsho/bufferline.nvim
 
 return {

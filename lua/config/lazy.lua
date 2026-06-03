@@ -41,10 +41,11 @@ local function clean_path(path)
     return string.gsub(tostring(path), '["\']', "")
 end
 
+local paths = require("config.paths")
+
 -- 手动收集所有插件规格（不依赖 runtimepath，解决路径不匹配时找不到插件的问题）
 local function collect_plugin_specs()
-    local our_config = vim.fn.expand("~/.config/nvim")
-    local plugin_files = vim.fn.glob(our_config .. "/lua/plugins/*.lua", false, true)
+    local plugin_files = vim.fn.glob(paths.plugins_glob(), false, true)
     local specs = {}
     for _, file in ipairs(plugin_files) do
         -- Windows glob 返回 C:\...\lua\plugins\foo.lua，需兼容正反斜杠
@@ -77,7 +78,7 @@ require("lazy").setup({
     root = clean_path(vim.fn.stdpath("data")) .. "/lazy",
     state = clean_path(vim.fn.stdpath("state")) .. "/lazy/state.json",
     -- 锁文件路径：使用实际配置目录而非 stdpath('config')（Windows 路径不匹配时修正）
-    lockfile = vim.fn.expand("~/.config/nvim") .. "/lazy-lock.json",
+    lockfile = paths.lockfile_path(),
     performance = {
         cache = {
             enabled = false, -- 禁用 vim.loader 缓存（修复 Windows + Git Bash 路径问题）

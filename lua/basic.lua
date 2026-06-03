@@ -69,10 +69,24 @@ setup_proxy()
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
     -- 添加 MinGW 到 PATH（如果 gcc 不可用）
     if vim.fn.executable("gcc") == 0 then
-        local mingw_paths = {
-            "C:\\msys64\\mingw64\\bin",
-            "C:\\ProgramData\\mingw64\\mingw64\\bin",
-        }
+        local mingw_paths = {}
+        local mingw_prefix = vim.env.MINGW_PREFIX
+        if mingw_prefix and mingw_prefix ~= "" then
+            table.insert(mingw_paths, mingw_prefix:gsub("\\", "/") .. "/bin")
+        end
+        local program_data = vim.env.ProgramData
+        if program_data and program_data ~= "" then
+            table.insert(mingw_paths, program_data .. "\\mingw64\\mingw64\\bin")
+        end
+        local extra = vim.env.NVIM_MINGW_PATHS
+        if extra and extra ~= "" then
+            for path in extra:gmatch("[^;]+") do
+                path = path:gsub("^%s+", ""):gsub("%s+$", "")
+                if path ~= "" then
+                    table.insert(mingw_paths, path)
+                end
+            end
+        end
         local current_path = vim.env.PATH or ""
         local path_separator = ";"  -- Windows 使用分号
         for _, path in ipairs(mingw_paths) do

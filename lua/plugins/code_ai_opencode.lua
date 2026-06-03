@@ -1,7 +1,5 @@
--- opencode.nvim
--- 集成 opencode AI 助手到 Neovim
--- 提供编辑器感知的研究、审查和请求功能
---
+-- NickvanDyke/opencode.nvim
+-- 集成 opencode AI 助手，提供编辑器感知的研究与审查
 -- https://github.com/NickvanDyke/opencode.nvim
 
 return {

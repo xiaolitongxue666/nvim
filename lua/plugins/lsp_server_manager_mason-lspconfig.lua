@@ -1,10 +1,6 @@
 -- mason-org/mason-lspconfig.nvim
-
--- mason.nvim 的扩展插件，简化 LSP 服务器的安装和配置
--- 提供 mason.nvim 与 nvim-lspconfig 之间的桥梁
-
+-- mason.nvim 与 nvim-lspconfig 的桥梁，简化 LSP 服务器安装与配置
 -- https://github.com/mason-org/mason-lspconfig.nvim
--- https://github.com/mason-org/mason-lspconfig.nvim#available-lsp-servers
 
 return {
     {

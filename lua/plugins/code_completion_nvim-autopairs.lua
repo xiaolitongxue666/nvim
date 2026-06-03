@@ -1,9 +1,6 @@
 -- windwp/nvim-autopairs
--- 一个功能强大的 Neovim 自动配对插件，支持多种字符
--- 用 Lua 编写的 Neovim 自动括号配对插件
--- 需要 Neovim 0.7 或更高版本
-
--- 官方文档: https://github.com/windwp/nvim-autopairs
+-- 自动括号与字符配对（Neovim 0.7+）
+-- https://github.com/windwp/nvim-autopairs
 
 return {
     {

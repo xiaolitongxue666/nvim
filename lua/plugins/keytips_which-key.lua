@@ -1,7 +1,5 @@
 -- folke/which-key.nvim
-
--- 显示键位绑定提示的弹窗，帮助记忆 Neovim 键位映射
-
+-- 显示键位绑定提示弹窗，帮助记忆 Neovim 键位映射
 -- https://github.com/folke/which-key.nvim
 
 return {

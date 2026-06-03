@@ -1,8 +1,6 @@
 -- jbyuki/one-small-step-for-vimkind
-
--- 🌙 Neovim 插件的调试适配器，用于调试在 Neovim 实例中运行的 Lua 代码
-
--- 官方文档：https://github.com/jbyuki/one-small-step-for-vimkind
+-- 调试在 Neovim 实例中运行的 Lua 插件代码
+-- https://github.com/jbyuki/one-small-step-for-vimkind
 
 return {
     -- 插件名称

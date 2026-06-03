@@ -1,5 +1,5 @@
--- hardtime.nvim 习惯培养插件
--- 帮助培养良好的 Vim 操作习惯，阻止重复按键并提供高效操作提示
+-- m4xshen/hardtime.nvim
+-- 培养高效 Vim 操作习惯，阻止重复按键并提供提示
 -- https://github.com/m4xshen/hardtime.nvim
 
 return {

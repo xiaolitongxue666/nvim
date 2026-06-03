@@ -1,4 +1,4 @@
--- outline.nvim
+-- hedyhli/outline.nvim
 -- 代码大纲侧边栏，支持 LSP 和 Tree-sitter
 -- https://github.com/hedyhli/outline.nvim
 

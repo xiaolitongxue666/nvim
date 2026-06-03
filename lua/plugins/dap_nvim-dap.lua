@@ -1,7 +1,5 @@
 -- mfussenegger/nvim-dap
-
--- Neovim 的调试适配器协议客户端实现
-
+-- 调试适配器协议（DAP）客户端
 -- https://github.com/mfussenegger/nvim-dap
 
 return {

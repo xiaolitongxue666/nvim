@@ -1,8 +1,6 @@
 -- numToStr/Comment.nvim
-
--- 🧠 Neovim 的智能且强大的注释插件，支持 Treesitter、点重复、左右/上下移动、钩子等功能
-
--- 官方文档：https://github.com/numToStr/Comment.nvim
+-- 智能注释插件，支持 Treesitter、重复与移动扩展
+-- https://github.com/numToStr/Comment.nvim
 
 return {
     {

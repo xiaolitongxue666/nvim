@@ -36,8 +36,12 @@ local function find_our_config_dir()
     return expected
   end
 
-  -- 检查标准项目路径：~/.config/nvim
-  local candidate = vim.fn.expand("~/.config/nvim")
+  -- 检查 XDG 配置路径（兼容自定义 XDG_CONFIG_HOME）
+  local xdg_base = vim.env.XDG_CONFIG_HOME
+  if not xdg_base or xdg_base == "" then
+    xdg_base = vim.fn.expand("~/.config")
+  end
+  local candidate = vim.fs.join(xdg_base, "nvim")
   if vim.fn.filereadable(candidate .. "/lua/basic.lua") == 1 then
     return candidate
   end
@@ -89,6 +93,9 @@ end
 
 -- 一次性找到配置目录，全局复用
 local our_config = find_our_config_dir()
+if our_config then
+  vim.g.nvim_config_dir = our_config
+end
 
 -- 第一阶段：立即修复 package.path（在 require("basic") 之前）
 fix_package_path(our_config)

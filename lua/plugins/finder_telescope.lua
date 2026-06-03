@@ -1,4 +1,5 @@
--- telescope
+-- nvim-telescope/telescope.nvim
+-- 模糊查找器，支持文件、缓冲区、LSP 与 Git 等
 -- https://github.com/nvim-telescope/telescope.nvim
 
 return {

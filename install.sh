@@ -618,10 +618,21 @@ install_lua() {
     fi
 }
 
+# 规范化目录路径后比较是否同一目录
+is_same_directory() {
+    local dir_a dir_b
+    dir_a="$(cd "${1}" 2>/dev/null && pwd)" || return 1
+    dir_b="$(cd "${2}" 2>/dev/null && pwd)" || return 1
+    [[ "${dir_a}" == "${dir_b}" ]]
+}
+
 # 确定配置目录（多 OS 统一：一律使用 $HOME/.config/nvim）
 determine_config_dir() {
     NVIM_CONFIG_DIR="${HOME}/.config/nvim"
     log_info "Neovim config directory: ${NVIM_CONFIG_DIR}"
+    if [[ -f /proc/version ]] && grep -qi Microsoft /proc/version 2>/dev/null; then
+        log_info "WSL detected: ensure eval \"\$(fnm env --use-on-cd)\" and Linux-side tree-sitter-cli (avoid Windows npm in PATH)"
+    fi
 }
 
 # 查询 Neovim stdpath('config')；unset_var 非空时临时取消该环境变量（探测 Git Bash 原生路径）
@@ -794,6 +805,11 @@ backup_existing_config() {
 # 部署配置文件
 deploy_config() {
     log_info "Deploying Neovim configuration..."
+
+    if is_same_directory "${SCRIPT_DIR}" "${NVIM_CONFIG_DIR}"; then
+        log_info "Config source equals target, skipping deploy"
+        return 0
+    fi
 
     # Windows：若目标下存在误建的 %APPDATA% 目录则删除，避免 cp 报 same file
     if [[ "${PLATFORM}" == "windows" ]] && [[ -d "${NVIM_CONFIG_DIR}/%APPDATA%" ]]; then

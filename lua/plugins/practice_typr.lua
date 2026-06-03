@@ -1,5 +1,5 @@
--- typr 打字练习插件
--- 提供美观的打字练习界面和统计仪表板
+-- nvzone/typr
+-- 打字练习界面与统计仪表板
 -- https://github.com/nvzone/typr
 
 return {

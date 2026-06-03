@@ -1,5 +1,6 @@
+-- stevearc/overseer.nvim
+-- 任务运行与管理，统一管理构建、脚本与命令的输出查看
 -- https://github.com/stevearc/overseer.nvim
--- 任务运行与管理插件：统一管理构建、脚本、命令的执行与输出查看
 
 return {
     {

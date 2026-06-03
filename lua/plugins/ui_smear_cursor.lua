@@ -1,8 +1,6 @@
--- smear-cursor.nvim
-
--- Neovim 插件可在所有终端中为光标添加涂抹效果
-
--- 官方文档：https://github.com/sphamba/smear-cursor.nvim
+-- sphamba/smear-cursor.nvim
+-- 为光标添加涂抹动画效果（跨终端）
+-- https://github.com/sphamba/smear-cursor.nvim
 
 return {
   "sphamba/smear-cursor.nvim",

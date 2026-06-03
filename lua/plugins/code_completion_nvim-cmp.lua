@@ -1,9 +1,6 @@
 -- hrsh7th/nvim-cmp
--- 一个功能强大的 Neovim 自动补全引擎
--- 用 Lua 编写的 Neovim 补全插件，支持多种补全源
--- 需要 Neovim 0.7 或更高版本
-
--- 官方文档: https://github.com/hrsh7th/nvim-cmp
+-- Neovim 自动补全引擎，支持多种补全源（Neovim 0.7+）
+-- https://github.com/hrsh7th/nvim-cmp
 
 return {
     {

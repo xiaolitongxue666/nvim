@@ -1,7 +1,5 @@
--- Neovim 内置 LSP 客户端的快速配置
--- 提供各种语言服务器的预配置设置
--- 使用新 API: vim.lsp.config (Neovim 0.11+)
---
+-- neovim/nvim-lspconfig
+-- Neovim 内置 LSP 客户端快速配置（Neovim 0.11+ vim.lsp.config API）
 -- https://github.com/neovim/nvim-lspconfig
 
 -- 统一处理 schemastore 模块加载

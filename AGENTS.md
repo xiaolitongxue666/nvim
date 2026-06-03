@@ -1,6 +1,6 @@
 # Neovim Config — Agent Instructions
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-03T07:16:03Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-03T07:33:31Z. Edit PROJECT_MEMORY.md instead.
 
 
 ## 架构概览
@@ -39,7 +39,7 @@
 
 14) **Windows env var 语法**（2026-06-02）：`VAR=val command` 在 Windows Git Bash 管线下不生效；改用 `env VAR=val command`。
 
-15) **自部署冗余**（2026-06-02）：仓库本身就是 `~/.config/nvim` 时，`install.sh` 的 `deploy_config` 步骤执行 `cp` 全为自身复制（约 18 条 "同一文件" 警告，无害）。建议在检测到 SCRIPT_DIR == NVIM_CONFIG_DIR 时跳过部署。
+15) **自部署冗余**（2026-06-02，**2026-06-03 已修复**）：仓库即 `~/.config/nvim` 时 `deploy_config` 曾自复制；现 `is_same_directory` 检测后跳过部署。
 
 16) **nvim-treesitter 分支锁定**（2026-05-19）：`Lazy update` 拉到了需 Neovim 0.12+ 的 rewrite 版 `main` 分支；本机 0.11.5 需锁定为上游兼容分支 `master`（`lua/plugins/code_highlight_nvim-treesitter.lua` + `lazy-lock.json`）。
 
@@ -51,7 +51,13 @@
 
 20) **mini.starter 启动页**（2026-06-03）：Neovim 0.11 内置 intro 或空 buffer 可能触发 `is_something_shown()`，跳过 `autoopen`。`basic.lua` 的 `shortmess` 加 `I` 禁用 intro；`greeter_dashboard_mini-starter.lua` 设 `autoopen = false`，在 `UIEnter` 调用 `starter.open()`。
 
-21) **init.lua 路径自愈**（2026-06-03）：`find_our_config_dir` 在 `require("basic")` 前修 `package.path`，在 `require("config.lazy")` 前修 `runtimepath`；`VimEnter` 防 rtp 被重置；`our_config` 用于 venv 路径检测。
+21) **路径解析栈**（2026-06-03）：`init.lua` `find_our_config_dir` 在 require 前修 `package.path`/rtp（`VimEnter` 防重置）；写入 `vim.g.nvim_config_dir`；`lua/config/paths.lua` 供 lazy lockfile/glob；XDG 候选用 `vim.fs.join(XDG_CONFIG_HOME or ~/.config, "nvim")`。
+
+22) **Windows MinGW PATH**（2026-06-03）：`basic.lua` 不再硬编码 `C:\msys64`；按 `MINGW_PREFIX`、`ProgramData\mingw64\...`、`NVIM_MINGW_PATHS`（分号分隔）动态探测，仅 `gcc` 不可用时 prepend。
+
+23) **插件注释模板**（2026-06-03）：`lua/plugins/*.lua` 文件头统一三行（owner/repo、中文说明、GitHub URL）；见 `README.md` 维护建议。
+
+24) **WSL 安装提示**（2026-06-03）：`install.sh` 检测 `/proc/version` 含 Microsoft 时日志提示 `fnm env` 与 Linux 侧 `tree-sitter-cli`（WSL 仍走 linux 分支，不建 Windows junction）。
 
 # 已修复的历史问题（参考）
 

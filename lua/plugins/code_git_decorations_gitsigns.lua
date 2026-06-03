@@ -1,9 +1,6 @@
 -- lewis6991/gitsigns.nvim
--- Git 缓冲区集成插件，提供 Git 状态显示、hunk 操作、blame 等功能
--- 为 Neovim 缓冲区提供深度的 Git 集成支持
--- 需要 Neovim >= 0.9.0
-
--- 官方文档: https://github.com/lewis6991/gitsigns.nvim
+-- Git 缓冲区集成，状态显示、hunk 操作与 blame（Neovim 0.9+）
+-- https://github.com/lewis6991/gitsigns.nvim
 
 return {
     {

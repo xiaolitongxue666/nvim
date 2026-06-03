@@ -1,8 +1,7 @@
 -- echasnovski/mini.icons
---
--- 为 which-key 和其他插件提供图标支持
+-- 为 which-key 等插件提供图标支持
 -- https://github.com/echasnovski/mini.icons
---
+
 return {
     {
         -- 插件名称

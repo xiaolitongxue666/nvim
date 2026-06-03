@@ -189,6 +189,31 @@
 
 ---
 
+## 问题：Windows 编译工具 / LuaSnip jsregexp
+
+### 现象
+
+- `:checkhealth luasnip` 中 **jsregexp** 相关项为 WARNING（Windows 上常见编译失败）。
+- Mason 或 treesitter 提示缺少 C 编译器；`:!gcc --version` 在 Neovim 内不可用。
+
+### 原因简述
+
+Neovim 从 Git Bash 启动时，`PATH` 可能不含 MinGW/gcc。本配置在 `lua/basic.lua` 中于 `gcc` 不可用时尝试 prepend 编译工具目录，**不再硬编码** `C:\msys64\...`。
+
+### 探测顺序（basic.lua）
+
+1. `$MINGW_PREFIX/bin`（MSYS2 标准，在 MSYS2 终端或已 export 时生效）
+2. `$ProgramData\mingw64\mingw64\bin`
+3. 用户自定义 `$NVIM_MINGW_PATHS`（分号分隔，例如 `C:\msys64\mingw64\bin;D:\tools\mingw\bin`）
+
+### 建议操作
+
+1. 安装 [MSYS2](https://www.msys2.org/) 或独立 MinGW-w64，并确保 `gcc` 在系统 PATH 中，或设置 `NVIM_MINGW_PATHS`。
+2. 在 Git Bash 启动 Neovim 前可验证：`which gcc` 或 `echo $MINGW_PREFIX`。
+3. jsregexp 为 **可选** 加速项；LuaSnip 核心功能不依赖它，WARNING 可忽略。
+
+---
+
 ## 可选：vscode-neovim / IdeaVim 安装排错
 
 子目录与主 Neovim 配置独立；完整安装步骤见 [vscode_neovim/README.md](vscode_neovim/README.md)、[ideavimrc/README.md](ideavimrc/README.md)。

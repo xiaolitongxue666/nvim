@@ -1,6 +1,5 @@
--- 现代化的 Neovim UI 替换插件
--- 完全替换消息、命令行和弹出菜单的 UI
-
+-- folke/noice.nvim
+-- 现代化 UI，替换消息、命令行与弹出菜单
 -- https://github.com/folke/noice.nvim
 
 return {

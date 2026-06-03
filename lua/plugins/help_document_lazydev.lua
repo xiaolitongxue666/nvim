@@ -1,10 +1,6 @@
--- folke/lazydev.nvim (替代 neodev.nvim)
-
--- 为 Neovim 配置和插件开发提供完整的 Lua API 签名帮助、文档和补全功能
--- 注意：neodev.nvim 已停止维护，官方推荐使用 lazydev.nvim 作为替代
-
--- 原项目：https://github.com/folke/neodev.nvim
--- 新项目：https://github.com/folke/lazydev.nvim
+-- folke/lazydev.nvim
+-- Neovim 配置与插件开发的 Lua API 签名、文档与补全（替代 neodev.nvim）
+-- https://github.com/folke/lazydev.nvim
 
 return {
     {

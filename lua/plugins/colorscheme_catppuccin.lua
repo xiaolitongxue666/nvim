@@ -1,8 +1,6 @@
 -- catppuccin/nvim
---
--- 🍨 Soothing pastel theme for (Neo)vim
---
--- 官方文档：https://github.com/catppuccin/nvim
+-- 柔和 pastel 配色主题
+-- https://github.com/catppuccin/nvim
 
 return {
     {

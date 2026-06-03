@@ -1,6 +1,5 @@
--- 简单的 Neovim 会话管理插件
--- 自动保存和恢复编辑会话，支持多项目会话管理
-
+-- folke/persistence.nvim
+-- 自动保存与恢复编辑会话，支持多项目会话管理
 -- https://github.com/folke/persistence.nvim
 
 return {

@@ -1,7 +1,5 @@
 -- rcarriga/nvim-notify
-
--- NeoVim 的一个精美、可配置的通知管理器
-
+-- 精美可配置的通知管理器
 -- https://github.com/rcarriga/nvim-notify
 
 return {

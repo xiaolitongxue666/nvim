@@ -1,8 +1,5 @@
 -- lukas-reineke/indent-blankline.nvim
-
--- 为 Neovim 添加缩进参考线的插件
--- 使用 Neovim 的虚拟文本功能，不使用 conceal
-
+-- 缩进参考线，基于虚拟文本而非 conceal
 -- https://github.com/lukas-reineke/indent-blankline.nvim
 
 return {

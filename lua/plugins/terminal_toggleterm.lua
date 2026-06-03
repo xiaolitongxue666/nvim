@@ -1,5 +1,6 @@
+-- akinsho/toggleterm.nvim
+-- 终端管理插件，支持多个终端实例的切换与管理
 -- https://github.com/akinsho/toggleterm.nvim
--- 终端管理插件：支持多个终端实例的切换和管理
 
 return {
     {

@@ -1,6 +1,5 @@
--- 现代化的 Neovim 文件浏览器
--- 支持文件系统、缓冲区、Git 状态和文档符号的树形视图
-
+-- nvim-neo-tree/neo-tree.nvim
+-- 现代化文件浏览器，支持文件系统、缓冲区、Git 与文档符号树形视图
 -- https://github.com/nvim-neo-tree/neo-tree.nvim
 
 return {

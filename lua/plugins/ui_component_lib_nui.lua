@@ -1,7 +1,5 @@
 -- MunifTanjim/nui.nvim
-
--- UI Component Library for Neovim.
-
+-- Neovim UI 组件库
 -- https://github.com/MunifTanjim/nui.nvim
 
 return {

@@ -4,6 +4,20 @@
 
 ## 2026-06-03
 
+### 跨平台路径与注释风格优化
+
+- **lua/config/paths.lua**：统一 `config_dir` / `lockfile_path` / `plugins_glob`；`init.lua` 写入 `vim.g.nvim_config_dir`；XDG 候选用 `vim.fs.join`。
+- **basic.lua MinGW**：删除 `C:\msys64` 硬编码；按 `MINGW_PREFIX`、`ProgramData`、`NVIM_MINGW_PATHS` 探测。
+- **install.sh**：`is_same_directory` 跳过自部署；WSL 检测日志提示 fnm/tree-sitter-cli。
+- **注释**：36 个 `lua/plugins/*.lua` 文件头统一三行格式；`README.md` 维护建议补充模板。
+- **文档**：`TROUBLE_SHOOT.md` 增加 Windows 编译工具 / luasnip jsregexp 小节；`PROJECT_MEMORY` #21–#24。
+
+### summary-memory（2026-06-03）
+
+- **清理**：仓库内无暂存日志/调试产物/空文件；`docs/install_run.log` 与 `docs/nvim_checkhealth_final.log` 保留作验收证据；`graphify-out/` 在 `.gitignore` 内可 `graphify update .` 再生。
+- **冗余**：sha256 无重复文件；`PROJECT_MEMORY` #21+#22 合并为「路径解析栈」。
+- **待用户**：`~/.config/nvim.backup.*` 多份历史备份在仓库**外**父目录，需手动清理时保留最近 1–2 份即可。
+
 ### Windows + Git Bash 从头测试
 
 - **install.sh 路径转换**：sed 把 `C:/Users/...` 转成 `c/Users/...`（缺 `/c/` 前缀），`ensure_directory` 在仓库内误建 `~/.config/nvim/c/`；改用 `scripts/common.sh` 路径函数 + 绝对路径守卫。
