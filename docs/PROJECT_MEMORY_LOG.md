@@ -4,6 +4,13 @@
 
 ## 2026-06-03
 
+### macOS 安装与无头验收（summary-memory）
+
+- **环境**：NVIM v0.11.6、uv 0.9.10、fnm 1.38.1、Node v20.20.2；`eval "$(fnm env --use-on-cd)"` 后验收。
+- **结果**：`./install.sh` exit 0；`bash scripts/headless_validate.sh` exit 0；`docs/nvim_checkhealth_final.log` 务实 grep 无 ERROR/可修复 WARNING。
+- **log 白名单项**：`vim.health` 报 `Missing user config file: nvim/init.lua`；`terminal` 缺 `key_backspace`/`key_dc` terminfo（headless/dumb 预期）。
+- **运维**：`./scripts/headless_validate.sh` 无可执行位时用 `bash`；`install.sh` step 7 在 `~/.config/` 外生成 `nvim.backup.*`（本机曾累积多份，宜手动保留最近 1–2 份）。
+
 ### Win10/Win11 统一流程 + 无头 checkhealth
 
 - **install.cmd**（根目录）、**scripts/headless_validate.sh**（Lazy + Mason sleep + 务实 grep）。

@@ -27,11 +27,11 @@
 
 11) **Win 安装增强**（2026-06-03）：`ensure_windows_user_env`（USERPROFILE/LOCALAPPDATA/XDG 正斜杠）；`setup_windows_proxy` 默认 7890；`cleanup_legacy_packer` 备份至 `nvim-data/backups/` 并迁出 `site/pack/packer*`。
 
-12) **无头验收**：`scripts/headless_validate.sh`；`install.sh` 末尾默认调用（`NVIM_SKIP_HEADLESS=1` 跳过）；默认 `NVIM_SKIP_LAZY_UPDATE=1`（~20s）；完整同步设 `NVIM_SKIP_LAZY_UPDATE=0`（Lazy+Mason 90s）。
+12) **无头验收**：`bash scripts/headless_validate.sh`（或保持可执行位）；`install.sh` 末尾默认调用（`NVIM_SKIP_HEADLESS=1` 跳过）；默认 `NVIM_SKIP_LAZY_UPDATE=1`（~20s）；完整同步设 `NVIM_SKIP_LAZY_UPDATE=0`（Lazy+Mason 90s）。
 
 13) **无头 env**：`run_nvim` 设 `MSYS2_ARG_CONV_EXCL=*` 并 export 环境变量；checkhealth 落盘用 `set buftype=` + `write! docs/nvim_checkhealth_final.log`（勿依赖 `redir`/`w!`）。
 
-14) **务实 grep**：fail 于 ERROR/❌ 与 lazy packer 残留；白名单 headless/dumb 的 Slow shell、terminfo、`%USERPROFILE%` health 误报（`-u init.lua` 已加载）、luasnip jsregexp；见 `TROUBLE_SHOOT.md`。
+14) **务实 grep**：fail 于 ERROR/❌ 与 lazy packer 残留；白名单 headless/dumb 的 Slow shell、terminfo、`Missing user config file`（`nvim/init.lua` 或 `%USERPROFILE%`，`-u init.lua` 已加载）、luasnip jsregexp；见 `TROUBLE_SHOOT.md`。
 
 15) **init.lua 路径栈**：`find_our_config_dir` 在 require 前修 rtp/package.path；`vim.g.nvim_config_dir`；`vim.fs.joinpath or vim.fs.join`（0.12）；`lua/config/paths.lua` 供 lazy glob/lockfile。
 
