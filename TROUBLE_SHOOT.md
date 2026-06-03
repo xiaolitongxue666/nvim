@@ -214,13 +214,44 @@ Neovim 从 Git Bash 启动时，`PATH` 可能不含 MinGW/gcc。本配置在 `lu
 
 ---
 
+## Win10 → Win11 迁移与统一安装流程
+
+Win10/Win11 共用 `PLATFORM=windows`，不区分版本；推荐同一套入口：
+
+| 步骤 | 命令 |
+|------|------|
+| 安装/更新 | 仓库根目录 `install.cmd` 或 Git Bash 下 `./install.sh` |
+| 无头验收 | `./scripts/headless_validate.sh`（`install.sh` 末尾默认调用；`NVIM_SKIP_HEADLESS=1` 可跳过） |
+| 代理 | 默认 `127.0.0.1:7890`（`USE_PROXY=0` 关闭；见 `setup_windows_proxy`） |
+
+### packer 残留（lazy checkhealth WARNING）
+
+从 Win10 时代 vim-plug/packer 迁移到 lazy.nvim 后，`%LOCALAPPDATA%\nvim-data\site\pack\packer` 可能仍存在。`install.sh` 的 `cleanup_legacy_packer` 会在 step 12 前备份并删除该目录。
+
+### `%USERPROFILE%` 未展开（vim.health WARNING）
+
+Git Bash / 无头模式下 Neovim 可能仍报告 `Missing user config file: %USERPROFILE%\.config\nvim/init.lua`（即使用 `-u init.lua` 且已设 `XDG_CONFIG_HOME`）。`ensure_windows_user_env` 会将 `USERPROFILE`/`XDG_CONFIG_HOME` 转为正斜杠 Windows 路径；`run_nvim` 设 `MSYS2_ARG_CONV_EXCL=*` 避免 MSYS 改写环境变量。交互式终端一般无此问题。
+
+### 无头 checkhealth 白名单（务实验收）
+
+以下 WARNING 在 headless + `$TERM=dumb` 下常见，**不计入失败**（见 `scripts/headless_validate.sh`）：
+
+- `vim.health`：`Slow shell invocation`（计时异常）
+- `vim.health`：terminfo `key_backspace` / `key_dc` 未找到
+- `vim.health`：`Missing user config file: %USERPROFILE%`（无头误报；配置已通过 `-u init.lua` 加载）
+- `luasnip`：jsregexp（Windows 无 make 时可选）
+
+可修复项（脚本会 fail）：lazy packer 残留、`packer.backup.*` 目录。
+
+---
+
 ## 可选：vscode-neovim / IdeaVim 安装排错
 
 子目录与主 Neovim 配置独立；完整安装步骤见 [vscode_neovim/README.md](vscode_neovim/README.md)、[ideavimrc/README.md](ideavimrc/README.md)。
 
 | 现象 | 处理 |
 |------|------|
-| Windows 下无法直接运行 `install.sh` | 使用子目录 `install.cmd`，或设置 `NVIM_GIT_BASH` 指向 Git Bash 的 `bash.exe`（与 [scripts/bash.cmd](scripts/bash.cmd) 思路一致） |
+| Windows 下无法直接运行 `install.sh` | 使用仓库根或子目录 `install.cmd`，或设置 `NVIM_GIT_BASH` 指向 Git Bash 的 `bash.exe` |
 | 合并设置后路径仍错误或含 `%APPDATA%` | 复用上文「项目根目录下出现字面量 `%APPDATA%` 文件夹」；[vscode_neovim/install.sh](vscode_neovim/install.sh) 内 `resolve_appdata` 会尝试展开 Windows Roaming 路径 |
 | vscode-neovim 扩展找不到 init | 在 `vscode_neovim` 目录重跑 `./install.sh`；编辑器 **Developer: Reload Window**；查看 Output → `vscode-neovim logs` |
 | WSL 内 `nvim` + Windows 版 Cursor/VS Code | 需在编辑器设置中配置官方 `vscode-neovim.useWSL` 等，见 [vscode_neovim/README.md](vscode_neovim/README.md)「路径注意」 |

@@ -289,7 +289,13 @@ def load_json(path: Path) -> dict:
     text = path.read_text(encoding="utf-8").strip()
     if not text:
         return {}
-    return json.loads(text)
+    # Cursor/VS Code settings.json 常为 JSONC（行首 // 注释），标准 json 无法解析
+    lines = []
+    for line in text.splitlines():
+        if line.lstrip().startswith("//"):
+            continue
+        lines.append(line)
+    return json.loads("\n".join(lines))
 
 user = load_json(user_path)
 fragment = load_json(fragment_path)

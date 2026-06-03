@@ -27,7 +27,29 @@
 --   - package.path 在 require("basic") 之前修
 --   - runtimepath 在 require("config.lazy") 之前修
 -- 同时通过 VimEnter 自动命令防止启动后 rtp 被重置。
+--   因为某些平台通过 -u init.lua 加载后 Neovim 会重算 rtp。
 -- ==========================================
+
+-- Windows：在 stdpath/health 计算前展开 USERPROFILE 等（避免 %USERPROFILE% 字面量）
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+  local function expand_win_env(name)
+    local value = vim.env[name] or ""
+    if value == "" or value:find("%%") then
+      local ok, result = pcall(function()
+        return vim.fn.system('cmd /c "echo %' .. name .. '%"'):gsub("^%s+", ""):gsub("%s+$", ""):gsub("[\r\n]", "")
+      end)
+      if ok and result and result ~= "" and not result:find("%%") then
+        vim.env[name] = result
+      end
+    end
+  end
+  expand_win_env("USERPROFILE")
+  expand_win_env("APPDATA")
+  expand_win_env("LOCALAPPDATA")
+  if not vim.env.XDG_CONFIG_HOME or vim.env.XDG_CONFIG_HOME == "" then
+    vim.env.XDG_CONFIG_HOME = vim.fn.expand("~/.config")
+  end
+end
 
 local function find_our_config_dir()
   -- 检查 stdpath('config') 是否已有我们的文件
@@ -41,7 +63,8 @@ local function find_our_config_dir()
   if not xdg_base or xdg_base == "" then
     xdg_base = vim.fn.expand("~/.config")
   end
-  local candidate = vim.fs.join(xdg_base, "nvim")
+  local fs_join = vim.fs.joinpath or vim.fs.join
+  local candidate = fs_join(xdg_base, "nvim")
   if vim.fn.filereadable(candidate .. "/lua/basic.lua") == 1 then
     return candidate
   end

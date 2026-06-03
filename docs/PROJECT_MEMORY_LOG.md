@@ -4,6 +4,14 @@
 
 ## 2026-06-03
 
+### Win10/Win11 统一流程 + 无头 checkhealth
+
+- **install.cmd**（根目录）、**scripts/headless_validate.sh**（Lazy + Mason sleep + 务实 grep）。
+- **install.sh**：`ensure_windows_user_env`、`setup_windows_proxy`、`cleanup_legacy_packer`、stdpath 跳过 `%` 候选；末尾可选无头验收。
+- **init.lua**：`vim.fs.joinpath or vim.fs.join`（0.12）。
+- **LuaSnip**：Windows MinGW make 探测构建 jsregexp。
+- **文档**：TROUBLE_SHOOT 迁移/白名单；headless-testing.mdc；PROJECT_MEMORY #25–#28。
+
 ### 跨平台路径与注释风格优化
 
 - **lua/config/paths.lua**：统一 `config_dir` / `lockfile_path` / `plugins_glob`；`init.lua` 写入 `vim.g.nvim_config_dir`；XDG 候选用 `vim.fs.join`。
@@ -12,7 +20,11 @@
 - **注释**：36 个 `lua/plugins/*.lua` 文件头统一三行格式；`README.md` 维护建议补充模板。
 - **文档**：`TROUBLE_SHOOT.md` 增加 Windows 编译工具 / luasnip jsregexp 小节；`PROJECT_MEMORY` #21–#24。
 
-### summary-memory（2026-06-03）
+### summary-memory 压缩（2026-06-03 晚）
+
+- **压缩**：28 条 → **25 条**；合并 CRLF/JSONC/env/npm 为 #22；合并路径/无头/Win 安装为 #10–#14。
+- **修正**：#14 白名单含 `%USERPROFILE%` health 误报（非可修复项）；packer 备份路径 `nvim-data/backups/`；`NVIM_SKIP_LAZY_UPDATE` 默认 1；`MSYS2_ARG_CONV_EXCL`。
+- **删除/并入**：独立 #11–#15 安装排错条目、旧 `w!/redir` 写法、#28 与 #14 矛盾表述。
 
 - **清理**：仓库内无暂存日志/调试产物/空文件；`docs/install_run.log` 与 `docs/nvim_checkhealth_final.log` 保留作验收证据；`graphify-out/` 在 `.gitignore` 内可 `graphify update .` 再生。
 - **冗余**：sha256 无重复文件；`PROJECT_MEMORY` #21+#22 合并为「路径解析栈」。

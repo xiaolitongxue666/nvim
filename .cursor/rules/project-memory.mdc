@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Project Memory
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-03T07:33:31Z. Full file: PROJECT_MEMORY.md
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-03T13:34:07Z. Full file: PROJECT_MEMORY.md
 
 
 ## 架构概览
@@ -63,6 +63,14 @@ alwaysApply: true
 23) **插件注释模板**（2026-06-03）：`lua/plugins/*.lua` 文件头统一三行（owner/repo、中文说明、GitHub URL）；见 `README.md` 维护建议。
 
 24) **WSL 安装提示**（2026-06-03）：`install.sh` 检测 `/proc/version` 含 Microsoft 时日志提示 `fnm env` 与 Linux 侧 `tree-sitter-cli`（WSL 仍走 linux 分支，不建 Windows junction）。
+
+25) **Win10/Win11 统一流程**（2026-06-03）：根目录 `install.cmd` + `install.sh`；`ensure_windows_user_env` 展开 USERPROFILE/LOCALAPPDATA/XDG；`setup_windows_proxy` 默认 7890；`cleanup_legacy_packer` 清理 Win10 packer 残留。
+
+26) **无头验收脚本**（2026-06-03）：`scripts/headless_validate.sh`（Lazy + sleep Mason + checkhealth + 务实 grep）；`install.sh` 末尾默认调用（`NVIM_SKIP_HEADLESS=1` 可跳过）。
+
+27) **Neovim 0.12 路径 API**（2026-06-03）：`init.lua` 使用 `vim.fs.joinpath or vim.fs.join`（0.12 重命名 joinpath）。
+
+28) **checkhealth 白名单**（2026-06-03）：headless/dumb 下 `Slow shell invocation`、terminfo、luasnip jsregexp 为已知可选 WARNING；packer/`%USERPROFILE%` 为可修复项。见 TROUBLE_SHOOT.md。
 
 # 已修复的历史问题（参考）
 

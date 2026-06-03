@@ -480,21 +480,6 @@ install_language_tools() {
         # Windows: 尝试自动安装
         log_info "Windows platform detected, attempting automatic installation..."
 
-        # 代理设置（如果需要）
-        local proxy_host="${PROXY_HOST:-127.0.0.1}"
-        local proxy_port="${PROXY_PORT:-7890}"
-        local use_proxy="${USE_PROXY:-1}"
-
-        if [[ "${use_proxy}" == "1" ]]; then
-            export http_proxy="http://${proxy_host}:${proxy_port}"
-            export https_proxy="http://${proxy_host}:${proxy_port}"
-            export HTTP_PROXY="http://${proxy_host}:${proxy_port}"
-            export HTTPS_PROXY="http://${proxy_host}:${proxy_port}"
-            export npm_config_proxy="http://${proxy_host}:${proxy_port}"
-            export npm_config_https_proxy="http://${proxy_host}:${proxy_port}"
-            log_info "Proxy enabled: http://${proxy_host}:${proxy_port}"
-        fi
-
         # 安装 Go
         if [[ " ${tools_to_install[*]} " =~ " go " ]]; then
             log_info "Installing Go..."
@@ -535,6 +520,8 @@ install_language_tools() {
             local composer_dir="$(dirname "${composer_phar_path}")"
             mkdir -p "${composer_dir}"
 
+            local proxy_host="${PROXY_HOST:-127.0.0.1}"
+            local proxy_port="${PROXY_PORT:-7890}"
             if curl -x "http://${proxy_host}:${proxy_port}" -o "${composer_phar_path}" \
                 "https://getcomposer.org/download/latest-stable/composer.phar" 2>&1; then
                 chmod +x "${composer_phar_path}"
@@ -715,6 +702,87 @@ create_nvim_config_junction_powershell() {
         >/dev/null 2>&1
 }
 
+# Windows：展开 USERPROFILE / LOCALAPPDATA / XDG_CONFIG_HOME（避免 headless 中 %USERPROFILE% 字面量）
+ensure_windows_user_env() {
+    [[ "${PLATFORM}" != "windows" ]] && return 0
+
+    local userprofile localappdata xdg_unix
+
+    userprofile="$(cmd //c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r\n' || true)"
+    userprofile="${userprofile//[$'\r\n']}"
+    if [[ -n "${userprofile}" ]] && [[ "${userprofile}" != *"%"* ]]; then
+        export USERPROFILE="${userprofile}"
+    elif [[ -n "${HOME:-}" ]] && command -v cygpath >/dev/null 2>&1; then
+        export USERPROFILE="$(cygpath -w "${HOME}" 2>/dev/null || true)"
+    fi
+
+    localappdata="$(cmd //c "echo %LOCALAPPDATA%" 2>/dev/null | tr -d '\r\n' || true)"
+    localappdata="${localappdata//[$'\r\n']}"
+    if [[ -n "${localappdata}" ]] && [[ "${localappdata}" != *"%"* ]]; then
+        export LOCALAPPDATA="${localappdata}"
+    fi
+
+    xdg_unix="${XDG_CONFIG_HOME:-${HOME}/.config}"
+    if command -v cygpath >/dev/null 2>&1; then
+        export XDG_CONFIG_HOME="$(cygpath -w "${xdg_unix}" 2>/dev/null || echo "${xdg_unix}")"
+    else
+        export XDG_CONFIG_HOME="${xdg_unix}"
+    fi
+}
+
+# Windows：全局代理（uv / npm / winget / curl 等子进程共用；USE_PROXY=0 可关闭）
+setup_windows_proxy() {
+    [[ "${PLATFORM}" != "windows" ]] && return 0
+    local proxy_host="${PROXY_HOST:-127.0.0.1}"
+    local proxy_port="${PROXY_PORT:-7890}"
+    local use_proxy="${USE_PROXY:-1}"
+    if [[ "${use_proxy}" != "1" ]]; then
+        return 0
+    fi
+    export http_proxy="http://${proxy_host}:${proxy_port}"
+    export https_proxy="http://${proxy_host}:${proxy_port}"
+    export HTTP_PROXY="http://${proxy_host}:${proxy_port}"
+    export HTTPS_PROXY="http://${proxy_host}:${proxy_port}"
+    export npm_config_proxy="http://${proxy_host}:${proxy_port}"
+    export npm_config_https_proxy="http://${proxy_host}:${proxy_port}"
+    export NVIM_PROXY_URL="http://${proxy_host}:${proxy_port}"
+    log_info "Proxy enabled: http://${proxy_host}:${proxy_port}"
+}
+
+# Windows：清理 Win10 packer 残留（lazy checkhealth WARNING）
+cleanup_legacy_packer() {
+    [[ "${PLATFORM}" != "windows" ]] && return 0
+
+    local nvim_data_unix=""
+    if [[ -n "${LOCALAPPDATA:-}" ]] && [[ "${LOCALAPPDATA}" != *"%"* ]]; then
+        nvim_data_unix="$(windows_path_to_unix "${LOCALAPPDATA}/nvim-data")"
+    elif [[ -n "${HOME:-}" ]] && [[ -d "${HOME}/AppData/Local/nvim-data" ]]; then
+        nvim_data_unix="${HOME}/AppData/Local/nvim-data"
+    fi
+    [[ -z "${nvim_data_unix}" ]] && return 0
+
+    local packer_dir="${nvim_data_unix}/site/pack/packer"
+    local backup_root="${nvim_data_unix}/backups"
+    ensure_directory "${backup_root}"
+
+    if [[ -d "${packer_dir}" ]]; then
+        local backup_dir="${backup_root}/packer.$(date +%Y%m%d_%H%M%S)"
+        log_info "Backing up legacy packer plugins (Win10 migration residue): ${packer_dir}"
+        if mv "${packer_dir}" "${backup_dir}" 2>/dev/null; then
+            log_success "Legacy packer removed (backup: ${backup_dir})"
+        else
+            log_warning "Could not remove legacy packer directory: ${packer_dir}"
+        fi
+    fi
+
+    local old_backup
+    for old_backup in "${nvim_data_unix}/site/pack/packer.backup."*; do
+        [[ -e "${old_backup}" ]] || continue
+        mv "${old_backup}" "${backup_root}/$(basename "${old_backup}").migrated" 2>/dev/null || rm -rf "${old_backup}"
+        log_info "Moved stray packer backup out of site/pack: ${old_backup}"
+    done
+}
+
 # Git Bash：写入 ~/.bashrc，确保未继承系统 XDG 时仍能找到 ~/.config/nvim
 setup_gitbash_xdg_config_home() {
     [[ "${PLATFORM}" != "windows" ]] && return 0
@@ -742,9 +810,11 @@ setup_windows_config_redirect() {
     for p in \
         "$(query_nvim_stdpath_config "")" \
         "$(query_nvim_stdpath_config "XDG_CONFIG_HOME")"; do
-        if [[ -n "${p}" ]] && [[ " ${seen} " != *" ${p} "* ]]; then
+        if [[ -n "${p}" ]] && [[ "${p}" != *"%"* ]] && [[ " ${seen} " != *" ${p} "* ]]; then
             candidates+=("${p}")
             seen="${seen} ${p}"
+        elif [[ -n "${p}" ]] && [[ "${p}" == *"%"* ]]; then
+            log_info "跳过未展开的 stdpath 候选: ${p}"
         fi
     done
 
@@ -1344,6 +1414,7 @@ vim.g.opencode_cmd = \"${opencode_escaped}\"
 
 # 检查插件管理器
 check_plugin_manager() {
+    cleanup_legacy_packer
     log_info "Checking plugin manager..."
 
     if [[ -f "${NVIM_CONFIG_DIR}/lua/config/lazy.lua" ]]; then
@@ -1752,12 +1823,14 @@ main() {
         if [[ -n "${early_appdata}" ]]; then
             export APPDATA="${early_appdata}"
         fi
+        setup_windows_proxy
     fi
 
     progress_step 1 "${TOTAL_MAIN_STEPS}" "Checking config directory..."
     check_config_integrity
 
     normalize_windows_home
+    ensure_windows_user_env
 
     progress_step 2 "${TOTAL_MAIN_STEPS}" "Determining config directory..."
     determine_config_dir
@@ -1804,6 +1877,15 @@ main() {
 
     progress_step 16 "${TOTAL_MAIN_STEPS}" "Printing summary..."
     print_summary
+
+    if [[ "${NVIM_SKIP_HEADLESS:-}" != "1" ]] && [[ -f "${SCRIPT_DIR}/scripts/headless_validate.sh" ]]; then
+        log_info "Running headless validation (set NVIM_SKIP_HEADLESS=1 to skip)..."
+        if bash "${SCRIPT_DIR}/scripts/headless_validate.sh"; then
+            log_success "Headless validation passed"
+        else
+            log_warning "Headless validation reported issues (see docs/nvim_checkhealth_final.log)"
+        fi
+    fi
 
     end_script
 }

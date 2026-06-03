@@ -25,8 +25,19 @@ if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
         local ok, result = pcall(function()
             return vim.fn.system('cmd /c "echo %APPDATA%"'):gsub("^%s+", ""):gsub("%s+$", ""):gsub("[\r\n]", "")
         end)
-        if ok and result and result ~= "" then
+        if ok and result and result ~= "" and not result:find("%%") then
             vim.env.APPDATA = result
+        end
+    end
+
+    -- 展开 USERPROFILE，避免 checkhealth 报告 %USERPROFILE%\.config\nvim 缺失
+    local userprofile = vim.env.USERPROFILE or ""
+    if userprofile == "" or userprofile:find("%%") then
+        local ok, result = pcall(function()
+            return vim.fn.system('cmd /c "echo %USERPROFILE%"'):gsub("^%s+", ""):gsub("%s+$", ""):gsub("[\r\n]", "")
+        end)
+        if ok and result and result ~= "" and not result:find("%%") then
+            vim.env.USERPROFILE = result
         end
     end
 end
