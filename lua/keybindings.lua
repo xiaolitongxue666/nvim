@@ -115,8 +115,8 @@ map("n", "<LEADER>q", ":q<CR>", opt)
 -- 空格+Q 直接退出Neovim（保存所有文件）
 map("n", "<LEADER>Q", ":wqa<CR>", opt)
 
--- 空格+b 关闭当前使用的buffer
-map("n", "<LEADER>b", ":b #<CR>:bd #<CR>", opt)
+-- 空格+b 关闭当前 buffer（分屏独立 tab；见 ui_buffer_tabpage_winbuf.lua）
+-- 每个编辑器组有自己的 tab 行——Neovim 里对应的是 winbar（每个 window 一条顶栏），不是 tabline。
 
 -- 显示当前编辑的buffer的文件路径
 map("n", "sp", "1<C-G>", opt)

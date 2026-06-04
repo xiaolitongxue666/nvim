@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Project Memory
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-04T02:02:07Z. Full file: PROJECT_MEMORY.md
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-04T07:19:15Z. Full file: PROJECT_MEMORY.md
 
 
 ## 架构概览
@@ -54,12 +54,14 @@ alwaysApply: true
 
 22) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离或 JSONC 解析；Git Bash 用 `env VAR=val` 非前缀赋值（如 `env USE_PROXY=0`）；Windows npm host 或需 `NODE_PATH`。
 
-23) **自部署**：仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`。
+23) **自部署与 Settings Sync**：仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写入三平台 `neovimInitVimPaths`；Windows 路径错则重跑 `install.cmd`/`install.sh`。
 
-24) **Settings Sync**：mac 写入三平台 `neovimInitVimPaths`；Windows 路径错则重跑 `install.cmd`/`install.sh`。
+24) **分屏 Tab + neo-tree**（2026-06-04）：每个编辑器组有自己的 tab 行——Neovim 里对应的是 **winbar**（每个 window 一条顶栏），不是 tabline。`bufferline.nvim` 仅全局 tabline → 已 `enabled=false`，改用 `winbuf.nvim`；`basic.lua` `showtabline=0`；键位 `[b`/`]b`/`<leader>b` 在 `ui_buffer_tabpage_winbuf.lua`。`<leader>q` 关 window 不删 buffer。neo-tree 勿 `nvim_win_close` toggle（E95）；`<leader>e`/`fe` 用 `execute({ toggle })`；`auto_clean_after_session_restore` + `NEO_TREE_BUFFER_LEAVE` 清孤儿 buffer（`ui_file_explorer_neo-tree.lua`）。
 
 25) **插件注释**：`lua/plugins/*.lua` 文件头三行（repo、中文说明、URL）；见 `README.md`。
 
 # 已修复的历史问题（参考）
 
 - 键位冲突、conform 统一格式化、pyright/ruff 重复诊断、neodev→lazydev、dressing→Snacks 已治理
+- bufferline 全局 tab 无法分屏独立显示 → winbuf.nvim；`<leader>b` 曾误删 alternate buffer 已修正
+- neo-tree `<leader>e` E95：`nvim_win_close` 留孤儿 buffer → 原生 toggle + buffer leave 清理

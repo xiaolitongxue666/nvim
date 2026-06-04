@@ -21,48 +21,18 @@ return {
             {
                 "<leader>fe",
                 function()
-                    -- 检查是否已经有 neo-tree 窗口
-                    local neo_tree_win = nil
-                    for _, win in ipairs(vim.api.nvim_list_wins()) do
-                        local buf = vim.api.nvim_win_get_buf(win)
-                        local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-                        if filetype == "neo-tree" then
-                            neo_tree_win = win
-                            break
-                        end
-                    end
-
-                    if neo_tree_win then
-                        -- 如果存在，关闭它
-                        vim.api.nvim_win_close(neo_tree_win, true)
-                    else
-                        -- 如果不存在，打开它
-                        require("neo-tree.command").execute({ toggle = true, dir = vim.uv.cwd() })
-                    end
+                    require("neo-tree.command").execute({ toggle = true, dir = vim.uv.cwd() })
                 end,
                 desc = "文件浏览器（根目录）",
             },
             {
                 "<leader>fE",
                 function()
-                    -- 检查是否已经有 neo-tree 窗口
-                    local neo_tree_win = nil
-                    for _, win in ipairs(vim.api.nvim_list_wins()) do
-                        local buf = vim.api.nvim_win_get_buf(win)
-                        local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-                        if filetype == "neo-tree" then
-                            neo_tree_win = win
-                            break
-                        end
+                    local dir = vim.fn.expand("%:p:h")
+                    if dir == "" then
+                        dir = vim.uv.cwd()
                     end
-
-                    if neo_tree_win then
-                        -- 如果存在，关闭它
-                        vim.api.nvim_win_close(neo_tree_win, true)
-                    else
-                        -- 如果不存在，打开它
-                        require("neo-tree.command").execute({ toggle = true, dir = vim.fn.expand("%:p:h") })
-                    end
+                    require("neo-tree.command").execute({ toggle = true, dir = dir })
                 end,
                 desc = "文件浏览器（当前文件）",
             },
@@ -99,6 +69,8 @@ return {
         end,
         -- 插件配置选项
         opts = {
+            -- 会话恢复后清理无效的 neo-tree buffer（避免 E95）
+            auto_clean_after_session_restore = true,
             -- 数据源
             sources = { "filesystem", "buffers", "git_status" },
             -- 不替换的文件类型（包括 neo-tree 自身，避免缓冲区冲突）
@@ -345,38 +317,21 @@ return {
         },
         -- 插件配置函数
         config = function(_, opts)
-            -- 添加 neo-tree 缓冲区清理函数（必须在其他函数之前定义）
-            local function cleanup_neo_tree_buffers()
-                local buffers = vim.api.nvim_list_bufs()
-                for _, buf in ipairs(buffers) do
-                    local bufname = vim.api.nvim_buf_get_name(buf)
-                    local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-                    local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
-
-                    -- 清理 neo-tree 相关缓冲区
-                    if (bufname:match("^neo%-tree://") or
-                        filetype == "neo-tree" or
-                        filetype == "neo-tree-popup") and
-                        buftype == "nofile" then
-                        -- 检查缓冲区是否在窗口中
-                        local is_used = false
-                        for _, win in ipairs(vim.api.nvim_list_wins()) do
-                            if vim.api.nvim_win_get_buf(win) == buf then
-                                is_used = true
-                                break
-                            end
-                        end
-                        if not is_used then
-                            pcall(vim.api.nvim_buf_delete, buf, { force = true })
-                        end
+            -- 用 Vim 命令关 neo-tree 窗口时会留下孤儿 buffer，再次打开触发 E95（#1415）
+            local function cleanup_orphan_neo_tree_buffers()
+                local shown_buffers = {}
+                for _, win in ipairs(vim.api.nvim_list_wins()) do
+                    shown_buffers[vim.api.nvim_win_get_buf(win)] = true
+                end
+                for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                    if not shown_buffers[buf]
+                        and vim.api.nvim_buf_is_valid(buf)
+                        and vim.api.nvim_buf_get_option(buf, "buftype") == "nofile"
+                        and vim.api.nvim_buf_get_option(buf, "filetype") == "neo-tree"
+                    then
+                        pcall(vim.api.nvim_buf_delete, buf, { force = true })
                     end
                 end
-            end
-
-            -- 修复缓冲区名称冲突的错误处理
-            local function safe_navigate()
-                -- 在导航前清理可能冲突的缓冲区
-                cleanup_neo_tree_buffers()
             end
 
             -- 文件移动/重命名时的 LSP 处理
@@ -392,36 +347,18 @@ return {
             vim.list_extend(opts.event_handlers, {
                 { event = events.FILE_MOVED, handler = on_move },
                 { event = events.FILE_RENAMED, handler = on_move },
-                -- 在文件系统导航前清理缓冲区
                 {
-                    event = events.FS_EVENT,
-                    handler = function()
-                        -- 延迟清理，避免与导航冲突
-                        vim.defer_fn(safe_navigate, 50)
-                    end,
+                    event = events.NEO_TREE_BUFFER_LEAVE,
+                    handler = cleanup_orphan_neo_tree_buffers,
                 },
             })
 
             require("neo-tree").setup(opts)
 
-            -- 捕获并处理 E95 缓冲区名称冲突错误
-            -- 使用 vim 的错误处理机制
-            local error_group = vim.api.nvim_create_augroup("neo_tree_error_handling", { clear = true })
-            
-            -- 在文件系统事件后清理可能冲突的缓冲区
-            vim.api.nvim_create_autocmd("User", {
-                pattern = "NeoTreeFilesystem*",
-                group = error_group,
-                callback = function()
-                    -- 延迟清理，避免与正在进行的操作冲突
-                    vim.defer_fn(cleanup_neo_tree_buffers, 100)
-                end,
-            })
-
-            -- 在启动时清理可能存在的 neo-tree 缓冲区
+            -- 启动时清理可能残留的 neo-tree buffer
             vim.api.nvim_create_autocmd("VimEnter", {
                 group = vim.api.nvim_create_augroup("neo_tree_cleanup", { clear = true }),
-                callback = cleanup_neo_tree_buffers,
+                callback = cleanup_orphan_neo_tree_buffers,
                 once = true,
             })
 

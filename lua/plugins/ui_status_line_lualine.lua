@@ -54,7 +54,7 @@ return {
                     lualine_y = {},
                     lualine_z = {}
                 },
-                tabline = {},
+                -- winbar 由 winbuf.nvim 占用（每个 window 一条顶栏，不是全局 tabline）；此处留空避免与 lualine 冲突
                 winbar = {},
                 inactive_winbar = {},
                 extensions = {}

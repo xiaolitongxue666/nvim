@@ -311,8 +311,9 @@ vim.o.wildmenu = true
 -- 不向插入补全菜单传递消息；I = 跳过 Neovim 0.11 内置 intro（否则 mini.starter autoopen 被误判跳过）
 vim.o.shortmess = vim.o.shortmess .. "cI"
 vim.o.pumheight = 10
--- 始终显示标签栏
-vim.o.showtabline = 2
+-- 每个编辑器组有自己的 tab 行——Neovim 里对应的是 winbar（每个 window 一条顶栏），不是 tabline。
+-- winbuf.nvim 在 winbar 渲染分屏标签；showtabline=0 关闭全局 tabline，避免空白顶栏
+vim.o.showtabline = 0
 -- 在下次打开文件的时候光标位置
 vim.cmd([[autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif ]])
 -- 拷贝到剪切板

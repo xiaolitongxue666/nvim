@@ -119,3 +119,11 @@
 - 执行 `./install.sh` → 无头 `Lazy! update` → 无头 `checkhealth`，严格口径全绿。
 - 新增规则 [`.cursor/rules/headless-testing.mdc`](../.cursor/rules/headless-testing.mdc)；`nvim-treesitter` 钉在 `master`（0.11 兼容）；证据 `docs/nvim_checkhealth_final.log`。
 - 经验摘要已写入 `PROJECT_MEMORY.md`「无头模式经验」小节。
+
+### 分屏 Tab + neo-tree E95（summary-memory）
+
+- **Tab 架构**：`bufferline.nvim` 仅全局 tabline；垂直分屏时标签无法各跟各 window。
+- **winbuf.nvim**：每 window 用 winbar 独立 tab（VS Code editor group）；`showtabline=0`；bufferline `enabled=false`；键位见 `ui_buffer_tabpage_winbuf.lua`。
+- **bufferline 遗留**：`always_show_bufferline=false`；`custom_filter` 过滤 UI/special buffer；`<leader>b` 关 buffer，`<leader>q` 仅关分屏。
+- **neo-tree E95**：`nvim_win_close` toggle 留孤儿 buffer → `execute({ toggle })` + `auto_clean_after_session_restore` + `NEO_TREE_BUFFER_LEAVE`。
+- **验收**：`bash scripts/headless_validate.sh` exit 0；`lazy-lock.json` 含 `winbuf.nvim`。

@@ -1,10 +1,13 @@
 -- akinsho/bufferline.nvim
--- 缓冲区标签页，支持图标与关闭按钮
+-- 全局 tabline 插件（已禁用）：每个编辑器组有自己的 tab 行——Neovim 里对应的是 winbar（每个 window 一条顶栏），不是 tabline。
 -- https://github.com/akinsho/bufferline.nvim
 
 return {
     {
         "akinsho/bufferline.nvim",
+        -- bufferline 使用全局 tabline，无法分屏各自显示 tab；已改用 winbuf.nvim（见 ui_buffer_tabpage_winbuf.lua）
+        -- 每个编辑器组有自己的 tab 行——Neovim 里对应的是 winbar（每个 window 一条顶栏），不是 tabline。
+        enabled = false,
         -- 在 VeryLazy 事件时加载
         event = "VeryLazy",
         -- 依赖项
@@ -93,14 +96,34 @@ return {
                 separator_style = "slant",
                 -- 强制删除终端
                 enforce_regular_tabs = false,
-                always_show_bufferline = true,
+                always_show_bufferline = false,
                 -- 排序
                 sort_by = "insert_after_current",
                 -- 自定义过滤器
-                custom_filter = function(buf_number, buf_numbers)
-                    -- 过滤掉特定文件类型
+                custom_filter = function(buf_number, _buf_numbers)
                     local filetype = vim.bo[buf_number].filetype
+                    local buftype = vim.bo[buf_number].buftype
+                    local name = vim.api.nvim_buf_get_name(buf_number)
+
                     if filetype == "qf" or filetype == "help" then
+                        return false
+                    end
+                    if filetype == "neo-tree" or filetype == "NvimTree" then
+                        return false
+                    end
+                    if filetype == "ministarter" or filetype == "starter" then
+                        return false
+                    end
+                    if filetype == "lazy" or filetype == "mason" or filetype == "toggleterm" then
+                        return false
+                    end
+                    if buftype == "terminal" or buftype == "prompt" then
+                        return false
+                    end
+                    if buftype == "nofile" and name == "" then
+                        return false
+                    end
+                    if name == "" and buftype == "" then
                         return false
                     end
                     return true
