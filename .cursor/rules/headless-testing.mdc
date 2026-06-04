@@ -23,7 +23,7 @@ eval "$(fnm env --use-on-cd)"   # 无头前建议
 
 脚本内容：Lazy update（`NVIM_SKIP_LAZY_UPDATE=0` 启用，默认跳过以加速）→ 可选 `Lazy build LuaSnip` → checkhealth 落盘 → **务实 grep**。
 
-Windows 无头前自动：`ensure_windows_user_env`（展开 USERPROFILE/XDG）、`setup_headless_proxy`（默认 7890，`USE_PROXY=0` 关闭）。
+Windows 无头前自动：`ensure_windows_user_env`（展开 USERPROFILE/XDG）、`setup_default_proxy`（本机/WSL 7890、2s 探测，`env USE_PROXY=0` 关闭）。
 
 ## 务实 vs 严格 grep
 

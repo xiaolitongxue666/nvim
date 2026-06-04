@@ -14,7 +14,7 @@
 ### Win10/Win11 统一流程 + 无头 checkhealth
 
 - **install.cmd**（根目录）、**scripts/headless_validate.sh**（Lazy + Mason sleep + 务实 grep）。
-- **install.sh**：`ensure_windows_user_env`、`setup_windows_proxy`、`cleanup_legacy_packer`、stdpath 跳过 `%` 候选；末尾可选无头验收。
+- **install.sh**：`ensure_windows_user_env`、`setup_default_proxy`（原 `setup_windows_proxy` 已废弃）、`cleanup_legacy_packer`、stdpath 跳过 `%` 候选；末尾可选无头验收。
 - **init.lua**：`vim.fs.joinpath or vim.fs.join`（0.12）。
 - **LuaSnip**：Windows MinGW make 探测构建 jsregexp。
 - **文档**：TROUBLE_SHOOT 迁移/白名单；headless-testing.mdc；PROJECT_MEMORY #25–#28。
@@ -98,6 +98,21 @@
 - 新增涉及路径、shell、安装流程的改动时，默认同时验证 Windows + WSL 场景。
 - 新增项目规则时优先放在 `.cursor/rules/*.mdc`，保证可版本化。
 - 变更完成后优先维护 `README.md`、`TROUBLE_SHOOT.md`、`PROJECT_MEMORY.md` 三处一致性。
+
+## 2026-06-04
+
+### 跨平台默认代理 + headless fnm 误建 %APPDATA% 修复（summary-memory）
+
+- **代理**：`scripts/common.sh` 统一 `setup_default_proxy`（本机 7890 / WSL 宿主机 IP / 2s 探测 / `USE_PROXY=0`）；`install.sh` 全平台调用；`basic.lua` 第三层自动默认 + `vim.notify`。
+- **%APPDATA% 根因**：Git Bash 中 `%APPDATA%` 不展开；`headless_validate.sh` 在仓库根 `eval fnm env` 时若未 export APPDATA，fnm 会创建字面量 `%APPDATA%/fnm`。
+- **修复**：`common.sh` 新增 `ensure_windows_appdata_export`、`fnm_env_safe`、`cleanup_stray_appdata_in_dir`；headless 前后清理；`install.sh` 无头结束后再次清理。
+- **验收**：`./install.sh` exit 0；安装后仓库根无 `%APPDATA%/`；代理日志正常。
+
+### 文档同步 + 误建目录重测（summary-memory 续）
+
+- **文档**：`README.md`、`TROUBLE_SHOOT.md`、`.cursor/rules/headless-testing.mdc` 代理说明对齐 `setup_default_proxy`（含 WSL 宿主机、`env USE_PROXY=0`）。
+- **重测**：`install_retest_appdata.log` 记录 step 7 前仍可能短暂出现 `%APPDATA%`（早期步骤），backup 前/无头后清理后**最终无残留**；单独 `headless_validate.sh` 不再误建。
+- **清理**：删除会话测试 log（保留 `docs/nvim_checkhealth_final.log`）。
 
 ### 安装更新与健康清零（同日晚间）
 

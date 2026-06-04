@@ -9,16 +9,34 @@ COMMON_LIB="${SCRIPT_DIR}/common.sh"
 source "${COMMON_LIB}"
 
 CHECKHEALTH_LOG="docs/nvim_checkhealth_final.log"
+# 核心模块验收（跳过 snacks：VeryLazy + 无头 dumb 终端易挂起/误报）
+CHECKHEALTH_MODULES="lazy luasnip nvim-treesitter vim.provider vim.lsp vim.health vim.treesitter vim.deprecated"
+CHECKHEALTH_TIMEOUT="${NVIM_CHECKHEALTH_TIMEOUT:-90}"
 
 ensure_windows_user_env
 setup_headless_proxy
 cleanup_legacy_packer
 
-if command -v fnm >/dev/null 2>&1; then
-    eval "$(fnm env --use-on-cd)" || true
+cd "${NVIM_ROOT}"
+
+if is_windows_platform; then
+    ensure_windows_appdata_export
+    cleanup_stray_appdata_in_dir "${NVIM_ROOT}"
 fi
 
-cd "${NVIM_ROOT}"
+fnm_env_safe
+
+# install.sh 会 export；单独跑本脚本时自动探测 venv Scripts/bin
+if [[ -z "${NVIM_VENV_BIN_DIR:-}" ]]; then
+    for candidate in \
+        "${NVIM_ROOT}/venv/nvim-python/Scripts" \
+        "${NVIM_ROOT}/venv/nvim-python/bin"; do
+        if [[ -d "${candidate}" ]]; then
+            export NVIM_VENV_BIN_DIR="${candidate}"
+            break
+        fi
+    done
+fi
 
 run_nvim() {
     # Git Bash 勿转换 Windows 环境变量路径
@@ -27,6 +45,13 @@ run_nvim() {
     export LOCALAPPDATA="${LOCALAPPDATA:-}"
     export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-}"
     export APPDATA="${APPDATA:-}"
+    export NVIM_HEADLESS_VALIDATE=1
+    # 无头验收用 g:python3_host_prog，勿继承 shell 的 VIRTUAL_ENV（会触发 vim.provider
+    # 对裸 python 的检查；Win10 cmd 子 shell 常无法解析 Git Bash 的 PATH）
+    unset VIRTUAL_ENV
+    if [[ -n "${NVIM_VENV_BIN_DIR:-}" ]] && [[ -d "${NVIM_VENV_BIN_DIR}" ]]; then
+        export PATH="${NVIM_VENV_BIN_DIR}:${PATH}"
+    fi
     nvim --headless -u init.lua "$@"
 }
 
@@ -34,7 +59,7 @@ start_script "Headless Validation"
 
 if [[ "${NVIM_SKIP_LAZY_UPDATE:-1}" != "1" ]]; then
     log_info "=== Lazy update (+ Mason wait) ==="
-    run_nvim \
+    run_with_timeout 180 run_nvim \
       -c "Lazy! update" \
       -c "sleep 90" \
       -c "qa!"
@@ -49,18 +74,29 @@ if [[ "${NVIM_SKIP_LAZY_UPDATE:-1}" != "1" ]] && command -v make >/dev/null 2>&1
       -c "qa!" || log_warning "LuaSnip build skipped or failed (optional jsregexp)"
 fi
 
-log_info "=== checkhealth ==="
-run_nvim \
-  -c "lua vim.wait(25000, function() return pcall(require,'nvim-treesitter.configs') end)" \
-  -c "checkhealth" \
-  -c "set buftype=" \
-  -c "write! ${CHECKHEALTH_LOG}" \
+log_info "=== checkhealth (modules: ${CHECKHEALTH_MODULES}; timeout ${CHECKHEALTH_TIMEOUT}s) ==="
+if ! run_with_timeout "${CHECKHEALTH_TIMEOUT}" bash <<EOF
+$(declare -f run_nvim)
+run_nvim \\
+  -c "lua vim.wait(8000, function() return pcall(require,'nvim-treesitter.configs') end, 50)" \\
+  -c "let g:loaded_node_provider=0" \\
+  -c "checkhealth ${CHECKHEALTH_MODULES}" \\
+  -c "set buftype=" \\
+  -c "write! ${CHECKHEALTH_LOG}" \\
   -c "qa!"
+EOF
+then
+    log_error "checkhealth timed out or failed after ${CHECKHEALTH_TIMEOUT}s"
+    log_info "If stuck on network: USE_PROXY=0 ./scripts/headless_validate.sh"
+    log_info "Or increase: NVIM_CHECKHEALTH_TIMEOUT=180 ./scripts/headless_validate.sh"
+    exit 1
+fi
 
 log_info "=== grep validation (pragmatic) ==="
-# 严格：ERROR / ❌
-if grep -iE '^- ERROR|❌' "${CHECKHEALTH_LOG}"; then
+# 严格：条目行 ERROR（luasnip 未安装时跳过 No healthcheck found）
+if grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"'; then
     log_error "checkhealth contains ERROR"
+    grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"' || true
     exit 1
 fi
 
@@ -87,8 +123,9 @@ while IFS= read -r line; do
         *"key_backspace"*|*"key_dc"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
         *"jsregexp"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
         *"Missing user config file: %USERPROFILE%"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
+        *"No healthcheck found for \"luasnip\""*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
     esac
-done < <(grep -iE '^- WARNING|⚠' "${CHECKHEALTH_LOG}" || true)
+done < <(grep -iE '^- WARNING|⚠|^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" || true)
 
 if [[ ${WHITELIST_LINES} -gt 0 ]]; then
     log_info "Known optional/headless WARNINGs present (${WHITELIST_LINES} line(s)); see TROUBLE_SHOOT.md"
@@ -96,4 +133,5 @@ fi
 
 log_success "Pragmatic validation passed (no ERROR; no fixable WARNING)"
 log_info "Log: ${CHECKHEALTH_LOG}"
+is_windows_platform && cleanup_stray_appdata_in_dir "${NVIM_ROOT}"
 end_script

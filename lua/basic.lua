@@ -43,13 +43,102 @@ if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
 end
 
 -- 代理环境变量设置（跨平台兼容）
--- 优先级：系统环境变量 > NVIM_PROXY_URL 环境变量 > 不设置（保持兼容性）
--- 推荐：在终端中先 export http_proxy=... https_proxy=... 再启动 nvim，这样 lazy/mason/treesitter 等所有子进程都会走代理。
--- 注意：nvim-treesitter 使用 Git 下载，需要确保 Git 和 Neovim 都能使用代理
+-- 优先级：系统环境变量 > NVIM_PROXY_URL > 自动默认（WSL 宿主机 / 本机 127.0.0.1:7890，探测后设置）
+local PROXY_PROBE_TIMEOUT_MS = 2000
+local DEFAULT_PROXY_PORT = 7890
+
+local function proxy_log(msg, level)
+    level = level or vim.log.levels.INFO
+    vim.notify(msg, level, { title = "proxy" })
+end
+
+local function is_wsl_platform()
+    local f = io.open("/proc/version", "r")
+    if not f then
+        return false
+    end
+    local version = f:read("*a") or ""
+    f:close()
+    return version:lower():find("microsoft", 1, true) ~= nil
+end
+
+local function resolve_wsl_host_ip()
+    local f = io.open("/etc/resolv.conf", "r")
+    if f then
+        for line in f:lines() do
+            local ip = line:match("^nameserver%s+(%S+)")
+            if ip then
+                f:close()
+                return ip, "wsl-resolv"
+            end
+        end
+        f:close()
+    end
+    if vim.fn.executable("ip") == 1 then
+        local result = vim
+            .system({ "sh", "-c", "ip route show default 2>/dev/null | awk '{print $3; exit}'" }, { timeout = PROXY_PROBE_TIMEOUT_MS })
+            :wait()
+        if result.code == 0 and result.stdout then
+            local ip = result.stdout:match("%S+")
+            if ip and ip ~= "" then
+                return ip, "wsl-gateway"
+            end
+        end
+    end
+    return nil, nil
+end
+
+local function resolve_default_proxy_host()
+    local user_host = os.getenv("PROXY_HOST")
+    if user_host and user_host ~= "" then
+        return user_host, "user-override"
+    end
+    if is_wsl_platform() then
+        local wsl_host, method = resolve_wsl_host_ip()
+        if wsl_host then
+            return wsl_host, method
+        end
+        proxy_log("WSL: could not resolve host IP, falling back to 127.0.0.1", vim.log.levels.WARN)
+    end
+    return "127.0.0.1", "native-localhost"
+end
+
+local function proxy_port_reachable(host, port)
+    port = tonumber(port) or DEFAULT_PROXY_PORT
+    if vim.fn.executable("bash") == 1 then
+        local result = vim.system({
+            "bash",
+            "-c",
+            string.format("echo >/dev/tcp/%s/%d", host, port),
+        }, { timeout = PROXY_PROBE_TIMEOUT_MS }):wait()
+        return result.code == 0
+    end
+    if vim.fn.has("win32") == 1 and vim.fn.executable("powershell") == 1 then
+        local ps_cmd = string.format(
+            "try { $c=New-Object Net.Sockets.TcpClient('%s',%d); $c.Close(); exit 0 } catch { exit 1 }",
+            host,
+            port
+        )
+        local result = vim.system({ "powershell", "-NoProfile", "-Command", ps_cmd }, { timeout = PROXY_PROBE_TIMEOUT_MS }):wait()
+        return result.code == 0
+    end
+    return false
+end
+
+local function apply_proxy_url(proxy_url, no_proxy_list)
+    vim.env.http_proxy = proxy_url
+    vim.env.https_proxy = proxy_url
+    vim.env.HTTP_PROXY = proxy_url
+    vim.env.HTTPS_PROXY = proxy_url
+    vim.env.all_proxy = proxy_url
+    vim.env.no_proxy = no_proxy_list
+    vim.env.NO_PROXY = no_proxy_list
+    vim.env.NVIM_PROXY_URL = proxy_url
+end
+
 local function setup_proxy()
     -- 如果系统环境变量已设置，直接使用（会自动继承）
     if vim.env.http_proxy or vim.env.HTTP_PROXY then
-        -- 统一设置 all_proxy 与 no_proxy，部分工具只认 all_proxy
         local proxy = vim.env.https_proxy or vim.env.HTTP_PROXY or vim.env.http_proxy
         if proxy and (not vim.env.all_proxy or vim.env.all_proxy == "") then
             vim.env.all_proxy = proxy
@@ -60,17 +149,48 @@ local function setup_proxy()
         return
     end
 
-    -- 尝试从 NVIM_PROXY_URL 环境变量获取（如果用户设置了）
-    -- 使用方法：在启动 Neovim 前设置 export NVIM_PROXY_URL=http://127.0.0.1:7890
+    -- NVIM_PROXY_URL 环境变量（install/headless 或用户手动 export）
     local proxy_url = os.getenv("NVIM_PROXY_URL")
     if proxy_url and proxy_url ~= "" then
-        vim.env.http_proxy = proxy_url
-        vim.env.https_proxy = proxy_url
-        vim.env.HTTP_PROXY = proxy_url
-        vim.env.HTTPS_PROXY = proxy_url
-        vim.env.all_proxy = proxy_url
-        vim.env.no_proxy = "127.0.0.1,localhost"
+        apply_proxy_url(proxy_url, "127.0.0.1,localhost")
+        return
     end
+
+    if os.getenv("USE_PROXY") == "0" then
+        proxy_log("Proxy setup: USE_PROXY=0, skipping")
+        return
+    end
+
+    local proxy_port = tonumber(os.getenv("PROXY_PORT")) or DEFAULT_PROXY_PORT
+    local platform_label = is_wsl_platform() and "WSL" or "native"
+    local proxy_host, resolve_method = resolve_default_proxy_host()
+
+    proxy_log(string.format(
+        "Proxy setup: USE_PROXY=1 platform=%s host=%s port=%d (resolve=%s)",
+        platform_label,
+        proxy_host,
+        proxy_port,
+        resolve_method or "unknown"
+    ))
+    proxy_log(string.format("Proxy probe: %s:%d (timeout %ds)...", proxy_host, proxy_port, PROXY_PROBE_TIMEOUT_MS / 1000))
+
+    if not proxy_port_reachable(proxy_host, proxy_port) then
+        proxy_log(string.format(
+            "Proxy %s:%d unreachable, skipping (set USE_PROXY=0 to silence)",
+            proxy_host,
+            proxy_port
+        ))
+        return
+    end
+
+    local no_proxy_list = "127.0.0.1,localhost"
+    if is_wsl_platform() and proxy_host ~= "127.0.0.1" then
+        no_proxy_list = no_proxy_list .. "," .. proxy_host
+    end
+
+    local auto_proxy_url = string.format("http://%s:%d", proxy_host, proxy_port)
+    apply_proxy_url(auto_proxy_url, no_proxy_list)
+    proxy_log("Proxy enabled: " .. auto_proxy_url)
 end
 
 setup_proxy()

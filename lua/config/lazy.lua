@@ -67,13 +67,14 @@ local function collect_plugin_specs()
 end
 
 -- 设置 lazy.nvim
+local headless_validate = vim.env.NVIM_HEADLESS_VALIDATE == "1"
 require("lazy").setup({
     spec = collect_plugin_specs(),
     -- 在这里配置任何其他设置。查看文档了解更多详情。
     -- 安装插件时使用的配色方案。
-    install = { colorscheme = { "habamax" } },
-    -- 自动检查插件更新
-    checker = { enabled = true },
+    install = { colorscheme = { "habamax" }, missing = not headless_validate },
+    -- 自动检查插件更新（无头验收时关闭，避免 git 网络挂起）
+    checker = { enabled = not headless_validate },
     -- 显式设置路径（修复 Windows + Git Bash 路径问题）
     root = clean_path(vim.fn.stdpath("data")) .. "/lazy",
     state = clean_path(vim.fn.stdpath("state")) .. "/lazy/state.json",

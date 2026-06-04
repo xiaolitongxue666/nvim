@@ -198,7 +198,9 @@ nvim --headless -u init.lua \
   -c "checkhealth" -c "w! docs/nvim_checkhealth_final.log" -c "qa!"
 ```
 
-细节与排错见 [`.cursor/rules/headless-testing.mdc`](.cursor/rules/headless-testing.mdc)。缺失工具可由 `./install.sh` 安装；代理见 `basic.lua` 中 `NVIM_PROXY_URL` / `http_proxy`。
+细节与排错见 [`.cursor/rules/headless-testing.mdc`](.cursor/rules/headless-testing.mdc)。缺失工具可由 `./install.sh` 安装。
+
+**代理（默认启用）：** `scripts/common.sh` 的 `setup_default_proxy` 在 `install.sh` 与无头验收开头执行——本机 `127.0.0.1:7890`，WSL 自动解析宿主机 IP；2s 探测不可达则跳过，避免 git/npm 挂起。关闭：`env USE_PROXY=0 ./install.sh`；覆盖：`PROXY_HOST` / `PROXY_PORT`。直接启动 `nvim` 时 `basic.lua` 会按相同规则自动设置（已有 `http_proxy` 或 `NVIM_PROXY_URL` 时不覆盖）。
 
 ## 维护
 

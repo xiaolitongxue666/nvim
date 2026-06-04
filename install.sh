@@ -520,9 +520,7 @@ install_language_tools() {
             local composer_dir="$(dirname "${composer_phar_path}")"
             mkdir -p "${composer_dir}"
 
-            local proxy_host="${PROXY_HOST:-127.0.0.1}"
-            local proxy_port="${PROXY_PORT:-7890}"
-            if curl -x "http://${proxy_host}:${proxy_port}" -o "${composer_phar_path}" \
+            if curl -o "${composer_phar_path}" \
                 "https://getcomposer.org/download/latest-stable/composer.phar" 2>&1; then
                 chmod +x "${composer_phar_path}"
                 if "${composer_phar_path}" --version >/dev/null 2>&1; then
@@ -728,25 +726,6 @@ ensure_windows_user_env() {
     else
         export XDG_CONFIG_HOME="${xdg_unix}"
     fi
-}
-
-# Windows：全局代理（uv / npm / winget / curl 等子进程共用；USE_PROXY=0 可关闭）
-setup_windows_proxy() {
-    [[ "${PLATFORM}" != "windows" ]] && return 0
-    local proxy_host="${PROXY_HOST:-127.0.0.1}"
-    local proxy_port="${PROXY_PORT:-7890}"
-    local use_proxy="${USE_PROXY:-1}"
-    if [[ "${use_proxy}" != "1" ]]; then
-        return 0
-    fi
-    export http_proxy="http://${proxy_host}:${proxy_port}"
-    export https_proxy="http://${proxy_host}:${proxy_port}"
-    export HTTP_PROXY="http://${proxy_host}:${proxy_port}"
-    export HTTPS_PROXY="http://${proxy_host}:${proxy_port}"
-    export npm_config_proxy="http://${proxy_host}:${proxy_port}"
-    export npm_config_https_proxy="http://${proxy_host}:${proxy_port}"
-    export NVIM_PROXY_URL="http://${proxy_host}:${proxy_port}"
-    log_info "Proxy enabled: http://${proxy_host}:${proxy_port}"
 }
 
 # Windows：清理 Win10 packer 残留（lazy checkhealth WARNING）
@@ -1812,6 +1791,8 @@ print_summary() {
 main() {
     start_script "Neovim Configuration Installation"
 
+    setup_default_proxy
+
     # Windows：脚本一开始就清理可能存在的 %APPDATA% 并导出已展开的 APPDATA
     if [[ "${PLATFORM}" == "windows" ]]; then
         if [[ -d "${SCRIPT_DIR}/%APPDATA%" ]]; then
@@ -1823,7 +1804,6 @@ main() {
         if [[ -n "${early_appdata}" ]]; then
             export APPDATA="${early_appdata}"
         fi
-        setup_windows_proxy
     fi
 
     progress_step 1 "${TOTAL_MAIN_STEPS}" "Checking config directory..."
@@ -1880,11 +1860,16 @@ main() {
 
     if [[ "${NVIM_SKIP_HEADLESS:-}" != "1" ]] && [[ -f "${SCRIPT_DIR}/scripts/headless_validate.sh" ]]; then
         log_info "Running headless validation (set NVIM_SKIP_HEADLESS=1 to skip)..."
+        # Windows: 把 venv 的 Scripts/bin 加入 PATH，确保 healthcheck 中裸 python 命令可用
+        if [[ -n "${VENV_PYTHON:-}" ]]; then
+            export NVIM_VENV_BIN_DIR="$(dirname "${VENV_PYTHON}")"
+        fi
         if bash "${SCRIPT_DIR}/scripts/headless_validate.sh"; then
             log_success "Headless validation passed"
         else
             log_warning "Headless validation reported issues (see docs/nvim_checkhealth_final.log)"
         fi
+        is_windows_platform && cleanup_stray_appdata_in_dir "${SCRIPT_DIR}"
     fi
 
     end_script

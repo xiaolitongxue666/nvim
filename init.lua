@@ -180,6 +180,17 @@ local function detect_node_host_from_fnm()
     local resolved = vim.fn.systemlist([[node -p "require.resolve('neovim/bin/cli.js')"]])
     if vim.v.shell_error == 0 and resolved and resolved[1] and file_exists(resolved[1]) then
         vim.g.node_host_prog = resolved[1]
+        return
+    end
+    -- 全局 npm 包不在 node 默认可解析路径；用 npm root -g 定位 cli.js
+    if vim.fn.executable("npm") == 1 then
+        local npm_root = vim.fn.systemlist("npm root -g")
+        if vim.v.shell_error == 0 and npm_root and npm_root[1] then
+            local cli = vim.trim(npm_root[1]:gsub("\r", ""):gsub("\\", "/")) .. "/neovim/bin/cli.js"
+            if file_exists(cli) then
+                vim.g.node_host_prog = cli
+            end
+        end
     end
 end
 

@@ -25,7 +25,7 @@
 
 10) **Windows 路径**：`scripts/common.sh` 路径互转；`setup_windows_config_redirect` 用 PowerShell Junction（勿用 Git Bash mklink）；`~/.bashrc` 设 `XDG_CONFIG_HOME`；提交前 `settings.json` 勿含本机 `neovimInitVimPaths`。
 
-11) **Win 安装增强**（2026-06-03）：`ensure_windows_user_env`（USERPROFILE/LOCALAPPDATA/XDG 正斜杠）；`setup_windows_proxy` 默认 7890；`cleanup_legacy_packer` 备份至 `nvim-data/backups/` 并迁出 `site/pack/packer*`。
+11) **Win 安装 + 跨平台代理**（2026-06-04）：`ensure_windows_user_env`；`setup_default_proxy`（`common.sh`，install/headless 共用；本机 `127.0.0.1:7890`、WSL 宿主机 IP、`PROXY_PROBE_TIMEOUT` 2s 探测不可达跳过、`env USE_PROXY=0`）；`basic.lua` 第三层自动默认；`ensure_windows_appdata_export` + `fnm_env_safe` 防误建 `%APPDATA%`；`cleanup_stray_appdata_in_dir`（backup 前、无头后）；`cleanup_legacy_packer`；说明见 README / TROUBLE_SHOOT / headless-testing.mdc。
 
 12) **无头验收**：`bash scripts/headless_validate.sh`（或保持可执行位）；`install.sh` 末尾默认调用（`NVIM_SKIP_HEADLESS=1` 跳过）；默认 `NVIM_SKIP_LAZY_UPDATE=1`（~20s）；完整同步设 `NVIM_SKIP_LAZY_UPDATE=0`（Lazy+Mason 90s）。
 
@@ -45,9 +45,9 @@
 
 20) **LuaSnip jsregexp**：Windows 可选 `Lazy build LuaSnip`（需 make/MinGW）；失败仅 WARNING。
 
-21) **WSL**：`/proc/version` 含 Microsoft 时提示 `fnm env` 与 Linux 侧 tree-sitter-cli。
+21) **WSL**：`/proc/version` 含 Microsoft 时提示 `fnm env` 与 Linux 侧 tree-sitter-cli；代理默认宿主机 `:7890`（`resolve_default_proxy_host`，非 127.0.0.1）。
 
-22) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离或 JSONC 解析；Git Bash 用 `env VAR=val` 非前缀赋值；Windows npm host 或需 `NODE_PATH`。
+22) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离或 JSONC 解析；Git Bash 用 `env VAR=val` 非前缀赋值（如 `env USE_PROXY=0`）；Windows npm host 或需 `NODE_PATH`。
 
 23) **自部署**：仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`。
 
