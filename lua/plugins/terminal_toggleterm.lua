@@ -65,8 +65,8 @@ return {
                 insert_mappings = true,
                 -- 在终端模式下启用映射
                 terminal_mappings = true,
-                -- 持久化大小
-                persist_size = true,
+                -- 不持久化手动 resize 后的异常高度（与 Ctrl+方向键 调整冲突）
+                persist_size = false,
                 -- 持久化模式
                 persist_mode = true,
                 -- 默认方向：'vertical' | 'horizontal' | 'tab' | 'float'
@@ -146,8 +146,10 @@ return {
                 vim.keymap.set('t', '<C-j>', [[<Cmd>wincmd j<CR>]], opts)
                 vim.keymap.set('t', '<C-k>', [[<Cmd>wincmd k<CR>]], opts)
                 vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
-                -- 调整窗口大小
+                -- 调整窗口大小（限高，见 window_control.lua）
                 vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]], opts)
+                vim.keymap.set('t', '<C-Up>', [[<Cmd>lua require('window_control').smart_resize_height(3)<CR>]], opts)
+                vim.keymap.set('t', '<C-Down>', [[<Cmd>lua require('window_control').smart_resize_height(-3)<CR>]], opts)
             end
             
             -- 自动命令：在终端打开时设置键位映射

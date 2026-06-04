@@ -112,7 +112,9 @@ Leader 为 `<Space>`。光标：`i/k/j/l` 对应上/下/左/右（与 Vim 默认
 | Tab | `[b` / `]b` / `<leader>[` / `<leader>]` | 当前分屏内切换 buffer（winbar，见下节） |
 | Tab | `<leader>b` | 关闭当前分屏 tab（删 buffer） |
 | 窗口 | `<leader>q` | 关闭当前分屏 window（**不**删 buffer / tab） |
+| 窗口 | `<leader>wr` | 平衡窗口布局（`wincmd =`，终端 resize 乱了时用） |
 | Tab | `<A-h/j/k/l>` | 将 buffer 移到相邻分屏 |
+| 终端 | `Ctrl+Up/Down` | 调整当前窗口高度（toggleterm 限高 8～55% 屏高，`window_control.lua`） |
 | LSP | `D` | 悬停（LSP buffer；全局 `K` 为下移 5 行） |
 | LSP | `<leader>cf` | 格式化（conform，与保存时一致） |
 | Mason | `<leader>cm` | Mason |

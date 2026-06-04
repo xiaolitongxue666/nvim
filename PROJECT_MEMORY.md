@@ -60,3 +60,4 @@
 - 键位冲突、conform 统一格式化、pyright/ruff 重复诊断、neodev→lazydev、dressing→Snacks 已治理
 - bufferline 全局 tab 无法分屏独立显示 → winbuf.nvim；`<leader>b` 曾误删 alternate buffer 已修正
 - neo-tree `<leader>e` E95：`nvim_win_close` 留孤儿 buffer → 原生 toggle + buffer leave 清理
+- toggleterm `<leader>/` + `Ctrl+Up/Down` 撑满屏：`window_control` 须识别 `buftype=terminal` 限高；`persist_size=false`；布局乱了 `<leader>wr`（`wincmd =`）

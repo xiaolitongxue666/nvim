@@ -127,3 +127,9 @@
 - **bufferline 遗留**：`always_show_bufferline=false`；`custom_filter` 过滤 UI/special buffer；`<leader>b` 关 buffer，`<leader>q` 仅关分屏。
 - **neo-tree E95**：`nvim_win_close` toggle 留孤儿 buffer → `execute({ toggle })` + `auto_clean_after_session_restore` + `NEO_TREE_BUFFER_LEAVE`。
 - **验收**：`bash scripts/headless_validate.sh` exit 0；`lazy-lock.json` 含 `winbuf.nvim`。
+
+### toggleterm 窗口 resize（summary-memory）
+
+- **现象**：`<leader>/` 打开水平终端后 `Ctrl+Up/Down` 把终端撑满、编辑区压扁，黑屏难恢复。
+- **根因**：`window_control` 未识别 `buftype=terminal`；裸 `resize` + `persist_size=true`。
+- **修复**：`clamp_terminal_height`（8～55% 行高）；`persist_size=false`；`t`/`n` 模式绑定 Ctrl+方向键；恢复用 `<leader>wr`。

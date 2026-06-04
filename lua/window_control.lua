@@ -7,20 +7,34 @@ local M = {}
 local function get_window_type()
     local buftype = vim.bo.buftype
     local filetype = vim.bo.filetype
-    
+
+    -- toggleterm 的 buftype 为 terminal，不在 nofile 分支内
+    if buftype == "terminal" or filetype == "toggleterm" then
+        return "terminal"
+    end
+
     if buftype == "nofile" then
         if filetype == "outline" then
             return "outline"
         elseif filetype == "neo-tree" then
             return "neo-tree"
-        elseif filetype == "toggleterm" then
-            return "terminal"
         elseif filetype == "qf" then
             return "quickfix"
         end
     end
-    
+
     return "normal"
+end
+
+local function clamp_terminal_height(win, delta)
+    if not vim.api.nvim_win_is_valid(win) then
+        return
+    end
+    local min_h = 8
+    local max_h = math.max(min_h, math.floor(vim.o.lines * 0.55))
+    local step = math.max(-3, math.min(3, delta))
+    local new_h = math.max(min_h, math.min(max_h, vim.api.nvim_win_get_height(win) + step))
+    vim.api.nvim_win_set_height(win, new_h)
 end
 
 
@@ -29,6 +43,12 @@ end
 local function smart_resize(direction, amount)
     local window_type = get_window_type()
     
+    -- toggleterm 水平分屏：限制高度，避免 resize 撑满整屏后无法恢复
+    if window_type == "terminal" and direction == "height" then
+        clamp_terminal_height(0, amount)
+        return
+    end
+
     -- 对于插件窗口，使用更保守的调整策略
     if window_type == "outline" or window_type == "neo-tree" then
         if direction == "width" then
@@ -126,12 +146,24 @@ local window_presets = {
 -- 设置窗口大小预设
 function M.set_window_preset(window_type, preset)
     local presets = window_presets[window_type]
-    if not presets or not presets[preset] then
+    if not presets then
         return
     end
-    
+
+    if window_type == "terminal" then
+        local alias = { narrow = "small", normal = "normal", wide = "large" }
+        local key = alias[preset] or preset
+        local height = presets[key]
+        if height then
+            clamp_terminal_height(0, height - vim.api.nvim_win_get_height(0))
+        end
+        return
+    end
+
     local width = presets[preset]
-    vim.api.nvim_win_set_width(0, width)
+    if width then
+        vim.api.nvim_win_set_width(0, width)
+    end
 end
 
 -- 智能窗口调整函数
@@ -170,9 +202,11 @@ function M.setup_keymaps()
     local map = vim.api.nvim_set_keymap
     local opt = { noremap = true, silent = true }
     
-    -- 智能窗口大小调整（更精细的控制）
+    -- 智能窗口大小调整（终端窗口限高；布局乱了用 <leader>wr 平衡）
     map("n", "<C-Up>", ":lua require('window_control').smart_resize_height(3)<CR>", opt)
     map("n", "<C-Down>", ":lua require('window_control').smart_resize_height(-3)<CR>", opt)
+    map("t", "<C-Up>", ":lua require('window_control').smart_resize_height(3)<CR>", opt)
+    map("t", "<C-Down>", ":lua require('window_control').smart_resize_height(-3)<CR>", opt)
     map("n", "<C-Left>", ":lua require('window_control').smart_resize_width(-3)<CR>", opt)
     map("n", "<C-Right>", ":lua require('window_control').smart_resize_width(3)<CR>", opt)
     
