@@ -2,6 +2,15 @@
 -- 终端管理插件，支持多个终端实例的切换与管理
 -- https://github.com/akinsho/toggleterm.nvim
 
+--- Git Bash / MSYS 可识别的 cwd（反斜杠会导致 cd 失败并落在 HOME）
+local function terminal_workspace_dir()
+    local dir = vim.fn.getcwd()
+    if vim.fn.has("win32") == 1 then
+        dir = dir:gsub("\\", "/")
+    end
+    return dir
+end
+
 return {
     {
         -- 插件名称
@@ -18,15 +27,55 @@ return {
             "ToggleTermSendVisualLines",
             "ToggleTermSendVisualSelection",
         },
-        -- 按键映射懒加载
+        -- 按键映射懒加载（dir 显式绑定 Neovim cwd，避免 Git Bash login 落在 HOME）
         keys = {
             -- 主要终端快捷键
-            { "<leader>/", "<cmd>ToggleTerm<cr>", desc = "终端", mode = { "n", "t" } },
-            { "<C-`>", "<cmd>ToggleTerm<cr>", desc = "切换终端" },
+            {
+                "<leader>/",
+                function()
+                    require("toggleterm").toggle(1, nil, terminal_workspace_dir())
+                end,
+                desc = "终端",
+                mode = { "n", "t" },
+            },
+            {
+                "<C-`>",
+                function()
+                    require("toggleterm").toggle(1, nil, terminal_workspace_dir())
+                end,
+                desc = "切换终端",
+            },
             -- 其他终端类型
-            { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", desc = "浮动终端" },
-            { "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "水平终端" },
-            { "<leader>tv", "<cmd>ToggleTerm direction=vertical size=80<cr>", desc = "垂直终端" },
+            {
+                "<leader>tf",
+                function()
+                    vim.cmd(
+                        "ToggleTerm direction=float dir="
+                            .. vim.fn.fnameescape(terminal_workspace_dir())
+                    )
+                end,
+                desc = "浮动终端",
+            },
+            {
+                "<leader>th",
+                function()
+                    vim.cmd(
+                        "ToggleTerm direction=horizontal dir="
+                            .. vim.fn.fnameescape(terminal_workspace_dir())
+                    )
+                end,
+                desc = "水平终端",
+            },
+            {
+                "<leader>tv",
+                function()
+                    vim.cmd(
+                        "ToggleTerm direction=vertical size=80 dir="
+                            .. vim.fn.fnameescape(terminal_workspace_dir())
+                    )
+                end,
+                desc = "垂直终端",
+            },
             { "<leader>ta", "<cmd>ToggleTermToggleAll<cr>", desc = "切换所有终端" },
             -- 预定义终端快捷键
             { "<leader>tg", "<cmd>lua _LAZYGIT_TOGGLE()<cr>", desc = "Lazygit" },
@@ -37,7 +86,7 @@ return {
         -- 插件配置
         config = function()
             local toggleterm = require("toggleterm")
-            
+
             -- 基础配置
             toggleterm.setup({
                 -- 终端大小配置
@@ -53,8 +102,8 @@ return {
                 hide_numbers = true,
                 -- 着色文件类型
                 shade_filetypes = {},
-                -- 自动改变目录
-                autochdir = false,
+                -- 再次打开已有终端时跟随 Neovim cwd（与会话 curdir 恢复一致）
+                autochdir = true,
                 -- 着色终端
                 shade_terminals = true,
                 -- 着色因子（1-3，数字越大越暗）
@@ -76,7 +125,13 @@ return {
                 -- 使用的 shell
                 -- Windows 上使用 Git Bash 作为交互式终端
                 -- vim.o.shell 保持 PowerShell 用于插件内部命令，避免路径问题
-                shell = vim.fn.has("win32") == 1 and (vim.fn.stdpath("config") .. "\\scripts\\bash.cmd") or vim.o.shell,
+                shell = vim.fn.has("win32") == 1
+                        and (
+                            vim.fn.exepath("bash")
+                                ~= "" and vim.fn.exepath("bash")
+                            or (vim.fn.stdpath("config") .. "/scripts/bash.cmd")
+                        )
+                    or vim.o.shell,
                 -- 自动滚动到底部
                 auto_scroll = true,
                 -- 浮动窗口配置
@@ -113,8 +168,13 @@ return {
                         return term.name
                     end
                 },
-                -- 打开/关闭时的回调，用于自动聚焦终端窗口
+                -- 打开/关闭时的回调，用于自动聚焦终端窗口并同步 cwd
                 on_open = function(term)
+                    local dir = terminal_workspace_dir()
+                    if term.dir ~= dir then
+                        term:send(('cd "%s"'):format(dir:gsub('"', '\\"')))
+                        term.dir = dir
+                    end
                     vim.schedule(function()
                         if term.window and vim.api.nvim_win_is_valid(term.window) then
                             vim.api.nvim_set_current_win(term.window)
@@ -133,11 +193,15 @@ return {
                 end,
             })
             
+            local workspace_dir = terminal_workspace_dir
+
             -- 设置终端模式下的键位映射
             function _G.set_terminal_keymaps()
                 local opts = { buffer = 0 }
                 -- 终端切换
-                vim.keymap.set('t', '<leader>/', '<cmd>ToggleTerm<cr>', opts)
+                vim.keymap.set("t", "<leader>/", function()
+                    require("toggleterm").toggle(1, nil, workspace_dir())
+                end, opts)
                 -- 退出终端模式但不关闭终端
                 vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
                 vim.keymap.set('t', 'jk', [[<C-\><C-n>]], opts)
@@ -183,6 +247,7 @@ return {
             -- Node REPL 终端
             local node = Terminal:new({
                 cmd = "node",
+                dir = workspace_dir,
                 direction = "horizontal",
                 size = 15,
             })
@@ -194,6 +259,7 @@ return {
             -- Python REPL 终端
             local python = Terminal:new({
                 cmd = "python3",
+                dir = workspace_dir,
                 direction = "horizontal",
                 size = 15,
             })
@@ -205,6 +271,7 @@ return {
             -- Htop 系统监控终端
             local htop = Terminal:new({
                 cmd = "htop",
+                dir = workspace_dir,
                 direction = "float",
                 float_opts = {
                     border = "double",

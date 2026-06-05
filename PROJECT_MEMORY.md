@@ -33,13 +33,13 @@
 
 14) **务实 grep**：fail 于 ERROR/❌ 与 lazy packer 残留；白名单 headless/dumb 的 Slow shell、terminfo、`Missing user config file`（`nvim/init.lua` 或 `%USERPROFILE%`，`-u init.lua` 已加载）、luasnip jsregexp；见 `TROUBLE_SHOOT.md`。
 
-15) **init.lua 路径栈**：`find_our_config_dir` 在 require 前修 rtp/package.path；`vim.g.nvim_config_dir`；`vim.fs.joinpath or vim.fs.join`（0.12）；`lua/config/paths.lua` 供 lazy glob/lockfile。
+15) **init.lua 路径栈**：`find_our_config_dir` **优先 init.lua 脚本目录**（避免 Git Bash stdpath 指向 msys 旧副本）；再 stdpath/XDG；修 rtp/package.path；`vim.g.nvim_config_dir`；`lua/config/paths.lua` 供 lazy glob/lockfile。
 
 16) **lazy 插件加载**：`collect_plugin_specs` 手动 glob；Windows 反斜杠 modname 用 `^.+[\\/]lua[\\/]`；单条 `{ "name", config=... }` 勿拆成多 spec（否则 config 不执行）。
 
 17) **nvim-treesitter**：Neovim 0.11 锁 `branch=master`（`main` 需 0.12+）；无头须 `-u init.lua` + `vim.wait` 等 treesitter 就绪。
 
-18) **mini.starter**：`shortmess` 加 `I` 禁 intro；`autoopen=false`，`UIEnter` 调 `starter.open()`。
+18) **mini.starter**：`shortmess` 加 `I` 禁 intro；`autoopen=false`，`UIEnter` 调 `starter.open()`；会话 `s`/`S` 经 `config.neo_tree_session.load_session`（`S` 优先带 sidecar 的会话）。
 
 19) **Windows MinGW**：`basic.lua` 动态探测 `MINGW_PREFIX`/`ProgramData`/`NVIM_MINGW_PATHS`，仅无 `gcc` 时 prepend PATH。
 
@@ -47,13 +47,13 @@
 
 21) **WSL**：`/proc/version` 含 Microsoft 时提示 `fnm env` 与 Linux 侧 tree-sitter-cli；代理默认宿主机 `:7890`（`resolve_default_proxy_host`，非 127.0.0.1）。
 
-22) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离或 JSONC 解析；Git Bash 用 `env VAR=val` 非前缀赋值（如 `env USE_PROXY=0`）；Windows npm host 或需 `NODE_PATH`。
+22) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离；Git Bash 用 `env VAR=val`；Windows npm 或需 `NODE_PATH`；**msys 与 `%USERPROFILE%\.config\nvim` 双副本**时重跑 `install.sh` 或设 `XDG_CONFIG_HOME`。
 
 23) **自部署与 Settings Sync**：仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写入三平台 `neovimInitVimPaths`；Windows 路径错则重跑 `install.cmd`/`install.sh`。
 
-24) **分屏 Tab + neo-tree**（2026-06-04）：每个编辑器组有自己的 tab 行——Neovim 里对应的是 **winbar**（每个 window 一条顶栏），不是 tabline。`bufferline.nvim` 仅全局 tabline → 已 `enabled=false`，改用 `winbuf.nvim`；`basic.lua` `showtabline=0`；键位 `[b`/`]b`/`<leader>b` 在 `ui_buffer_tabpage_winbuf.lua`。`<leader>q` 关 window 不删 buffer。neo-tree 勿 `nvim_win_close` toggle（E95）；`<leader>e`/`fe` 用 `execute({ toggle })`；`auto_clean_after_session_restore` + `NEO_TREE_BUFFER_LEAVE` 清孤儿 buffer（`ui_file_explorer_neo-tree.lua`）。
+24) **分屏 Tab + neo-tree toggle**（2026-06-04）：winbar 用 `winbuf.nvim`（`bufferline` `enabled=false`，`showtabline=0`）；`[b`/`]b`/`<leader>b` 关 buffer。neo-tree 勿 `nvim_win_close` toggle（E95）；`<leader>e`/`fe` 用 `execute({ toggle })`；`NEO_TREE_BUFFER_LEAVE` 清孤儿 buffer。
 
-25) **插件注释**：`lua/plugins/*.lua` 文件头三行（repo、中文说明、URL）；见 `README.md`。
+25) **toggleterm cwd + neo-tree 会话**（2026-06-05）：Win Git Bash 仅 `<leader>/` 显式 `dir=getcwd()`（正斜杠）、`autochdir`、`on_open` 带引号 cd、`scripts/bash.cmd` 非 login + `$PWD` 锚定。会话：`lua/config/neo_tree_session.lua` 写 sidecar `*.neo-tree.json`；退出 `PersistenceSavePre` purge 后 `mks`；`PersistenceLoadPost` **purge session 空壳 buffer** 再 `focus`（`Neotree close` 无效）；无头 `NVIM_HEADLESS_VALIDATE=1`→`persistence.stop()`。插件文件头三行注释见 `README.md`。
 
 # 已修复的历史问题（参考）
 
@@ -61,3 +61,5 @@
 - bufferline 全局 tab 无法分屏独立显示 → winbuf.nvim；`<leader>b` 曾误删 alternate buffer 已修正
 - neo-tree `<leader>e` E95：`nvim_win_close` 留孤儿 buffer → 原生 toggle + buffer leave 清理
 - toggleterm `<leader>/` + `Ctrl+Up/Down` 撑满屏：`window_control` 须识别 `buftype=terminal` 限高；`persist_size=false`；布局乱了 `<leader>wr`（`wincmd =`）
+- toggleterm Win cwd 落在 HOME：`terminal_workspace_dir` 正斜杠 + 显式 `dir` + `bash.cmd` 非 login（Git Bash 仅 Windows）
+- neo-tree 会话半恢复（空壳 buffer）：sidecar `*.neo-tree.json` + `purge_neo_tree_artifacts` + starter `S` 优先 sidecar；无头不写 session

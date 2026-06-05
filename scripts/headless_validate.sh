@@ -46,6 +46,7 @@ run_nvim() {
     export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-}"
     export APPDATA="${APPDATA:-}"
     export NVIM_HEADLESS_VALIDATE=1
+    # 无头模式：persistence_headless_guard 会 persistence.stop()，勿写入 sessions/
     # 无头验收用 g:python3_host_prog，勿继承 shell 的 VIRTUAL_ENV（会触发 vim.provider
     # 对裸 python 的检查；Win10 cmd 子 shell 常无法解析 Git Bash 的 PATH）
     unset VIRTUAL_ENV

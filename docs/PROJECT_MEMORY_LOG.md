@@ -133,3 +133,12 @@
 - **现象**：`<leader>/` 打开水平终端后 `Ctrl+Up/Down` 把终端撑满、编辑区压扁，黑屏难恢复。
 - **根因**：`window_control` 未识别 `buftype=terminal`；裸 `resize` + `persist_size=true`。
 - **修复**：`clamp_terminal_height`（8～55% 行高）；`persist_size=false`；`t`/`n` 模式绑定 Ctrl+方向键；恢复用 `<leader>wr`。
+
+### toggleterm cwd + neo-tree 会话恢复（summary-memory，2026-06-05）
+
+- **终端 cwd（Win Git Bash）**：`<leader>/` 落在 HOME 而非项目目录；根因 login shell + 反斜杠路径 + 未传 `dir`。
+- **修复**：`terminal_toggleterm.lua` `terminal_workspace_dir()`、`autochdir`、`on_open` cd；`scripts/bash.cmd` 非 login + `$PWD` 锚定；Linux/macOS/WSL 仅正斜杠 `dir` 逻辑。
+- **neo-tree 半恢复**：starter `S` 后左侧空壳 buffer（`neo-tree filesystem [1]` 无树）；`mks` 无法恢复 manager 状态；`Neotree close` 关不掉 session 孤儿窗。
+- **修复**：[`lua/config/neo_tree_session.lua`](../lua/config/neo_tree_session.lua) sidecar `*.neo-tree.json`；`purge_neo_tree_artifacts()`；`PersistenceLoadPost` 延迟 rebuild；starter `load_session({ prefer_sidecar=true })`；无头 `persistence.stop()`。
+- **环境**：Git Bash 可能加载 msys 与 `Users\.config\nvim` 双副本；`find_our_config_dir` 优先 init.lua 脚本路径。
+- **验收**：项目目录开 neo-tree → `<leader>Q` → `nvim` → `S` 左侧完整目录树；`headless_validate.sh` 不覆盖用户 session。

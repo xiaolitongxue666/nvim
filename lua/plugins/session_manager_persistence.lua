@@ -9,7 +9,14 @@ return {
         lazy = false,
         -- 按键映射时懒加载
         keys = {
-            { "<leader>qs", function() require("persistence").save() end, desc = "保存会话" },
+            {
+                "<leader>qs",
+                function()
+                    require("config.neo_tree_session").save()
+                    require("persistence").save()
+                end,
+                desc = "保存会话",
+            },
             { "<leader>ql", function() require("persistence").load() end, desc = "加载会话" },
             { "<leader>qL", function() require("persistence").load({ last = true }) end, desc = "加载最后一个会话" },
             { "<leader>qd", function() require("persistence").stop() end, desc = "停止会话记录" },
@@ -20,48 +27,25 @@ return {
             dir = vim.fn.stdpath("state") .. "/sessions/",
             -- 会话选项
             options = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" },
-            -- 预保存钩子函数
-            pre_save = nil,
+            -- 预保存：当前 persistence 版本不调用 opts.pre_save，由 PersistenceSavePre / <leader>qs 触发
+            pre_save = function()
+                require("config.neo_tree_session").save()
+            end,
             -- 保存空会话
             save_empty = false,
         },
         -- 插件配置函数
         config = function(_, opts)
             require("persistence").setup(opts)
-            
-            -- 禁用自动加载会话，让用户通过启动菜单手动选择
-            -- 这样可以确保启动菜单始终显示
-            -- 如果需要自动加载，可以取消下面的注释
-            --[[
-            local function auto_load_session()
-                -- 只有在没有参数启动 Neovim 时才自动加载会话
-                if vim.fn.argc(-1) == 0 then
-                    -- 检查是否在启动菜单中（mini.starter 的 filetype 是 "starter"）
-                    if vim.bo.filetype ~= "starter" then
-                        require("persistence").load()
-                    end
-                end
-            end
-            
-            -- 在 VimEnter 事件后自动加载会话（延迟更长时间，确保启动菜单先显示）
+            require("config.neo_tree_session").setup_autocmds()
+
+            -- 无头验收不写 session，避免覆盖用户「最后一次会话」及 sidecar
             vim.api.nvim_create_autocmd("VimEnter", {
-                group = vim.api.nvim_create_augroup("persistence_auto_load", { clear = true }),
+                group = vim.api.nvim_create_augroup("persistence_headless_guard", { clear = true }),
+                once = true,
                 callback = function()
-                    -- 延迟执行，确保启动菜单先显示
-                    -- 如果启动菜单存在，则不会自动加载会话
-                    vim.defer_fn(auto_load_session, 500)
-                end,
-                nested = true,
-            })
-            --]]
-            
-            -- 在退出时自动保存会话
-            vim.api.nvim_create_autocmd("VimLeavePre", {
-                group = vim.api.nvim_create_augroup("persistence_auto_save", { clear = true }),
-                callback = function()
-                    -- 只有在有缓冲区时才保存会话
-                    if #vim.api.nvim_list_bufs() > 1 then
-                        require("persistence").save()
+                    if vim.env.NVIM_HEADLESS_VALIDATE == "1" then
+                        require("persistence").stop()
                     end
                 end,
             })

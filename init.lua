@@ -52,6 +52,16 @@ if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
 end
 
 local function find_our_config_dir()
+  -- 优先 init.lua 实际路径（-u init.lua / 仓库即 ~/.config/nvim 时，避免 stdpath 指向 msys 旧副本）
+  local src = (debug.getinfo(1, "S") or {}).source or ""
+  src = src:gsub("^@", "")
+  if src ~= "" then
+    local script_dir = vim.fn.fnamemodify(src, ":p:h")
+    if vim.fn.filereadable(script_dir .. "/lua/basic.lua") == 1 then
+      return script_dir
+    end
+  end
+
   -- 检查 stdpath('config') 是否已有我们的文件
   local expected = vim.fn.stdpath("config")
   if vim.fn.filereadable(expected .. "/lua/basic.lua") == 1 then
@@ -67,16 +77,6 @@ local function find_our_config_dir()
   local candidate = fs_join(xdg_base, "nvim")
   if vim.fn.filereadable(candidate .. "/lua/basic.lua") == 1 then
     return candidate
-  end
-
-  -- 兜底：从当前脚本位置推断
-  local src = (debug.getinfo(1, "S") or {}).source or ""
-  src = src:gsub("^@", "")
-  if src ~= "" then
-    local script_dir = vim.fn.fnamemodify(src, ":p:h")
-    if vim.fn.filereadable(script_dir .. "/lua/basic.lua") == 1 then
-      return script_dir
-    end
   end
 
   return nil

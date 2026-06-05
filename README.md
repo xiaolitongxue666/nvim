@@ -60,6 +60,7 @@ Windows 可用根目录及各子目录下的 `install.cmd`（调用 Git Bash 执
 │   ├── keybindings.lua
 │   ├── window_control.lua
 │   ├── config/lazy.lua
+│   ├── config/neo_tree_session.lua  # persistence 会话 + neo-tree sidecar
 │   └── plugins/             # 36 个插件规格文件
 ├── scripts/
 │   ├── common.sh            # 日志/目录/Windows 环境辅助
@@ -105,7 +106,8 @@ Leader 为 `<Space>`。光标：`i/k/j/l` 对应上/下/左/右（与 Vim 默认
 |------|------|------|
 | 文件 | `S` | 保存 |
 | 文件 | `<leader>Q` | 保存并退出 |
-| 终端 | `<leader>/` | ToggleTerm（仅 toggleterm 一处定义） |
+| 终端 | `<leader>/` | ToggleTerm（cwd=Neovim 工作目录；Win 用 Git Bash） |
+| 会话 | starter `s` / `S` | 恢复 cwd 会话 / 优先带 neo-tree sidecar 的最近会话 |
 | 树 | `<leader>e` / `<leader>fe` | neo-tree 切换（`execute({ toggle })`；勿 `:q`/`<leader>q` 关侧栏，易 E95） |
 | 树 | `<leader>fE` | neo-tree（当前文件所在目录） |
 | 大纲 | `<leader>O` | outline |

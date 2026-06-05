@@ -59,13 +59,13 @@ return {
             },
             -- 恢复会话
             {
-                action = "lua require('persistence').load()",
+                action = "lua require('config.neo_tree_session').load_session()",
                 name = "s Restore Session",
                 section = "会话管理"
             },
             -- 恢复最后一个会话
             {
-                action = "lua require('persistence').load({ last = true })",
+                action = "lua require('config.neo_tree_session').load_session({ last = true, prefer_sidecar = true })",
                 name = "S Restore Last Session",
                 section = "会话管理"
             },
