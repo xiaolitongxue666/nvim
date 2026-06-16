@@ -142,3 +142,13 @@
 - **修复**：[`lua/config/neo_tree_session.lua`](../lua/config/neo_tree_session.lua) sidecar `*.neo-tree.json`；`purge_neo_tree_artifacts()`；`PersistenceLoadPost` 延迟 rebuild；starter `load_session({ prefer_sidecar=true })`；无头 `persistence.stop()`。
 - **环境**：Git Bash 可能加载 msys 与 `Users\.config\nvim` 双副本；`find_our_config_dir` 优先 init.lua 脚本路径。
 - **验收**：项目目录开 neo-tree → `<leader>Q` → `nvim` → `S` 左侧完整目录树；`headless_validate.sh` 不覆盖用户 session。
+
+## 2026-06-16
+
+### summary-memory 例行扫描
+
+- **deps 模块**（`b9c88bc`）：`scripts/deps/` 模块化安装（`manifest.sh` SSOT）；默认 `NVIM_SKIP_MASON=1`，首次 `nvim` 由 mason-tool-installer 后台装；`scripts/tests/test_deps.sh`；摘要已写入 `PROJECT_MEMORY.md` #3 与问题表。
+- **无头验收**：`docs/nvim_checkhealth_final.log`（21:55）务实 grep 无 ERROR/❌；luasnip jsregexp ✅。
+- **仓库内清理**：无 `logs/`、`graphify-out/`、`.DS_Store`、空文件/空目录、暂存 log；`docs/nvim_checkhealth_final.log` 保留作证据。
+- **冗余检测**：sha256 无重复文件；`PROJECT_MEMORY.md` ↔ `AGENTS.md`/`CLAUDE.md` 仅 header 差异（install 同步正常）。
+- **仓库外**：`~/.config/nvim.backup.*` 共 **11** 份、约 **1.1G**；install step 9 生成，宜手动保留最近 1～2 份（见 `PROJECT_MEMORY` 问题表）。

@@ -1,6 +1,6 @@
 # Neovim Config — Claude Project Context
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-16T06:16:27Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-16T13:55:36Z. Edit PROJECT_MEMORY.md instead.
 
 
 ## 架构概览
