@@ -3,7 +3,7 @@
 # Neovim 配置安装脚本
 # 支持 macOS、Linux、Windows、WSL；独立仓库
 # 使用 uv 管理 Python 环境，使用 fnm 管理 Node.js 环境
-# 前置：uv、fnm；各平台均需先安装。Neovim 0.11.0+；升级后建议 uv pip install -U pynvim
+# 前置：install 自动安装/升级 uv、fnm、Neovim 0.11.0+；依赖见 scripts/deps/manifest.sh
 
 # 启用严格模式：遇到错误立即退出，未定义变量报错，管道中任一命令失败则整个管道失败
 set -euo pipefail
@@ -86,7 +86,7 @@ INSTALL_FAILED_ITEMS=()
 record_failed() { INSTALL_FAILED_ITEMS+=("$1"); }
 
 # 总进度与子进度（主步骤 1/TOTAL_MAIN_STEPS，子步骤显示进度条）
-readonly TOTAL_MAIN_STEPS=16
+readonly TOTAL_MAIN_STEPS=18
 progress_step() {
     local current="$1" total="$2" msg="$3"
     log_info "[ $current/$total ] $msg"
@@ -193,52 +193,7 @@ check_submodule() {
     log_success "Neovim config directory check passed"
 }
 
-# 检查前置依赖（uv, fnm；系统 Lua 为可选，Neovim 运行依赖内置 LuaJIT）
-check_prerequisites() {
-    log_info "Checking prerequisites..."
-
-    # 检查 uv
-    if ! command -v uv >/dev/null 2>&1; then
-        error_exit "uv is not installed. See README for install commands (e.g. macOS: brew install uv; Linux: see https://github.com/astral-sh/uv)"
-    fi
-    log_success "uv found: $(uv --version | head -n 1)"
-
-    # 检查 fnm
-    if ! command -v fnm >/dev/null 2>&1; then
-        error_exit "fnm is not installed. See README for install commands (e.g. macOS: brew install fnm; Linux: see https://github.com/Schniz/fnm)"
-    fi
-    log_success "fnm found: $(fnm --version)"
-
-    # 检查 Lua（可选：用于部分构建/脚本；Neovim 运行依赖其内置 LuaJIT，不依赖系统 Lua）
-    local lua_installed=0
-    if command -v lua >/dev/null 2>&1; then
-        lua_installed=1
-        log_success "Lua found: $(lua -v 2>&1 | head -n 1)"
-    elif [[ "${PLATFORM}" == "linux" ]] && command -v pacman >/dev/null 2>&1; then
-        if pacman -Qi lua >/dev/null 2>&1; then
-            lua_installed=1
-            log_success "Lua found via pacman"
-        fi
-    fi
-
-    if [[ ${lua_installed} -eq 0 ]]; then
-        log_info "Lua is not installed (optional for Neovim)"
-        record_failed "Lua"
-        install_lua
-    fi
-
-    log_success "All prerequisites checked"
-}
-
-# 检测当前 Rust 是否来自 rustup（~/.cargo/bin），否则视为系统/apt 旧版
-is_rust_from_rustup() {
-    local r
-    r="$(command -v rustc 2>/dev/null)"
-    [[ -n "$r" && "$r" == *".cargo"* ]] && return 0
-    r="$(command -v cargo 2>/dev/null)"
-    [[ -n "$r" && "$r" == *".cargo"* ]] && return 0
-    return 1
-}
+# 前置依赖由 scripts/deps/install_prereqs.sh 的 ensure_prerequisites 处理
 
 # 使用官网 rustup 安装 Rust 最新稳定版（https://rustup.rs）
 install_rust_official() {
@@ -319,9 +274,10 @@ install_language_tools() {
         fi
     fi
 
-    # 如果所有工具都已安装，直接返回
+    # 如果所有工具都已安装，跳过安装块但仍尝试升级
     if [[ ${#tools_to_install[@]} -eq 0 ]]; then
         log_success "All language tools are already installed"
+        upgrade_language_tool_packages
         return 0
     fi
 
@@ -572,6 +528,8 @@ install_language_tools() {
             fi
         fi
     fi
+
+    upgrade_language_tool_packages
 }
 
 # 安装 Lua（可选；Neovim 运行不依赖系统 Lua，仅部分构建/脚本可能用到）
@@ -997,56 +955,17 @@ setup_python_environment() {
         fi
     fi
 
-    # 安装 Python 包
-    local python_packages=(
-        pynvim
-        pyright
-        ruff-lsp
-        debugpy
-        black
-        isort
-        flake8
-        mypy
-    )
-
-    log_info "Installing Python packages: ${python_packages[*]}"
+    log_info "Installing/upgrading Python packages: ${NVIM_PYTHON_PACKAGES[*]}"
     log_info "This may take a few minutes..."
 
-    # 检查已安装的包，只安装缺失的包
-    local packages_to_install=()
-    local installed_packages=""
-
-    # 获取已安装的包列表
-    if [[ -f "${VENV_ACTIVATE}" ]]; then
-        installed_packages=$(source "${VENV_ACTIVATE}" && \
-            uv pip list --format=freeze 2>/dev/null | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]' || echo "")
-    fi
-
-    # 检查每个包是否需要安装（使用 tr 兼容 macOS 默认 bash 3.x）
-    for pkg in "${python_packages[@]}"; do
-        local pkg_lower
-        pkg_lower=$(echo "${pkg}" | tr '[:upper:]' '[:lower:]')
-        if echo "${installed_packages}" | grep -q "^${pkg_lower}$"; then
-            log_info "  ${pkg} already installed, skipping"
-        else
-            packages_to_install+=("${pkg}")
-        fi
-    done
-
-    # 如果没有需要安装的包，直接返回
-    if [[ ${#packages_to_install[@]} -eq 0 ]]; then
-        log_success "All Python packages are already installed"
+    local activate_script="${VENV_ACTIVATE:-${VENV_PATH}/bin/activate}"
+    local install_cmd="source '${activate_script}' && uv pip install -U ${NVIM_PYTHON_PACKAGES[*]}"
+    if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
+        run_with_timeout 600 bash -c "${install_cmd}" || { log_warning "Some packages may have failed to install, but continuing"; }
     else
-        log_info "Installing ${#packages_to_install[@]} packages: ${packages_to_install[*]}"
-        local activate_script="${VENV_ACTIVATE:-${VENV_PATH}/bin/activate}"
-        local install_cmd="source '${activate_script}' && uv pip install -U ${packages_to_install[*]}"
-        if [[ "${use_system_venv}" == "1" ]] && [[ "$EUID" -eq 0 ]]; then
-            run_with_timeout 600 bash -c "${install_cmd}" || { log_warning "Some packages may have failed to install, but continuing"; }
-        else
-            run_with_timeout 600 bash -c "${install_cmd}" || { log_warning "Some packages may have failed to install, but continuing"; }
-        fi
-        log_success "Python packages installation completed"
+        run_with_timeout 600 bash -c "${install_cmd}" || { log_warning "Some packages may have failed to install, but continuing"; }
     fi
+    log_success "Python packages install/upgrade completed"
 }
 
 # 设置 Node.js 环境（使用 fnm 管理）
@@ -1089,38 +1008,26 @@ setup_nodejs_environment() {
         }
     fi
 
-    # 检查是否已安装 Node.js
-    local node_installed=0
-    if command -v node >/dev/null 2>&1; then
-        local node_version
-        node_version=$(node --version 2>/dev/null || echo "")
-        if [[ -n "${node_version}" ]]; then
-            node_installed=1
-            log_success "Node.js already installed: ${node_version}"
-        fi
-    fi
-
-    # 如果未安装，使用 fnm 安装 LTS 版本
-    if [[ ${node_installed} -eq 0 ]]; then
-        log_info "Installing Node.js LTS version using fnm..."
-        # 安装 LTS 版本（使用 lts/* 表示最新的 LTS 版本）
-        if fnm install lts/* 2>&1; then
-            # 安装成功后，使用 lts/* 激活
-            fnm use lts/* || {
-                # 如果 lts/* 不工作，尝试获取已安装的 LTS 版本
-                local installed_lts
-                installed_lts=$(fnm list 2>/dev/null | grep -i "lts" | head -n 1 | awk '{print $1}' || echo "")
-                if [[ -n "${installed_lts}" ]]; then
-                    fnm use "${installed_lts}" || {
-                        log_error "Failed to activate Node.js version: ${installed_lts}"
-                        exit 1
-                    }
-                else
-                    log_error "Failed to activate Node.js LTS"
+    # 确保 Node.js LTS 为最新（fnm 幂等）
+    log_info "Ensuring Node.js LTS via fnm..."
+    if fnm install lts/* 2>&1; then
+        fnm use lts/* || {
+            local installed_lts
+            installed_lts=$(fnm list 2>/dev/null | grep -i "lts" | head -n 1 | awk '{print $1}' || echo "")
+            if [[ -n "${installed_lts}" ]]; then
+                fnm use "${installed_lts}" || {
+                    log_error "Failed to activate Node.js version: ${installed_lts}"
                     exit 1
-                fi
-            }
-            log_success "Node.js LTS installed and activated"
+                }
+            else
+                log_error "Failed to activate Node.js LTS"
+                exit 1
+            fi
+        }
+        log_success "Node.js LTS ready: $(node --version 2>/dev/null || echo unknown)"
+    else
+        if command -v node >/dev/null 2>&1; then
+            log_warning "fnm install lts/* failed; using existing node: $(node --version 2>&1)"
         else
             log_error "Failed to install Node.js LTS"
             exit 1
@@ -1205,7 +1112,9 @@ setup_nodejs_environment() {
         }
 
         if _npm list -g neovim >/dev/null 2>&1; then
-            log_success "neovim npm package already installed"
+            log_info "Upgrading neovim npm package..."
+            _npm update -g neovim >/dev/null 2>&1 || _npm install -g neovim >/dev/null 2>&1 || true
+            log_success "neovim npm package ready"
         else
             log_info "Installing neovim npm package..."
             if _npm install -g neovim >/dev/null 2>&1; then
@@ -1235,28 +1144,32 @@ setup_nodejs_environment() {
             log_info "Neovim node host path not set (no valid cli.js in npm global)"
         fi
 
-        # 安装 tree-sitter CLI（建议 >= 0.26.1）和 pnpm（用于健康检查）
-        if ! command -v tree-sitter >/dev/null 2>&1; then
+        # tree-sitter CLI（建议 >= 0.26.1）和 pnpm
+        if command -v tree-sitter >/dev/null 2>&1; then
+            log_info "Upgrading tree-sitter CLI..."
+            _npm update -g tree-sitter-cli >/dev/null 2>&1 || true
+            log_success "tree-sitter CLI ready"
+        else
             log_info "Installing tree-sitter CLI (recommended >= 0.26.1)..."
             if _npm install -g tree-sitter-cli >/dev/null 2>&1; then
                 log_success "tree-sitter CLI installed"
             else
                 log_info "tree-sitter CLI installation failed, continuing"
             fi
-        else
-            log_success "tree-sitter CLI already installed"
         fi
         _npm_cleanup_stray
 
-        if ! command -v pnpm >/dev/null 2>&1; then
+        if command -v pnpm >/dev/null 2>&1; then
+            log_info "Upgrading pnpm..."
+            _npm update -g pnpm >/dev/null 2>&1 || true
+            log_success "pnpm ready"
+        else
             log_info "Installing pnpm..."
             if _npm install -g pnpm >/dev/null 2>&1; then
                 log_success "pnpm installed"
             else
                 log_info "pnpm installation failed, continuing"
             fi
-        else
-            log_success "pnpm already installed"
         fi
         _npm_cleanup_stray
         if [[ "${PLATFORM}" == "windows" ]] && [[ -d "${SCRIPT_DIR}/%APPDATA%" ]]; then
@@ -1270,7 +1183,9 @@ setup_nodejs_environment() {
     # 安装 Ruby neovim gem（如果 Ruby 可用）
     if command -v ruby >/dev/null 2>&1; then
         if gem list neovim 2>/dev/null | grep -q neovim; then
-            log_success "neovim Ruby gem already installed"
+            log_info "Upgrading neovim Ruby gem..."
+            gem update neovim >/dev/null 2>&1 || true
+            log_success "neovim Ruby gem ready"
         else
             log_info "Installing neovim Ruby gem..."
             if gem install neovim >/dev/null 2>&1; then
@@ -1464,6 +1379,18 @@ verify_installation() {
         log_success "Installation verification completed"
     else
         log_info "Installation verification found ${errors} issue(s)"
+    fi
+
+    if command -v nvim >/dev/null 2>&1; then
+        if is_nvim_version_ge_0_11; then
+            log_success "Neovim version OK: $(nvim --version 2>&1 | head -n 1)"
+        else
+            log_warning "Neovim below 0.11.0: $(nvim --version 2>&1 | head -n 1)"
+            errors=$((errors + 1))
+        fi
+    else
+        log_warning "Neovim not found in PATH"
+        errors=$((errors + 1))
     fi
 }
 
@@ -1766,6 +1693,17 @@ print_summary() {
         log_info "Node.js path: ${NODE_PATH}"
     fi
 
+    if command -v nvim >/dev/null 2>&1; then
+        log_info "Neovim: $(nvim --version 2>&1 | head -n 1)"
+    fi
+    if command -v uv >/dev/null 2>&1; then
+        log_info "uv: $(uv --version 2>&1 | head -n 1)"
+    fi
+    if command -v fnm >/dev/null 2>&1; then
+        log_info "fnm: $(fnm --version 2>&1 | head -n 1)"
+    fi
+    log_info "Mason sync: ${NVIM_MASON_SYNC_STATUS:-skipped}"
+
     log_info ""
     log_info "Next steps:"
     log_info "1. Start Neovim: nvim"
@@ -1792,6 +1730,7 @@ main() {
     start_script "Neovim Configuration Installation"
 
     setup_default_proxy
+    detect_runtime_context
 
     # Windows：脚本一开始就清理可能存在的 %APPDATA% 并导出已展开的 APPDATA
     if [[ "${PLATFORM}" == "windows" ]]; then
@@ -1819,46 +1758,61 @@ main() {
     setup_windows_config_redirect
     setup_gitbash_xdg_config_home
 
-    progress_step 4 "${TOTAL_MAIN_STEPS}" "Checking prerequisites..."
-    check_prerequisites
+    progress_step 4 "${TOTAL_MAIN_STEPS}" "Ensuring prerequisites (git, uv, fnm)..."
+    ensure_prerequisites
 
-    progress_step 5 "${TOTAL_MAIN_STEPS}" "Installing language tools (Go, Ruby, Composer, Rust, C/C++)..."
+    progress_step 5 "${TOTAL_MAIN_STEPS}" "Installing/upgrading Neovim binary (>= 0.11)..."
+    install_neovim_binary
+
+    progress_step 6 "${TOTAL_MAIN_STEPS}" "Installing language tools (Go, Ruby, Composer, Rust, C/C++)..."
     install_language_tools
 
-    progress_step 6 "${TOTAL_MAIN_STEPS}" "Checking clipboard tool..."
+    progress_step 7 "${TOTAL_MAIN_STEPS}" "Checking system utilities (git, curl, tar, make)..."
+    install_system_utils
+
+    progress_step 8 "${TOTAL_MAIN_STEPS}" "Checking clipboard tool..."
     install_clipboard_tool
 
-    progress_step 7 "${TOTAL_MAIN_STEPS}" "Backing up existing config..."
+    progress_step 9 "${TOTAL_MAIN_STEPS}" "Backing up existing config..."
     backup_existing_config
 
-    progress_step 8 "${TOTAL_MAIN_STEPS}" "Deploying config files..."
+    progress_step 10 "${TOTAL_MAIN_STEPS}" "Deploying config files..."
     deploy_config
 
-    progress_step 9 "${TOTAL_MAIN_STEPS}" "Setting up Python environment (uv)..."
+    progress_step 11 "${TOTAL_MAIN_STEPS}" "Setting up Python environment (uv)..."
     setup_python_environment
 
-    progress_step 10 "${TOTAL_MAIN_STEPS}" "Setting up Node.js environment (fnm)..."
+    progress_step 12 "${TOTAL_MAIN_STEPS}" "Setting up Node.js environment (fnm)..."
     setup_nodejs_environment
 
-    progress_step 11 "${TOTAL_MAIN_STEPS}" "Configuring Neovim paths..."
+    progress_step 13 "${TOTAL_MAIN_STEPS}" "Configuring Neovim paths..."
     configure_neovim_paths
 
-    progress_step 12 "${TOTAL_MAIN_STEPS}" "Checking plugin manager..."
+    progress_step 14 "${TOTAL_MAIN_STEPS}" "Checking plugin manager..."
     check_plugin_manager
 
-    progress_step 13 "${TOTAL_MAIN_STEPS}" "Verifying installation..."
+    progress_step 15 "${TOTAL_MAIN_STEPS}" "Verifying installation..."
     verify_installation
 
-    progress_step 14 "${TOTAL_MAIN_STEPS}" "TreeSitter parsers..."
+    progress_step 16 "${TOTAL_MAIN_STEPS}" "TreeSitter parsers..."
     install_treesitter_parsers
 
-    progress_step 15 "${TOTAL_MAIN_STEPS}" "Syncing project memory to agent configs..."
+    if [[ -n "${VENV_PYTHON:-}" ]]; then
+        export NVIM_VENV_BIN_DIR="$(dirname "${VENV_PYTHON}")"
+    fi
+
+    progress_step 17 "${TOTAL_MAIN_STEPS}" "Syncing Mason packages..."
+    sync_mason_packages
+
+    progress_step 18 "${TOTAL_MAIN_STEPS}" "Syncing project memory to agent configs..."
     sync_project_memory || log_warning "Project memory sync failed, continuing"
 
-    progress_step 16 "${TOTAL_MAIN_STEPS}" "Printing summary..."
+    log_info "Installation summary..."
     print_summary
 
-    if [[ "${NVIM_SKIP_HEADLESS:-}" != "1" ]] && [[ -f "${SCRIPT_DIR}/scripts/headless_validate.sh" ]]; then
+    local skip_headless="${NVIM_SKIP_HEADLESS:-}"
+    skip_headless="${skip_headless//$'\r'/}"
+    if [[ "${skip_headless}" != "1" ]] && [[ -f "${SCRIPT_DIR}/scripts/headless_validate.sh" ]]; then
         log_info "Running headless validation (set NVIM_SKIP_HEADLESS=1 to skip)..."
         # Windows: 把 venv 的 Scripts/bin 加入 PATH，确保 healthcheck 中裸 python 命令可用
         if [[ -n "${VENV_PYTHON:-}" ]]; then
@@ -1874,6 +1828,16 @@ main() {
 
     end_script
 }
+
+# 加载依赖模块（须在 install_lua 等函数定义之后）
+DEPS_LOAD="${SCRIPT_DIR}/scripts/deps/load.sh"
+if [[ -f "${DEPS_LOAD}" ]]; then
+    # shellcheck source=scripts/deps/load.sh
+    source "${DEPS_LOAD}"
+else
+    log_error "Missing dependency module: ${DEPS_LOAD}"
+    exit 1
+fi
 
 # 执行主函数
 main "$@"

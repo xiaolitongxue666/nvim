@@ -1,17 +1,17 @@
 # Neovim Config — Claude Project Context
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-05T01:46:58Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-16T06:16:27Z. Edit PROJECT_MEMORY.md instead.
 
 
 ## 架构概览
 
 1) **单一来源**：终端 Neovim 以 `lua/basic.lua` 为选项来源；vscode-neovim `require("basic")` 再覆盖嵌入层；IdeaVim 手动翻译 `.ideavimrc` 支持的 `set` 子集。
 
-2) **三入口安装**：根 `install.cmd`/`install.sh`（16 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。
+2) **三入口安装**：根 `install.cmd`/`install.sh`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。
 
-3) **环境依赖**：`uv`（Python venv + LSP/formatter 工具链）+ `fnm`（Node LTS + neovim npm + tree-sitter-cli + pnpm）。
+3) **环境依赖与 install**（18 步）：`install.sh` 自动装/升级 git、uv、fnm、Neovim>=0.11、Python venv（`uv pip -U`）、npm 全局包；`scripts/deps/` 模块化（`manifest.sh` 为清单 SSOT）；**Mason 默认不在 install 预同步**（`NVIM_SKIP_MASON=0` 可选 headless，慢且易失败）；首次 `nvim` 由 `mason-tool-installer`（`run_on_start`）+ `mason-lspconfig`（`automatic_installation`）后台安装；测试 `scripts/tests/test_deps.sh`。
 
-4) **agent 同步**：`install.sh` 第 15 步将本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`。
+4) **agent 同步**：`install.sh` 第 18 步将本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`。
 
 5) **终端启动链**：`init.lua` → `basic` → `keybindings` → `window_control` → `config.lazy` → `lua/plugins/*.lua`（36 个规格）；尾部 `detect_python_host_from_uv` / `detect_node_host_from_fnm`。
 
@@ -54,6 +54,16 @@
 24) **分屏 Tab + neo-tree toggle**（2026-06-04）：winbar 用 `winbuf.nvim`（`bufferline` `enabled=false`，`showtabline=0`）；`[b`/`]b`/`<leader>b` 关 buffer。neo-tree 勿 `nvim_win_close` toggle（E95）；`<leader>e`/`fe` 用 `execute({ toggle })`；`NEO_TREE_BUFFER_LEAVE` 清孤儿 buffer。
 
 25) **toggleterm cwd + neo-tree 会话**（2026-06-05）：Win Git Bash 仅 `<leader>/` 显式 `dir=getcwd()`（正斜杠）、`autochdir`、`on_open` 带引号 cd、`scripts/bash.cmd` 非 login + `$PWD` 锚定。会话：`lua/config/neo_tree_session.lua` 写 sidecar `*.neo-tree.json`；退出 `PersistenceSavePre` purge 后 `mks`；`PersistenceLoadPost` **purge session 空壳 buffer** 再 `focus`（`Neotree close` 无效）；无头 `NVIM_HEADLESS_VALIDATE=1`→`persistence.stop()`。插件文件头三行注释见 `README.md`。
+
+# 问题 / 解法（install 与 Mason）
+
+| 现象 | 处理 |
+|------|------|
+| `install.sh` Mason 步骤慢或 `Neovim is exiting while packages are still installing` | 默认 `NVIM_SKIP_MASON=1`（deferred）；首次 `nvim` 自动装；勿在 headless 用 `MasonInstall`+`qa!` 与 tool-installer 竞态 |
+| headless 误用 `mason-registry.is_installing()` | 该 API 不存在；若需 install 内预同步用 `scripts/deps/mason_sync.lua` 逐包 `pkg:is_installed()` |
+| winget `msstore` 证书错误 | `platform_pkg.sh` 已加 `--source winget`；非致命 |
+| `npm install -g neovim` 失败 (Win) | 非致命；`init.lua` 仍可用 venv Python + Ruby gem host |
+| `~/.config/nvim.backup.*` 在父目录堆积 | install 步骤 9 备份；可手动删旧备份，保留最近 1～2 份 |
 
 # 已修复的历史问题（参考）
 

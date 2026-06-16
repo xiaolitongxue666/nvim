@@ -2,7 +2,7 @@
 
 基于 Lua 的 Neovim 配置，使用 [lazy.nvim](https://github.com/folke/lazy.nvim) 管理插件。独立 Git 仓库，支持 macOS、Linux、Windows、WSL。
 
-**要求**：Neovim **0.11.0+**、Git、安装脚本依赖 [uv](https://github.com/astral-sh/uv) 与 [fnm](https://github.com/Schniz/fnm)。
+**要求**：Neovim **0.11.0+**、Git。`./install.sh` 会自动安装/升级 [uv](https://github.com/astral-sh/uv)、[fnm](https://github.com/Schniz/fnm)、Neovim 二进制及项目依赖（Python venv、npm 全局包、Mason LSP/工具）。
 
 ## 安装与更新
 
@@ -14,6 +14,15 @@ chmod +x install.sh
 ```
 
 更新：`git pull && ./install.sh`（Windows 也可双击或运行根目录 `install.cmd`）
+
+**环境变量（可选）**：
+
+| 变量 | 默认 | 说明 |
+|------|------|------|
+| `USE_PROXY` | `1` | 外网走 `127.0.0.1:7890`（WSL 用宿主机 IP）；`0` 关闭 |
+| `NVIM_SKIP_MASON` | `1` | `0` 时在 install 中 headless 预装 Mason（慢）；默认跳过，首次 `nvim` 自动安装 |
+| `NVIM_MASON_TIMEOUT` | `120` | Mason 同步超时（秒） |
+| `NVIM_SKIP_HEADLESS` | 未设 | `1` 跳过末尾无头验收 |
 
 无头验收：`./scripts/headless_validate.sh`（`install.sh` 末尾默认调用；`NVIM_SKIP_HEADLESS=1` 可跳过）
 
@@ -53,7 +62,7 @@ Windows 可用根目录及各子目录下的 `install.cmd`（调用 Git Bash 执
 ```
 ~/.config/nvim/
 ├── init.lua                 # 入口：basic → keybindings → window_control → lazy
-├── install.sh               # 安装/依赖/路径注入
+├── install.sh               # 安装/依赖/路径注入（18 步；见 scripts/deps/）
 ├── install.cmd              # Windows：Git Bash 调用 install.sh
 ├── lua/
 │   ├── basic.lua
@@ -63,8 +72,10 @@ Windows 可用根目录及各子目录下的 `install.cmd`（调用 Git Bash 执
 │   ├── config/neo_tree_session.lua  # persistence 会话 + neo-tree sidecar
 │   └── plugins/             # 36 个插件规格文件
 ├── scripts/
-│   ├── common.sh            # 日志/目录/Windows 环境辅助
+│   ├── common.sh            # 日志/目录/Windows 环境/代理
+│   ├── deps/                # 依赖清单与跨平台安装模块
 │   ├── headless_validate.sh # 无头 Lazy + checkhealth 验收
+│   ├── tests/test_deps.sh   # 依赖模块单元测试
 │   └── bash.cmd             # Windows toggleterm 用 Git Bash（可配置）
 ├── ideavimrc/               # 可选：IdeaVim（.ideavimrc + install.sh/.cmd）
 ├── vscode_neovim/           # 可选：vscode-neovim（init + settings 模板 + install）
