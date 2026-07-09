@@ -1,6 +1,6 @@
 # Neovim Config — Claude Project Context
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-06-16T13:55:36Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-07-09T06:23:28Z. Edit PROJECT_MEMORY.md instead.
 
 
 ## 架构概览
@@ -39,7 +39,7 @@
 
 17) **nvim-treesitter**：Neovim 0.11 锁 `branch=master`（`main` 需 0.12+）；无头须 `-u init.lua` + `vim.wait` 等 treesitter 就绪。
 
-18) **mini.starter**：`shortmess` 加 `I` 禁 intro；`autoopen=false`，`UIEnter` 调 `starter.open()`；会话 `s`/`S` 经 `config.neo_tree_session.load_session`（`S` 优先带 sidecar 的会话）。
+18) **mini.starter + mini.icons**：`shortmess` 加 `I` 禁 intro；`autoopen=false`，`UIEnter` 调 `starter.open()`；会话 `s`/`S` 经 `config.neo_tree_session.load_session`（`S` 优先带 sidecar 的会话）。上游 2026-07 `feat(ALL)!: stop support Neovim 0.9`（本配置 install 要求 >=0.11）。
 
 19) **Windows MinGW**：`basic.lua` 动态探测 `MINGW_PREFIX`/`ProgramData`/`NVIM_MINGW_PATHS`，仅无 `gcc` 时 prepend PATH。
 
@@ -64,6 +64,7 @@
 | winget `msstore` 证书错误 | `platform_pkg.sh` 已加 `--source winget`；非致命 |
 | `npm install -g neovim` 失败 (Win) | 非致命；`init.lua` 仍可用 venv Python + Ruby gem host |
 | `~/.config/nvim.backup.*` 在父目录堆积 | install 步骤 9 备份；可手动删旧备份，保留最近 1～2 份 |
+| Lazy update 后 `mini.icons`/`mini.starter` 含 breaking commit | 2026-07-07 `feat(ALL)!: stop support Neovim 0.9`；须 Neovim >=0.10；本仓库 install 钉 >=0.11，当前无影响 |
 
 # 已修复的历史问题（参考）
 

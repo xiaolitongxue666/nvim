@@ -2,6 +2,16 @@
 
 按日期追加的变更与问题记录。权威摘要见根目录 [PROJECT_MEMORY.md](../PROJECT_MEMORY.md)。
 
+## 2026-07-09
+
+### Lazy update + healthcheck（summary-memory）
+
+- **Lazy update**：10 个插件更新（`lazy-lock.json`）；breaking：`mini.icons`/`mini.starter` `feat(ALL)!: stop support Neovim 0.9`（2026-07-07）；其余为常规 fix/docs（catppuccin、gitsigns、nvim-dap、nvim-lspconfig、schemastore 等）。
+- **环境**：Neovim v0.11.2；mini 弃用 0.9 对本配置无影响（install 要求 >=0.11）。
+- **无头验收**：`NVIM_SKIP_LAZY_UPDATE=1 bash scripts/headless_validate.sh` exit 0；`docs/nvim_checkhealth_final.log` 无 ERROR；仅 luasnip jsregexp WARNING（白名单）。
+- **清理扫描**：无 `graphify-out/`、OS 残留；`logs/install_*.log` 为 6 月旧 install 日志（gitignore，已删）；`docs/nvim_checkhealth_final.log` 保留作证据。
+- **冗余检测**：sha256 无重复内容文件；`PROJECT_MEMORY.md` #18 合并 mini.icons 版本约束，问题表增 mini breaking 行。
+
 ## 2026-06-03
 
 ### macOS 安装与无头验收（summary-memory）
