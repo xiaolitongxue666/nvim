@@ -134,6 +134,9 @@ __pycache__/
 # graphify generated artifacts (regenerate with: graphify update .)
 graphify-out/
 
+# PROJECT_MEMORY.md backups from summary-memory (keep local, do not commit)
+.project-memory-backups/
+
 # Windows specific
 Thumbs.db
 ehthumbs.db
