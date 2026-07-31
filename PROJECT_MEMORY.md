@@ -55,6 +55,8 @@
 
 25) **toggleterm cwd + neo-tree 会话**（2026-06-05）：Win Git Bash 仅 `<leader>/` 显式 `dir=getcwd()`（正斜杠）、`autochdir`、`on_open` 带引号 cd、`scripts/bash.cmd` 非 login + `$PWD` 锚定。会话：`lua/config/neo_tree_session.lua` 写 sidecar `*.neo-tree.json`；退出 `PersistenceSavePre` purge 后 `mks`；`PersistenceLoadPost` **purge session 空壳 buffer** 再 `focus`（`Neotree close` 无效）；无头 `NVIM_HEADLESS_VALIDATE=1`→`persistence.stop()`。插件文件头三行注释见 `README.md`。
 
+26) **CodeGraph 代码索引**（2026-08-01）：`codegraph init` 已建 `.codegraph/`（SQLite 本地索引，48 文件/418 节点/712 边）；增量 `codegraph sync`、全量 `codegraph index`、查询 `codegraph query|node <符号>`。`.codegraph/` 在根 `.gitignore` 第 138 行整体忽略（内层 `.gitignore` 只忽略内容不忽略自身，须根级条目）。
+
 # 问题 / 解法（install 与 Mason）
 
 | 现象 | 处理 |
