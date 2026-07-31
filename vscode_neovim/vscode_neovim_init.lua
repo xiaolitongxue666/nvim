@@ -12,7 +12,7 @@ require("basic")
 
 -- VSCode 嵌入层覆盖（basic.lua 中未启用或需与编辑器 UI 协调的项）
 if vim.g.vscode then
-    -- basic.lua 将 showtabline 设为 2；VSCode 自带标签栏
+    -- basic.lua 已设 showtabline=0（winbuf 渲染 winbar）；此处保持 0，VSCode 自带标签栏
     vim.o.showtabline = 0
     -- basic.lua 注释了 vim.o.mouse；不在嵌入层启用 Neovim 鼠标捕获
     vim.o.mouse = ""

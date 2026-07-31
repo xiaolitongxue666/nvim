@@ -196,7 +196,7 @@ return {
             -- 智能移动配置
             smart_move = {
                 enabled = true,
-                excluded_filetypes = { "cmp_menu", "cmp_docs", "notify" },
+                excluded_filetypes = { "cmp_menu", "cmp_docs", "notify", "TelescopePrompt" },
             },
             -- 节流配置
             throttle = 1000 / 30,

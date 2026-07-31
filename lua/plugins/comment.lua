@@ -1,56 +1,30 @@
--- numToStr/Comment.nvim
--- 智能注释插件，支持 Treesitter、重复与移动扩展
--- https://github.com/numToStr/Comment.nvim
+-- echasnovski/mini.comment
+-- 智能注释（替代 numToStr/Comment.nvim：后者 2024-06 起停更）
+-- 默认键位与 Comment.nvim 兼容：gcc 行注释、gc{motion}、gbc 块注释、gb{motion}
+-- https://github.com/echasnovski/mini.comment
 
 return {
     {
-        -- 插件名称
-        "numToStr/Comment.nvim",
+        "echasnovski/mini.comment",
         -- 不延迟加载，确保注释功能立即可用
         lazy = false,
-        -- 插件配置
-        opts = {
-            -- 在注释和行之间添加空格
-            padding = true,
-            -- 光标是否应保持在其位置
-            sticky = true,
-            -- 在（取消）注释时要忽略的行
-            ignore = nil,
-            -- 普通模式下切换映射的左侧
-            toggler = {
-                -- 行注释切换键映射
-                line = 'gcc',
-                -- 块注释切换键映射
-                block = 'gbc',
-            },
-            -- 普通模式和可视模式下操作符待定映射的左侧
-            opleader = {
-                -- 行注释键映射
-                line = 'gc',
-                -- 块注释键映射
-                block = 'gb',
-            },
-            -- 额外映射的左侧
-            extra = {
-                -- 在上方添加注释
-                above = 'gcO',
-                -- 在下方添加注释
-                below = 'gco',
-                -- 在行尾添加注释
-                eol = 'gcA',
-            },
-            -- 启用键绑定
-            -- 注意：如果设为 false，插件将不会创建任何映射
-            mappings = {
-                -- 操作符待定映射：`gcc` `gbc` `gc[count]{motion}` `gb[count]{motion}`
-                basic = true,
-                -- 额外映射：`gco`、`gcO`、`gcA`
-                extra = true,
-            },
-            -- 在（取消）注释之前调用的函数
-            pre_hook = nil,
-            -- 在（取消）注释之后调用的函数
-            post_hook = nil,
-        },
+        config = function()
+            require("mini.comment").setup({
+                options = {
+                    -- 注释符号与行之间加空格
+                    padding = true,
+                    -- 光标保持原位
+                    sticky = true,
+                    -- 起始/结束空白（treesitter 感知）
+                    start_after_line_prefix = false,
+                },
+                mappings = {
+                    comment = "gc",        -- 注释操作符
+                    comment_line = "gcc",  -- 注释当前行
+                    comment_visual = "gc", -- 可视模式注释
+                    textobject = "gb",     -- 块注释文本对象
+                },
+            })
+        end,
     },
 }

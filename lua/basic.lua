@@ -270,9 +270,8 @@ vim.o.cmdheight = 2
 -- 当文件被外部程序修改时，自动加载
 vim.o.autoread = true
 vim.bo.autoread = true
--- 自动换行
-vim.o.wrap = true
-vim.wo.wrap = false
+-- 不自动换行（全局统一为 false；避免新窗口继承 global=true 意外换行）
+vim.o.wrap = false
 -- 行结尾可以跳到下一行
 vim.o.whichwrap = "b,s,<,>,[,],h,l"
 -- 允许隐藏被修改过的buffer
@@ -296,7 +295,6 @@ vim.g.completeopt = "menu,menuone,noselect,noinsert"
 -- 样式
 vim.o.background = "dark"
 vim.o.termguicolors = true
-vim.opt.termguicolors = true
 -- 不可见字符的显示，这里只把空格显示为一个点
 vim.o.list = true
 -- vim.o.listchars = "space:-,tab:>~,eol:↵"
@@ -364,10 +362,17 @@ vim.g.loaded_ruby_provider = 0
 
 -- 根据操作系统设置shell
 if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
-	-- Windows 系统：使用 PowerShell 或 CMD（更好的路径兼容性）
-	-- 注意：Git Bash + shellslash 会导致 nvim-treesitter 等插件的路径解析问题
+	-- Windows 系统：优先 PowerShell 7（pwsh），未安装时回退系统自带 powershell.exe（5.1）
+	-- 注意：install.sh 不安装 pwsh，仅依赖系统自带；若两者都不可用才用 CMD
+	-- Git Bash + shellslash 会导致 nvim-treesitter 等插件的路径解析问题
 	-- 如果需要使用 Git Bash，请在外部终端中运行，而不是作为 Neovim 的内置 shell
-	vim.opt.shell = "pwsh.exe"
+	if vim.fn.executable("pwsh") == 1 then
+		vim.opt.shell = "pwsh.exe"
+	elseif vim.fn.executable("powershell") == 1 then
+		vim.opt.shell = "powershell.exe"
+	else
+		vim.opt.shell = "cmd.exe"
+	end
 	vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
 	vim.opt.shellquote = ""
 	vim.opt.shellxquote = ""

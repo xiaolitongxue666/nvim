@@ -43,7 +43,9 @@ run_nvim() {
     export MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:-*}"
     export USERPROFILE="${USERPROFILE:-}"
     export LOCALAPPDATA="${LOCALAPPDATA:-}"
-    export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-}"
+    # 空 XDG_CONFIG_HOME 会使 stdpath('config') 退回相对路径（如 nvim/），
+    # 导致 vim.health 误报 Missing user config file；仅非空时导出
+    if [[ -n "${XDG_CONFIG_HOME:-}" ]]; then export XDG_CONFIG_HOME; fi
     export APPDATA="${APPDATA:-}"
     export NVIM_HEADLESS_VALIDATE=1
     # 无头模式：persistence_headless_guard 会 persistence.stop()，勿写入 sessions/

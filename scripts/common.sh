@@ -42,13 +42,19 @@ ensure_directory() {
     fi
 }
 
-# 带超时运行命令（macOS 无 timeout 时直接执行）
+# 带超时运行命令（macOS 无 GNU timeout 时用 perl alarm 兑底；都不存在则直接执行）
 run_with_timeout() {
     local seconds="$1"
     shift
     if command -v timeout >/dev/null 2>&1; then
         timeout "${seconds}" "$@"
+    elif command -v gtimeout >/dev/null 2>&1; then
+        gtimeout "${seconds}" "$@"
+    elif command -v perl >/dev/null 2>&1; then
+        # macOS 自带 perl：alarm 实现超时（兼容 bash 3.2 环境）
+        perl -e 'alarm shift; exec @ARGV' "${seconds}" "$@"
     else
+        log_warning "run_with_timeout: no timeout/gtimeout/perl; running without timeout"
         "$@"
     fi
 }
@@ -57,13 +63,17 @@ run_with_timeout() {
 # 例：C:\Users\foo → /c/Users/foo
 windows_path_to_unix() {
     local p="$1"
+    local lower_drive=""
     p="${p//\\//}"
     if [[ "$p" =~ ^/([a-zA-Z])/(.*)$ ]]; then
-        printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+        lower_drive="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
+        printf '/%s/%s\n' "${lower_drive}" "${BASH_REMATCH[2]}"
     elif [[ "$p" =~ ^([a-zA-Z]):/(.*)$ ]]; then
-        printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+        lower_drive="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
+        printf '/%s/%s\n' "${lower_drive}" "${BASH_REMATCH[2]}"
     elif [[ "$p" =~ ^([a-zA-Z]):(.*)$ ]]; then
-        printf '/%s/%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+        lower_drive="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
+        printf '/%s/%s\n' "${lower_drive}" "${BASH_REMATCH[2]}"
     else
         printf '%s\n' "$p"
     fi
@@ -199,7 +209,7 @@ fnm_env_safe() {
         if [[ -n "${APPDATA:-}" ]] && [[ "${APPDATA}" != *%* ]]; then
             safe_dir="${APPDATA//\\//}"
             if [[ "${safe_dir}" =~ ^([A-Za-z]):(.*)$ ]]; then
-                safe_dir="/${BASH_REMATCH[1],,}${BASH_REMATCH[2]}"
+                safe_dir="/$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')${BASH_REMATCH[2]}"
             fi
         fi
         [[ -z "${safe_dir}" || ! -d "${safe_dir}" ]] && safe_dir="${HOME:-}"
@@ -255,16 +265,18 @@ is_wsl_platform() {
 }
 
 resolve_wsl_host_ip() {
+    # 先 resolv.conf（与 basic.lua 一致；WSL2 mirrored 网络下为 127.0.0.1，
+    # 此时宿主机端口可直连；NAT 模式下为宿主机 IP），再退回默认网关
     local gw=""
-    if command -v ip >/dev/null 2>&1; then
-        gw="$(ip route show default 2>/dev/null | awk '{print $3; exit}')"
+    if [[ -f /etc/resolv.conf ]]; then
+        gw="$(awk '/^nameserver/ { print $2; exit }' /etc/resolv.conf 2>/dev/null)"
         if [[ -n "${gw}" ]]; then
             printf '%s\n' "${gw}"
             return 0
         fi
     fi
-    if [[ -f /etc/resolv.conf ]]; then
-        gw="$(awk '/^nameserver/ { print $2; exit }' /etc/resolv.conf 2>/dev/null)"
+    if command -v ip >/dev/null 2>&1; then
+        gw="$(ip route show default 2>/dev/null | awk '{print $3; exit}')"
         if [[ -n "${gw}" ]]; then
             printf '%s\n' "${gw}"
             return 0

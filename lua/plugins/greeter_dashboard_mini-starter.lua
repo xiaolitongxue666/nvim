@@ -29,7 +29,7 @@ return {
         local items = {
             -- 查找文件
             {
-                action = "Telescope find_files",
+                action = "lua require('snacks').picker.files()",
                 name = "f Find file",
                 section = "文件操作"
             },
@@ -41,13 +41,13 @@ return {
             },
             -- 最近文件
             {
-                action = "Telescope oldfiles",
+                action = "lua require('snacks').picker.recent()",
                 name = "r Recent files",
                 section = "文件操作"
             },
             -- 文本搜索
             {
-                action = "Telescope live_grep",
+                action = "lua require('snacks').picker.grep()",
                 name = "g Find text",
                 section = "搜索功能"
             },

@@ -22,6 +22,7 @@ map("", "R", ":source $MYVIMRC<CR>", opt)
 map("", "<LEADER>rc", ":e $MYVIMRC<CR>", opt)
 
 -- 普通模式和visual模式插入按键重映射
+-- 注意：空模式 map("","h",...) 不覆盖 visual（实测 maparg('h','v') 为空），须显式定义 v 模式
 map("n", "h", "i", opt)
 map("n", "H", "I", opt)
 map("v", "h", "i", opt)
@@ -83,11 +84,11 @@ map("v", "J", "b", opt)
 map("v", "L", "w", opt)
 
 -- 窗口管理
--- s+ i/k/j/l 创建分屏窗口
-map("", "si", ":set nosplitbelow<CR>:split<CR>:set splitbelow<CR>", opt)
-map("", "sk", ":set splitbelow<CR>:split<CR>", opt)
-map("", "sj", ":set nosplitright<CR>:vsplit<CR>:set splitright<CR>", opt)
-map("", "sl", ":set splitright<CR>:vsplit<CR>", opt)
+-- s+ i/k/j/l 创建分屏窗口（方向修饰符显式指定，不依赖全局 splitbelow/splitright）
+map("", "si", ":aboveleft split<CR>", opt)
+map("", "sk", ":botright split<CR>", opt)
+map("", "sj", ":leftabove vsplit<CR>", opt)
+map("", "sl", ":rightbelow vsplit<CR>", opt)
 
 -- 空格+ i k j l 在不同分屏窗口之间移动
 map("n", "<LEADER>i", "<C-w>k", opt)
@@ -138,7 +139,7 @@ map("n", "<A-[>", "<C-i>", opt)
 map("n", "<A-]>", "<C-o>", opt)
 
 -- 注意：插件相关的键位映射已移至各自的插件配置文件中
--- 例如：telescope 的键位在 lua/plugins/finder_telescope.lua
+-- 例如：finder（snacks.picker）的键位在 lua/plugins/finder_snacks-picker.lua
 --      neo-tree 的键位在 lua/plugins/ui_file_explorer_neo-tree.lua
 --      LSP 的键位在 lua/plugins/lsp_server_nvim-lspconfig.lua
 

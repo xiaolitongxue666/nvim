@@ -22,6 +22,10 @@ run_with_timeout() {
     shift
     if command -v timeout >/dev/null 2>&1; then
         timeout "${seconds}" "$@"
+    elif command -v gtimeout >/dev/null 2>&1; then
+        gtimeout "${seconds}" "$@"
+    elif command -v perl >/dev/null 2>&1; then
+        perl -e 'alarm shift; exec @ARGV' "${seconds}" "$@"
     else
         "$@"
     fi

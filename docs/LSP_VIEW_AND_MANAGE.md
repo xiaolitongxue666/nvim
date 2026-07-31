@@ -92,7 +92,7 @@
 | `yamlls`    | YAML       |
 | `marksman`  | Markdown   |
 
-`mason-lspconfig` 的 `ensure_installed` 会确保上述部分服务器通过 Mason 自动安装（如 lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman）；`ruff_lsp` 等在 mason-tool-installer 或 Mason 中单独安装。
+自 2026-08-01 起，**全部 LSP 的安装与更新统一由 `mason-tool-installer` 接管**（`lua/plugins/lsp_server_manager_mason.lua` 的 `ensure_installed` 含 lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman、ruff-lsp，`run_on_start + auto_update=true`，全部走 uv）；`mason-lspconfig` 仅保留 `automatic_installation=true` 作为新 server 的兑底，不再维护重复清单。
 
 ---
 
@@ -136,7 +136,7 @@
    },
    ```
 
-3. 若使用 mason-lspconfig 的 `ensure_installed`，在 `lua/plugins/lsp_server_manager_mason-lspconfig.lua` 里把该服务器名加入列表，便于首次自动安装。
+3. 新服务器统一加入 `lua/plugins/lsp_server_manager_mason.lua` 的 `mason-tool-installer.ensure_installed`（自动安装 + 启动时自动更新），并在 `lsp_server_nvim-lspconfig.lua` 的 `servers` 表写配置（或 `vim.lsp.config`/`vim.lsp.enable` 动态注册）。
 
 ### 临时关闭某个 LSP
 

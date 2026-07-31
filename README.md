@@ -143,34 +143,36 @@ Leader 为 `<Space>`。光标：`i/k/j/l` 对应上/下/左/右（与 Vim 默认
 | 组件 | 文件 | 状态 |
 |------|------|------|
 | [winbuf.nvim](https://github.com/e-sigs/winbuf.nvim) | `lua/plugins/ui_buffer_tabpage_winbuf.lua` | **启用** |
-| [bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | `lua/plugins/ui_buffer_tabpage_bufferline.lua` | **`enabled=false`**（全局 tabline，已由 winbuf 替代） |
 | `showtabline` | `lua/basic.lua` | `0`（关闭全局 tabline 顶栏） |
 
 键位见上表「Tab / 窗口 / 树」行；细节与 PROJECT_MEMORY #24 一致。LSP 与 Mason 详见 [docs/LSP_VIEW_AND_MANAGE.md](docs/LSP_VIEW_AND_MANAGE.md)。
 
 ## 插件 GitHub 状态
 
-核查时间：2026-05-19（`gh api`，原始输出见 [docs/plugin_github_audit.txt](docs/plugin_github_audit.txt)）。
+核查时间：2026-08-01（commits atom feed，原始输出见 [docs/plugin_github_audit.txt](docs/plugin_github_audit.txt)）。
 
 ### 当前状态（启用插件）
 
 | 仓库 | 状态 | 建议 |
 |------|------|------|
-| `mason-org/mason.nvim` / `mason-org/mason-lspconfig.nvim` | 已切换到上游组织 | 与当前上游一致 |
-| `neovim-treesitter/nvim-treesitter` | 已切换到活跃仓库 | 分支已改为 `main` |
-| [folke/snacks.nvim](https://github.com/folke/snacks.nvim) | 已启用 input/picker | 替代 archived 的 dressing 选择/输入 UI |
-| [numToStr/Comment.nvim](https://github.com/numToStr/Comment.nvim) | 最近推送 2024-08 | 仍可用；长期可观察迁移方案 |
-| [saadparwaiz1/cmp_luasnip](https://github.com/saadparwaiz1/cmp_luasnip) | 最近推送 2024-11 | 仍可用；关注 cmp/LuaSnip 大版本 |
+| [folke/snacks.nvim](https://github.com/folke/snacks.nvim) | **主 picker + input**（2026-08-01 起） | 替代 telescope 与 archived 的 dressing；opencode 共用 |
+| [echasnovski/mini.comment](https://github.com/echasnovski/mini.comment) | **启用**（2026-08-01 替代 Comment.nvim） | 键位 gcc/gc/gbc 兼容，活跃维护 |
+| `mason-org/mason.nvim` / `mason-lspconfig.nvim` | 已切换到上游组织 | 与当前上游一致；安装/更新由 tool-installer 统一 |
 | [e-sigs/winbuf.nvim](https://github.com/e-sigs/winbuf.nvim) | **启用**；分屏 winbar tab | 每 window 独立 tab 行；见 README「分屏 Tab」 |
-| [akinsho/bufferline.nvim](https://github.com/akinsho/bufferline.nvim) | **`enabled=false`** | 全局 tabline，已由 winbuf 替代；规格仍保留便于回滚 |
-| [akinsho/toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 2025 初后较少提交 | 功能正常，升级前看 changelog |
+| [akinsho/toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) | 2025-03 后无提交（17 个月） | 功能正常；长期可评估迁 snacks.terminal |
+| [numToStr/Comment.nvim](https://github.com/numToStr/Comment.nvim) | 已移除（2024-06 停更） | 见上 mini.comment |
+| [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) | 已移除（2026-08-01） | 见上 snacks.picker |
 | [nvim-pack/nvim-spectre](https://github.com/nvim-pack/nvim-spectre) | 2025-05 后较少提交 | 仍可用 |
+| [saadparwaiz1/cmp_luasnip](https://github.com/saadparwaiz1/cmp_luasnip) | 2024-11 后较少提交 | 仍可用；关注 cmp/LuaSnip 大版本 |
 
 ### 历史归档仓库（已移除或替换）
 
 - `folke/neodev.nvim` → 使用 `folke/lazydev.nvim`
 - `nvim-treesitter/nvim-treesitter` → 使用 `neovim-treesitter/nvim-treesitter`
 - `stevearc/dressing.nvim` → 使用 `folke/snacks.nvim`（input/picker）
+- `nvim-telescope/telescope.nvim` + `telescope-fzf-native.nvim` → 使用 `folke/snacks.nvim`（picker，2026-08-01）
+- `numToStr/Comment.nvim` → 使用 `echasnovski/mini.comment`（2026-08-01）
+- `akinsho/bufferline.nvim` → 使用 `e-sigs/winbuf.nvim`（2026-08-01 移除死配置）
 
 ## 配置冲突与治理
 
@@ -186,7 +188,9 @@ Leader 为 `<Space>`。光标：`i/k/j/l` 对应上/下/左/右（与 Vim 默认
 | **中** | mason-lspconfig 默认 handler | 空 `{}` 二次 `vim.lsp.enable` | handler 改为 no-op，由 lspconfig 主配置 enable |
 | **中** | neo-tree `S` vs 全局保存 `S` | 树内水平分屏占键 | 树内改为 `s` 打开分屏 |
 | **中** | neo-tree `document_symbols` + outline | 双符号侧栏 | 已移除 neo-tree 的 `document_symbols`，保留 outline |
-| **中** | hardtime 在特殊 UI buffer 抢键 | 侧栏/选择器体验受影响 | 已加入 `neo-tree`/`mason`/`DressingSelect` 白名单 |
+| **中** | hardtime 在特殊 UI buffer 抢键 | 侧栏/选择器体验受影响 | 已加入 `neo-tree`/`mason`/`DressingSelect` 白名单；picker 迁移后为 `snacks_picker_input/list` |
+| **中** | `<leader>wr` 双义 | window_control 与 LSP on_attach 冲突 | 已删除 window_control 的 `wr`，恢复布局用 `<leader>wb`（2026-08-01） |
+| **中** | `wrap` 全局/窗口不一致 | 新窗口意外换行 | 统一 `vim.o.wrap = false`（2026-08-01） |
 | **低** | `[b`/`]b` 与 `<leader>[`/`]` | 别名 | 保留，which-key 说明即可 |
 | **低** | winbuf + lualine 诊断 | 分屏 tab 与状态栏均可能显示诊断 | 可关 winbuf `diagnostics` 或保留 buffer 内 virtual text |
 

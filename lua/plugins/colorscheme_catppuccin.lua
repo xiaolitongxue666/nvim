@@ -98,7 +98,8 @@ return {
                     -- 根据已安装的插件启用相应集成
                     treesitter = true,
                     treesitter_context = true,
-                    telescope = true,
+                    -- telescope 已迁 snacks.picker（2026-08-01），集成项保留 false 避免死引用
+                    telescope = false,
                     which_key = true,
                     indent_blankline = {
                         enabled = true,

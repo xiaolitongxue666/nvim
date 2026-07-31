@@ -162,3 +162,26 @@
 - **仓库内清理**：无 `logs/`、`graphify-out/`、`.DS_Store`、空文件/空目录、暂存 log；`docs/nvim_checkhealth_final.log` 保留作证据。
 - **冗余检测**：sha256 无重复文件；`PROJECT_MEMORY.md` ↔ `AGENTS.md`/`CLAUDE.md` 仅 header 差异（install 同步正常）。
 - **仓库外**：`~/.config/nvim.backup.*` 共 **11** 份、约 **1.1G**；install step 9 生成，宜手动保留最近 1～2 份（见 `PROJECT_MEMORY` 问题表）。
+
+## 2026-08-01
+
+### CodeGraph 初始化 + 环境升级
+
+- **CodeGraph**：`codegraph init` 建 `.codegraph/`（SQLite 索引 48 文件/418 节点/712 边）；根 `.gitignore` 加 `.codegraph/` 条目（内层 .gitignore 只忽略内容不忽略自身）。
+- **Neovim 0.12.3 → 0.12.4**（brew，含 luajit/tree-sitter 依赖）；`vim.health` 两条 WARNING 全清。
+- **XDG_CONFIG_HOME 空值 bug**：`export XDG_CONFIG_HOME=""` 使 `stdpath('config')` 退回相对路径 `nvim`，`vim.health` 误报 `Missing user config file`；`headless_validate.sh`/`sync_mason.sh` 改条件导出修复。
+- **Lazy update + checkhealth**：全绿（0 WARNING/0 ERROR）；`:Lazy clean` 清理 telescope/bufferline 残留。
+
+### 配置矛盾治理（只读分析 → 实施）
+
+- `<leader>wr` 双义：window_control vs LSP on_attach（buffer-local 覆盖）→ 删 window_control 的 wr，恢复布局用 `<leader>wb`。
+- telescope `<C-i>` 与 `<Tab>` 同码冲突 → 删 `<C-i>`；hardtime 放行 picker filetype（`snacks_picker_input/list`）。
+- `wrap` 全局 true + 窗口 false → 统一 `vim.o.wrap = false`；noice smart_move 排除 `TelescopePrompt`。
+- 清理：bufferline 死配置删除；`ui_notice.lua` → `ui_noice.lua`；si/sk/sj/sl 简化为方向修饰符；termguicolors 去重。
+
+### 插件瘦身（调研 → 迁移）
+
+- **telescope/fzf-native → snacks.picker**（27 键位不变；聚合源 `picker.pick("源名")`；`<leader>fv/fp` 移除；starter action、hardtime、catppuccin 联动更新）。
+- **Comment.nvim（2024-06 停更）→ mini.comment**（gcc/gc/gbc 兼容）。
+- **LSP 安装/更新统一 tool-installer**（9 server 入 ensure_installed + auto_update；mason-lspconfig 只留兑底），修复"只装不更新"缺口。
+- 51 个仓库 GitHub 状态核查（见 docs/plugin_github_audit.txt）：无 archived；toggleterm（2025-03）与 cmp_luasnip（2024-11）更新放缓，暂留。

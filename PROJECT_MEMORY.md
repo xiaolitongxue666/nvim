@@ -53,9 +53,11 @@
 
 24) **分屏 Tab + neo-tree toggle**（2026-06-04）：winbar 用 `winbuf.nvim`（`bufferline` `enabled=false`，`showtabline=0`）；`[b`/`]b`/`<leader>b` 关 buffer。neo-tree 勿 `nvim_win_close` toggle（E95）；`<leader>e`/`fe` 用 `execute({ toggle })`；`NEO_TREE_BUFFER_LEAVE` 清孤儿 buffer。
 
-25) **toggleterm cwd + neo-tree 会话**（2026-06-05）：Win Git Bash 仅 `<leader>/` 显式 `dir=getcwd()`（正斜杠）、`autochdir`、`on_open` 带引号 cd、`scripts/bash.cmd` 非 login + `$PWD` 锚定。会话：`lua/config/neo_tree_session.lua` 写 sidecar `*.neo-tree.json`；退出 `PersistenceSavePre` purge 后 `mks`；`PersistenceLoadPost` **purge session 空壳 buffer** 再 `focus`（`Neotree close` 无效）；无头 `NVIM_HEADLESS_VALIDATE=1`→`persistence.stop()`。插件文件头三行注释见 `README.md`。
+25) **toggleterm cwd + neo-tree 会话**（2026-06-05）：Win Git Bash 仅 `<leader>/` 显式 `dir=getcwd()`（正斜杠）、`autochdir`、`on_open` 带引号 cd、`scripts/bash.cmd` 非 login + `$PWD` 锚定。会话：`lua/config/neo_tree_session.lua` 写 sidecar `*.neo-tree.json`；退出 `PersistenceSavePre` purge 后 `mks`；`PersistenceLoadPost` **purge session 空壳 buffer** 再 `focus`（`Neotree close` 无效）；无头 `NVIM_HEADLESS_VALIDATE=1`→`persistence.stop()`。插件文件头三行注释见 `README.md`。布局乱了用 `<leader>wb`（`wincmd =`；2026-08-01 起 `<leader>wr` 让位 LSP“移除工作区文件夹”，window_control 不再占用）。
 
 26) **CodeGraph 代码索引**（2026-08-01）：`codegraph init` 已建 `.codegraph/`（SQLite 本地索引，48 文件/418 节点/712 边）；增量 `codegraph sync`、全量 `codegraph index`、查询 `codegraph query|node <符号>`。`.codegraph/` 在根 `.gitignore` 第 138 行整体忽略（内层 `.gitignore` 只忽略内容不忽略自身，须根级条目）。
+
+27) **picker 统一 snacks + 插件瘦身**（2026-08-01）：telescope/fzf-native 移除，主 picker 为 `snacks.picker`（键位不变 `<leader>f*/g*/l*`；聚合源用 `picker.pick("源名")`，lsp workspace 用 `pick("lsp_symbols",{workspace=true})`；filetype 为 `snacks_picker_input/list`，hardtime 据此放行）。`Comment.nvim`（2024-06 停更）→ `mini.comment`（键位 gcc/gc/gbc 兼容）。LSP 安装/更新统一由 `mason-tool-installer` 管理（9 server 全部入 ensure_installed + auto_update；mason-lspconfig 只留 automatic_installation 兑底）。snacks picker 无 vim_options/planets 对应，`<leader>fv/fp` 已移除。
 
 # 问题 / 解法（install 与 Mason）
 
@@ -67,12 +69,17 @@
 | `npm install -g neovim` 失败 (Win) | 非致命；`init.lua` 仍可用 venv Python + Ruby gem host |
 | `~/.config/nvim.backup.*` 在父目录堆积 | install 步骤 9 备份；可手动删旧备份，保留最近 1～2 份 |
 | Lazy update 后 `mini.icons`/`mini.starter` 含 breaking commit | 2026-07-07 `feat(ALL)!: stop support Neovim 0.9`；须 Neovim >=0.10；本仓库 install 钉 >=0.11，当前无影响 |
+| `export XDG_CONFIG_HOME=""` 空值导出 | 使 `stdpath('config')` 退回相对路径 `nvim`，`vim.health` 误报 `Missing user config file: nvim/init.lua`；`headless_validate.sh`/`sync_mason.sh` 已改条件导出（仅非空时 export，2026-08-01） |
 
 # 已修复的历史问题（参考）
 
 - 键位冲突、conform 统一格式化、pyright/ruff 重复诊断、neodev→lazydev、dressing→Snacks 已治理
+- `<leader>wr` 曾被 LSP on_attach（buffer-local）静默覆盖 → window_control 删除该键，恢复布局用 `<leader>wb`（2026-08-01）
+- `wrap` 全局 true + 当前窗口 false → 新窗口意外换行 → 统一 `vim.o.wrap = false`（2026-08-01）
+- telescope/fzf-native/bufferline 移除、picker 统一 snacks、Comment→mini.comment、LSP 统一 tool-installer（见 #27）
+- 跨平台修复（2026-08-01）：Windows `shell` 三级回退（pwsh→powershell.exe→cmd.exe）；`run_with_timeout` 加 gtimeout/perl-alarm 兜底（macOS 无 GNU timeout）；`ideavimrc/install.sh` 与 `vscode_neovim_init.lua` 转 LF（原 CRLF 致 bash 语法错误）；`${BASH_REMATCH[1],,}` 改 tr 兼容 bash 3.2；WSL 代理解析统一先 resolv.conf 后 ip route
 - bufferline 全局 tab 无法分屏独立显示 → winbuf.nvim；`<leader>b` 曾误删 alternate buffer 已修正
 - neo-tree `<leader>e` E95：`nvim_win_close` 留孤儿 buffer → 原生 toggle + buffer leave 清理
-- toggleterm `<leader>/` + `Ctrl+Up/Down` 撑满屏：`window_control` 须识别 `buftype=terminal` 限高；`persist_size=false`；布局乱了 `<leader>wr`（`wincmd =`）
+- toggleterm `<leader>/` + `Ctrl+Up/Down` 撑满屏：`window_control` 须识别 `buftype=terminal` 限高；`persist_size=false`；布局乱了 `<leader>wb`（`wincmd =`；`<leader>wr` 已让位 LSP 移除工作区文件夹，勿再用）
 - toggleterm Win cwd 落在 HOME：`terminal_workspace_dir` 正斜杠 + 显式 `dir` + `bash.cmd` 非 login（Git Bash 仅 Windows）
 - neo-tree 会话半恢复（空壳 buffer）：sidecar `*.neo-tree.json` + `purge_neo_tree_artifacts` + starter `S` 优先 sidecar；无头不写 session

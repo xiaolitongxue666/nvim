@@ -41,8 +41,14 @@
 ## 插件规格
 
 - 管理器：`lua/config/lazy.lua` + `lua/plugins/*.lua`（36 个文件）
-- 去重 GitHub 仓库：54（见 `docs/plugin_github_audit.txt`）
+- 去重 GitHub 仓库：51（2026-08-01 核查，见 `docs/plugin_github_audit.txt`）
 - `lazy-lock.json`：55 条（缺 `schemastore.nvim` 时需 `:Lazy sync`）
+
+## 2026-08-01 变更
+
+- 移除：`nvim-telescope/telescope.nvim`、`telescope-fzf-native.nvim`（→ snacks.picker）、`akinsho/bufferline.nvim`（死配置）、`numToStr/Comment.nvim`（停更）
+- 新增：`echasnovski/mini.comment`；`finder_snacks-picker.lua`（snacks picker 键位）
+- LSP 安装/更新统一由 `mason-tool-installer` 管理（见 `docs/LSP_VIEW_AND_MANAGE.md`）
 
 ## 已删除 / 不再引用的项
 

@@ -12,7 +12,8 @@ _sync_mason_run_nvim() {
     export MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:-*}"
     export USERPROFILE="${USERPROFILE:-}"
     export LOCALAPPDATA="${LOCALAPPDATA:-}"
-    export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-}"
+    # 空 XDG_CONFIG_HOME 会使 stdpath('config') 退回相对路径（见 headless_validate.sh 注释）
+    if [[ -n "${XDG_CONFIG_HOME:-}" ]]; then export XDG_CONFIG_HOME; fi
     export APPDATA="${APPDATA:-}"
     export NVIM_HEADLESS_VALIDATE=1
     unset VIRTUAL_ENV

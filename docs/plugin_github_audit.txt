@@ -52,3 +52,60 @@ WhoIsSethDaniel/mason-tool-installer.nvim|false|2026-01-22T20:52:23Z
 mason-org/mason-lspconfig.nvim|false|2026-05-15T10:52:22Z
 mason-org/mason.nvim|false|2026-05-18T21:23:52Z
 windwp/nvim-autopairs|false|2026-05-08T01:44:52Z
+
+# 2026-08-01 核查（commits atom feed，最后提交日期；今天 2026-08-01）
+# 方法: https://github.com/OWNER/REPO/commits/HEAD.atom 最新 <updated>
+# 结果: 无 archived；停更(>12个月): toggleterm(2025-03), Comment(2024-06, 已移除);
+#       缓慢(6-12月): cmp_luasnip(2024-11)。其余全部活跃(<6个月)。
+numToStr/Comment.nvim           2024-06-09  [已移除 -> mini.comment]
+saadparwaiz1/cmp_luasnip        2024-11-04
+akinsho/toggleterm.nvim         2025-03-09
+hrsh7th/cmp-buffer              2025-04-01
+nvim-pack/nvim-spectre          2025-05-13
+hrsh7th/cmp-cmdline             2025-05-18
+theHamsta/nvim-dap-virtual-text 2025-05-25
+MunifTanjim/nui.nvim            2025-06-08
+hrsh7th/cmp-path                2025-07-30
+rcarriga/nvim-notify            2025-09-06
+nvzone/volt                     2025-09-13
+jay-babu/mason-nvim-dap.nvim    2025-10-20
+folke/persistence.nvim          2025-10-28
+folke/which-key.nvim            2025-10-28
+folke/noice.nvim                2025-11-03
+nvzone/typr                     2025-11-09
+hrsh7th/cmp-nvim-lsp            2025-11-13
+jbyuki/one-small-step-for-vimkind 2026-01-12
+WhoIsSethDaniel/mason-tool-installer.nvim 2026-01-22
+rafamadriz/friendly-snippets    2026-01-23
+onsails/lspkind.nvim            2026-01-29
+lukas-reineke/indent-blankline.nvim 2026-02-17
+Bilal2453/luvit-meta            2026-03-02
+folke/lazydev.nvim              2026-03-14
+e-sigs/winbuf.nvim              2026-04-01
+nvim-lua/plenary.nvim           2026-04-10
+sphamba/smear-cursor.nvim       2026-04-15
+windwp/nvim-autopairs           2026-05-08
+L3MON4D3/LuaSnip                2026-05-19
+stevearc/conform.nvim           2026-05-24
+stevearc/overseer.nvim          2026-05-24
+folke/snacks.nvim               2026-05-25
+hedyhli/outline.nvim            2026-05-29
+nvim-lualine/lualine.nvim       2026-05-31
+mason-org/mason.nvim            2026-06-11
+mfussenegger/nvim-dap           2026-06-19
+nvim-telescope/telescope.nvim   2026-06-23  [已移除 -> snacks.picker]
+echasnovski/mini.icons          2026-07-07
+echasnovski/mini.starter        2026-07-07
+hrsh7th/nvim-cmp                2026-07-09
+lewis6991/gitsigns.nvim         2026-07-14
+rcarriga/nvim-dap-ui            2026-07-14
+nvim-neotest/nvim-nio           2026-07-15
+m4xshen/hardtime.nvim           2026-07-20
+nvim-tree/nvim-web-devicons     2026-07-22
+catppuccin/nvim                 2026-07-25
+b0o/schemastore.nvim            2026-07-27
+NickvanDyke/opencode.nvim       2026-07-30
+nvim-treesitter/nvim-treesitter 2026-07-30
+mason-org/mason-lspconfig.nvim  2026-07-31
+neovim/nvim-lspconfig           2026-07-31
+nvim-neo-tree/neo-tree.nvim     2026-07-31

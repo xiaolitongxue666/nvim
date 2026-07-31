@@ -218,7 +218,9 @@ function M.setup_keymaps()
     -- 窗口管理
     map("n", "<leader>wb", ":lua require('window_control').balance_windows()<CR>", opt)
     map("n", "<leader>wm", ":lua require('window_control').maximize_window()<CR>", opt)
-    map("n", "<leader>wr", ":lua require('window_control').restore_layout()<CR>", opt)
+    -- 注意：不定义 <leader>wr —— LSP on_attach 已用其做“移除工作区文件夹”
+    -- （buffer-local 优先于全局，会覆盖 window_control 的恢复布局）；
+    -- 恢复布局（wincmd =）由 <leader>wb 承担，两者功能相同
     
     -- 禁用原来的箭头键调整（可选）
     -- map("n", "<Up>", "<Nop>", opt)

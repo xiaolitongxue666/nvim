@@ -1,5 +1,5 @@
 -- folke/snacks.nvim
--- 与 opencode.nvim 共用；需优先加载且不懒加载以满足 checkhealth
+-- 主 picker（telescope 已迁移至此，见 finder_snacks-picker.lua）并与 opencode.nvim 共用；需优先加载且不懒加载以满足 checkhealth
 -- https://github.com/folke/snacks.nvim
 
 return {

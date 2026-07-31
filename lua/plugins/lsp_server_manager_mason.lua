@@ -78,10 +78,19 @@ return {
             })
 
             -- 自动安装最常用的工具（全部走 uv）
+            -- 注意：LSP 服务器由这里统一管理（含 auto_update 自动更新）——
+            -- 9 个已配置 server 全部在列：lua_ls/bashls/clangd/pyright/rust_analyzer/jsonls/yamlls/marksman + ruff-lsp
             require("mason-tool-installer").setup({
                 ensure_installed = {
-                    -- LSP 服务器
-                    "pyright",      -- Python LSP
+                    -- LSP 服务器（run_on_start + auto_update 自动安装与更新）
+                    "lua_ls",
+                    "bashls",
+                    "clangd",
+                    "pyright",
+                    "rust_analyzer",
+                    "jsonls",
+                    "yamlls",
+                    "marksman",
                     "ruff-lsp",     -- Ruff Python 代码检查器和格式化工具
                     -- Python 工具
                     "black",        -- Python 代码格式化工具

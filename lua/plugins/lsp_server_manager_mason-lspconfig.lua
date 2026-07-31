@@ -15,20 +15,8 @@ return {
         event = "VeryLazy",
         -- 插件配置选项
         opts = {
-            -- 自动安装的 LSP 服务器列表
-            -- 注意：只包含 mason-lspconfig 支持的服务器名称
-            -- ruff_lsp 需要通过 mason.nvim 单独安装，然后在 lspconfig 中配置
-            ensure_installed = {
-                "lua_ls",           -- Lua 语言服务器
-                "bashls",           -- Bash 语言服务器
-                "clangd",           -- C/C++ 语言服务器
-                "pyright",          -- Python 语言服务器
-                "rust_analyzer",    -- Rust 语言服务器
-                "jsonls",           -- JSON 语言服务器
-                "yamlls",           -- YAML 语言服务器
-                "marksman",         -- Markdown 语言服务器
-            },
-            -- 自动安装缺失的 LSP 服务器
+            -- 安装与更新统一由 mason-tool-installer 接管（见 lsp_server_manager_mason.lua），
+            -- 此处仅保留“新 server 缺失时自动安装”的兑底，不重复声明清单
             automatic_installation = true,
             -- 处理程序配置（使用新 API）
             -- lsp 启用与 on_attach 由 lsp_server_nvim-lspconfig.lua 统一处理

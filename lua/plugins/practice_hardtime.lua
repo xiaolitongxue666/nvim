@@ -53,6 +53,9 @@ return {
                 ["neo-tree-popup"] = true,
                 ["mason"] = true,
                 ["DressingSelect"] = true,
+                -- snacks.picker 列表浏览依赖连按 j/k，须放行（filetype: snacks_picker_*）
+                ["snacks_picker_input"] = true,
+                ["snacks_picker_list"] = true,
             },
         },
     },
