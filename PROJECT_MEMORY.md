@@ -14,7 +14,7 @@
 
 7) **Windows 路径与 env**：`scripts/common.sh` 路径互转；`setup_windows_config_redirect` 用 PowerShell Junction（勿 Git Bash mklink）；`~/.bashrc` 设 `XDG_CONFIG_HOME`；提交前 `settings.json` 勿含本机 `neovimInitVimPaths`；`ensure_windows_appdata_export` + `fnm_env_safe` 防误建 `%APPDATA%`；`cleanup_stray_appdata_in_dir`（backup 前、无头后）；`cleanup_legacy_packer`。**空 `XDG_CONFIG_HOME=""` 勿 export**（stdpath 退回相对路径 `nvim` 致 vim.health 误报 Missing user config file；脚本已条件导出）。
 
-8) **跨平台代理**（2026-06-04）：`setup_default_proxy`（common.sh，install/headless 共用）；本机 `127.0.0.1:7890`、WSL 宿主机 IP、`PROXY_PROBE_TIMEOUT` 2s 探测不可达跳过、`USE_PROXY=0` 关闭；`basic.lua` 第三层自动默认。
+8) **跨平台代理**（2026-06-04；2026-08-01 更新）：`setup_default_proxy`（common.sh，install/headless 共用）；本机 `127.0.0.1:7890`、WSL 宿主机 IP、**VPS/native 按 `PROXY_PROBE_PORTS`（默认 `7890 17890 7897 10808 1080`）顺序探测，显式 `PROXY_PORT` 只测单端口（对齐 agent-config）**、`PROXY_PROBE_TIMEOUT` 2s 探测不可达跳过、`USE_PROXY=0` 关闭；`basic.lua` 第三层自动默认。
 
 9) **无头验收**：`bash scripts/headless_validate.sh`（install.sh 末尾默认调用，`NVIM_SKIP_HEADLESS=1` 跳过）；默认 `NVIM_SKIP_LAZY_UPDATE=1`（~20s），全量同步设 `NVIM_SKIP_LAZY_UPDATE=0`（Lazy+Mason 90s，约 5min）。`run_nvim` 设 `MSYS2_ARG_CONV_EXCL=*`；checkhealth 落盘用 `set buftype=` + `write! docs/nvim_checkhealth_final.log`（勿依赖 redir/w!）。务实 grep：fail 于 ERROR/❌ 与 packer 残留；白名单 Slow shell、terminfo、`Missing user config file`、luasnip jsregexp；见 `TROUBLE_SHOOT.md`。
 

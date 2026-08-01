@@ -329,13 +329,16 @@ export_proxy_env() {
     fi
 }
 
+# 默认代理探测端口列表（与 agent-config/script_tool 的 PROXY_PROBE_PORTS 对齐）：
+# VPS mihomo 常用 17890；本地/WSL 常用 7890；兼容 7897/10808/1080
+PROXY_PROBE_PORTS="${PROXY_PROBE_PORTS:-7890 17890 7897 10808 1080}"
+
 setup_default_proxy() {
     if [[ "${USE_PROXY:-1}" != "1" ]]; then
         log_info "Proxy setup: USE_PROXY=0, skipping"
         return 0
     fi
 
-    local proxy_port="${PROXY_PORT:-7890}"
     local resolve_method=""
     local proxy_host=""
     local platform_label="native"
@@ -355,11 +358,29 @@ setup_default_proxy() {
         resolve_method="fallback-localhost"
     fi
 
-    log_info "Proxy setup: USE_PROXY=1 platform=${platform_label} host=${proxy_host} port=${proxy_port} (resolve=${resolve_method})"
-    log_info "Proxy probe: ${proxy_host}:${proxy_port} (timeout ${PROXY_PROBE_TIMEOUT}s)..."
+    # 用户显式 PROXY_PORT 时只探测该端口；否则按 PROXY_PROBE_PORTS 顺序探测
+    # （VPS/headless 场景覆盖 17890；WSL 对宿主机同样探测）
+    local -a probe_ports=()
+    if [[ -n "${PROXY_PORT:-}" ]]; then
+        probe_ports=("${PROXY_PORT}")
+    else
+        # 无引号分词展开（端口列表空格分隔）；bash 3.2 兼容
+        probe_ports=(${PROXY_PROBE_PORTS})
+    fi
 
-    if ! proxy_port_reachable "${proxy_host}" "${proxy_port}"; then
-        log_info "Proxy ${proxy_host}:${proxy_port} unreachable, skipping (set USE_PROXY=0 to silence)"
+    log_info "Proxy setup: USE_PROXY=1 platform=${platform_label} host=${proxy_host} probes=[${probe_ports[*]}] (resolve=${resolve_method}, timeout ${PROXY_PROBE_TIMEOUT}s)"
+
+    local proxy_port="" port
+    for port in "${probe_ports[@]}"; do
+        log_info "Proxy probe: ${proxy_host}:${port}..."
+        if proxy_port_reachable "${proxy_host}" "${port}"; then
+            proxy_port="${port}"
+            break
+        fi
+    done
+
+    if [[ -z "${proxy_port}" ]]; then
+        log_info "No proxy reachable on ${proxy_host} (probed: ${probe_ports[*]}), skipping (set USE_PROXY=0 to silence)"
         return 0
     fi
 
