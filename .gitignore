@@ -146,3 +146,9 @@ ehthumbs.db
 desktop.ini
 *:Zone.Identifier
 
+# Local WSL config (machine-specific)
+.wslconfig
+
+# Local network probe scripts (sensitive, machine-specific)
+scripts/probe_login.ps1
+

@@ -1,85 +1,43 @@
 # Project Memory (Compact)
 
-> 权威项目记忆文件。`install.sh` 结束时把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`。
-> 编辑本文件后重跑 `./install.sh` 同步到各 Agent 配置。
+1) **单一来源**：终端 nvim 以 `lua/basic.lua` 为选项来源；vscode-neovim `require("basic")` 再覆盖嵌入层；IdeaVim 手动翻译 `.ideavimrc` 的 `set` 子集。改选项先 `basic.lua` → 核对 vscode 嵌入覆盖 → 核对 `.ideavimrc` 第一节。
 
-## 架构概览
+2) **三入口安装**：根 `install.sh`/`install.cmd`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。第 18 步把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`（编辑本文件后重跑 `install.sh` 同步）。
 
-1) **单一来源**：终端 Neovim 以 `lua/basic.lua` 为选项来源；vscode-neovim `require("basic")` 再覆盖嵌入层；IdeaVim 手动翻译 `.ideavimrc` 支持的 `set` 子集。
+3) **依赖与 Mason**：install 自动装 git、uv、fnm、Neovim>=0.11、Python venv（`uv pip -U`）、npm 全局包；`scripts/deps/manifest.sh` 为清单 SSOT。Mason 默认不在 install 预同步（`NVIM_SKIP_MASON=1` deferred）；首次 nvim 由 `mason-tool-installer`（run_on_start）+ `mason-lspconfig`（automatic_installation）后台装；LSP 更新统一由 tool-installer 管理（9 server 全部 ensure_installed + auto_update）。勿 headless `MasonInstall`+`qa!` 与 tool-installer 竞态；无 `mason-registry.is_installing()` API，预同步用 `scripts/deps/mason_sync.lua` 逐包 `is_installed()`。
 
-2) **三入口安装**：根 `install.cmd`/`install.sh`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。
+4) **终端启动链**：`init.lua` → `basic` → `keybindings` → `window_control` → `config.lazy` → `lua/plugins/*.lua`；尾部 `detect_python_host_from_uv` / `detect_node_host_from_fnm`。lazy 加载：`collect_plugin_specs` 手动 glob（Windows 反斜杠 modname 用 `^.+[\\/]lua[\\/]`）；单条 `{ "name", config=... }` 勿拆多 spec（否则 config 不执行）。
 
-3) **环境依赖与 install**（18 步）：`install.sh` 自动装/升级 git、uv、fnm、Neovim>=0.11、Python venv（`uv pip -U`）、npm 全局包；`scripts/deps/` 模块化（`manifest.sh` 为清单 SSOT）；**Mason 默认不在 install 预同步**（`NVIM_SKIP_MASON=0` 可选 headless，慢且易失败）；首次 `nvim` 由 `mason-tool-installer`（`run_on_start`）+ `mason-lspconfig`（`automatic_installation`）后台安装；测试 `scripts/tests/test_deps.sh`。
+5) **vscode-neovim + LSP 键位双份**：`vscode_neovim_init.lua` 嵌入 → `require("basic")` → 覆盖 showtabline/mouse → LSP 键经 `VSCodeNotify`（不加载 lspconfig 插件栈）。LSP 键位双份：终端 `lsp_server_nvim-lspconfig.lua` 与 vscode 嵌入文件，改一处须核对另一处。
 
-4) **agent 同步**：`install.sh` 第 18 步将本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`。
+6) **IdeaVim**：`.ideavimrc` 对齐 basic.lua；冲突键改前缀（FileStructurePopup→leader fo，PrevSplitter→leader pi）。
 
-5) **终端启动链**：`init.lua` → `basic` → `keybindings` → `window_control` → `config.lazy` → `lua/plugins/*.lua`（36 个规格）；尾部 `detect_python_host_from_uv` / `detect_node_host_from_fnm`。
+7) **Windows 路径与 env**：`scripts/common.sh` 路径互转；`setup_windows_config_redirect` 用 PowerShell Junction（勿 Git Bash mklink）；`~/.bashrc` 设 `XDG_CONFIG_HOME`；提交前 `settings.json` 勿含本机 `neovimInitVimPaths`；`ensure_windows_appdata_export` + `fnm_env_safe` 防误建 `%APPDATA%`；`cleanup_stray_appdata_in_dir`（backup 前、无头后）；`cleanup_legacy_packer`。**空 `XDG_CONFIG_HOME=""` 勿 export**（stdpath 退回相对路径 `nvim` 致 vim.health 误报 Missing user config file；脚本已条件导出）。
 
-6) **vscode-neovim**：`vscode_neovim_init.lua` 嵌入 → `require("basic")` → 覆盖 showtabline/mouse → LSP 键经 `VSCodeNotify`（不加载 lspconfig 插件栈）。
+8) **跨平台代理**（2026-06-04）：`setup_default_proxy`（common.sh，install/headless 共用）；本机 `127.0.0.1:7890`、WSL 宿主机 IP、`PROXY_PROBE_TIMEOUT` 2s 探测不可达跳过、`USE_PROXY=0` 关闭；`basic.lua` 第三层自动默认。
 
-7) **IdeaVim**：`.ideavimrc` 对齐 basic.lua；冲突键改前缀（FileStructurePopup→leader fo，PrevSplitter→leader pi）。
+9) **无头验收**：`bash scripts/headless_validate.sh`（install.sh 末尾默认调用，`NVIM_SKIP_HEADLESS=1` 跳过）；默认 `NVIM_SKIP_LAZY_UPDATE=1`（~20s），全量同步设 `NVIM_SKIP_LAZY_UPDATE=0`（Lazy+Mason 90s，约 5min）。`run_nvim` 设 `MSYS2_ARG_CONV_EXCL=*`；checkhealth 落盘用 `set buftype=` + `write! docs/nvim_checkhealth_final.log`（勿依赖 redir/w!）。务实 grep：fail 于 ERROR/❌ 与 packer 残留；白名单 Slow shell、terminfo、`Missing user config file`、luasnip jsregexp；见 `TROUBLE_SHOOT.md`。
 
-8) **LSP 键位双份**：终端 `lua/plugins/lsp_server_nvim-lspconfig.lua`；vscode `vscode_neovim_init.lua`；改一处须核对另一处。
+10) **init.lua 路径栈**：`find_our_config_dir` **优先 init.lua 脚本目录**（避免 Git Bash stdpath 指向 msys 旧副本）；再 stdpath/XDG；修 rtp/package.path；`vim.g.nvim_config_dir`；`lua/config/paths.lua` 供 lazy glob/lockfile。
 
-9) **跨编辑器改选项**：先 `basic.lua` → 核对 vscode 嵌入覆盖 → 核对 `.ideavimrc` 第一节。
+11) **nvim-treesitter**：Neovim 0.11 锁 `branch=master`（`main` 需 0.12+）；无头须 `-u init.lua` + `vim.wait` 等就绪。上游 2026-07 `feat(ALL)!: stop support Neovim 0.9`（须 >=0.10；本仓钉 >=0.11，无影响）。
 
-10) **Windows 路径**：`scripts/common.sh` 路径互转；`setup_windows_config_redirect` 用 PowerShell Junction（勿用 Git Bash mklink）；`~/.bashrc` 设 `XDG_CONFIG_HOME`；提交前 `settings.json` 勿含本机 `neovimInitVimPaths`。
+12) **mini.starter + mini.icons**：`shortmess` 加 `I` 禁 intro；`autoopen=false`，`UIEnter` 调 `starter.open()`；会话 `s`/`S` 经 `config.neo_tree_session.load_session`（`S` 优先带 sidecar）。
 
-11) **Win 安装 + 跨平台代理**（2026-06-04）：`ensure_windows_user_env`；`setup_default_proxy`（`common.sh`，install/headless 共用；本机 `127.0.0.1:7890`、WSL 宿主机 IP、`PROXY_PROBE_TIMEOUT` 2s 探测不可达跳过、`env USE_PROXY=0`）；`basic.lua` 第三层自动默认；`ensure_windows_appdata_export` + `fnm_env_safe` 防误建 `%APPDATA%`；`cleanup_stray_appdata_in_dir`（backup 前、无头后）；`cleanup_legacy_packer`；说明见 README / TROUBLE_SHOOT / headless-testing.mdc。
+13) **Windows MinGW + LuaSnip jsregexp**：`basic.lua` 动态探测 `MINGW_PREFIX`/`ProgramData`/`NVIM_MINGW_PATHS`，仅无 `gcc` 时 prepend PATH。jsregexp：Windows 可选 `Lazy build LuaSnip`（需 make/MinGW），失败仅 WARNING；幂等检测避免 WSL/Linux 无头 build 后 SIGSEGV core dump。
 
-12) **无头验收**：`bash scripts/headless_validate.sh`（或保持可执行位）；`install.sh` 末尾默认调用（`NVIM_SKIP_HEADLESS=1` 跳过）；默认 `NVIM_SKIP_LAZY_UPDATE=1`（~20s）；完整同步设 `NVIM_SKIP_LAZY_UPDATE=0`（Lazy+Mason 90s）。
+14) **WSL**：`/proc/version` 含 Microsoft 时提示 `fnm env` 与 Linux 侧 tree-sitter-cli；代理默认宿主机 `:7890`（`resolve_default_proxy_host` 先 resolv.conf 后 ip route，mirrored 网络回落 127.0.0.1）。
 
-13) **无头 env**：`run_nvim` 设 `MSYS2_ARG_CONV_EXCL=*` 并 export 环境变量；checkhealth 落盘用 `set buftype=` + `write! docs/nvim_checkhealth_final.log`（勿依赖 `redir`/`w!`）。
+15) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离；Git Bash 用 `env VAR=val`；Windows npm 或需 `NODE_PATH`；**msys 与 `%USERPROFILE%\.config\nvim` 双副本**时重跑 `install.sh` 或设 `XDG_CONFIG_HOME`；winget `msstore` 证书错误已加 `--source winget`（非致命）；`npm -g neovim` 失败非致命（venv Python host）；`~/.config/nvim.backup.*` 堆积可手动删，留 1～2 份。
 
-14) **务实 grep**：fail 于 ERROR/❌ 与 lazy packer 残留；白名单 headless/dumb 的 Slow shell、terminfo、`Missing user config file`（`nvim/init.lua` 或 `%USERPROFILE%`，`-u init.lua` 已加载）、luasnip jsregexp；见 `TROUBLE_SHOOT.md`。
+16) **自部署与 Settings Sync**：仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写三平台 `neovimInitVimPaths`；Windows 路径错重跑 `install.cmd`/`install.sh`。
 
-15) **init.lua 路径栈**：`find_our_config_dir` **优先 init.lua 脚本目录**（避免 Git Bash stdpath 指向 msys 旧副本）；再 stdpath/XDG；修 rtp/package.path；`vim.g.nvim_config_dir`；`lua/config/paths.lua` 供 lazy glob/lockfile。
+17) **分屏 Tab + neo-tree toggle**（2026-06-04）：winbar 用 `winbuf.nvim`（bufferline `enabled=false`，`showtabline=0`）；`[b`/`]b`/`<leader>b` 关 buffer。neo-tree 勿 `nvim_win_close` toggle（E95）；`<leader>e`/`fe` 用 `execute({ toggle })`；`NEO_TREE_BUFFER_LEAVE` 清孤儿 buffer。
 
-16) **lazy 插件加载**：`collect_plugin_specs` 手动 glob；Windows 反斜杠 modname 用 `^.+[\\/]lua[\\/]`；单条 `{ "name", config=... }` 勿拆成多 spec（否则 config 不执行）。
+18) **toggleterm cwd + neo-tree 会话**（2026-06-05）：Win Git Bash 仅 `<leader>/` 显式 `dir=getcwd()`（正斜杠）、`autochdir`、`on_open` 带引号 cd、`scripts/bash.cmd` 非 login + `$PWD` 锚定；`window_control` 识别 `buftype=terminal` 限高；`persist_size=false`；布局乱用 `<leader>wb`（`wincmd =`；2026-08-01 起 `<leader>wr` 让位 LSP 移除工作区文件夹，勿再用）。会话：sidecar `*.neo-tree.json`；`PersistenceSavePre` purge 后 `mks`；`PersistenceLoadPost` purge 空壳 buffer 再 focus（`Neotree close` 无效）；无头 `NVIM_HEADLESS_VALIDATE=1`→`persistence.stop()`。插件文件头三行注释见 `README.md`。
 
-17) **nvim-treesitter**：Neovim 0.11 锁 `branch=master`（`main` 需 0.12+）；无头须 `-u init.lua` + `vim.wait` 等 treesitter 就绪。
+19) **CodeGraph 代码索引**（2026-08-01）：`codegraph init` 建 `.codegraph/`（SQLite 本地索引）；增量 `codegraph sync`、全量 `codegraph index`、查询 `codegraph query|node <符号>`。`.codegraph/` 在根 `.gitignore` 整体忽略（内层 .gitignore 只忽略内容不忽略自身，须根级条目）。
 
-18) **mini.starter + mini.icons**：`shortmess` 加 `I` 禁 intro；`autoopen=false`，`UIEnter` 调 `starter.open()`；会话 `s`/`S` 经 `config.neo_tree_session.load_session`（`S` 优先带 sidecar 的会话）。上游 2026-07 `feat(ALL)!: stop support Neovim 0.9`（本配置 install 要求 >=0.11）。
+20) **picker 统一 snacks + 插件瘦身**（2026-08-01）：telescope/fzf-native/bufferline 移除，主 picker 为 `snacks.picker`（键位不变 `<leader>f*/g*/l*`；聚合源 `picker.pick("源名")`，lsp workspace `pick("lsp_symbols",{workspace=true})`；filetype `snacks_picker_input/list`，hardtime 据此放行）。`Comment.nvim`（2024-06 停更）→ `mini.comment`（gcc/gc/gbc 兼容）。snacks 无 vim_options/planets，`<leader>fv/fp` 已移除。
 
-19) **Windows MinGW**：`basic.lua` 动态探测 `MINGW_PREFIX`/`ProgramData`/`NVIM_MINGW_PATHS`，仅无 `gcc` 时 prepend PATH。
-
-20) **LuaSnip jsregexp**：Windows 可选 `Lazy build LuaSnip`（需 make/MinGW）；失败仅 WARNING。
-
-21) **WSL**：`/proc/version` 含 Microsoft 时提示 `fnm env` 与 Linux 侧 tree-sitter-cli；代理默认宿主机 `:7890`（`resolve_default_proxy_host`，非 127.0.0.1）。
-
-22) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离；Git Bash 用 `env VAR=val`；Windows npm 或需 `NODE_PATH`；**msys 与 `%USERPROFILE%\.config\nvim` 双副本**时重跑 `install.sh` 或设 `XDG_CONFIG_HOME`。
-
-23) **自部署与 Settings Sync**：仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写入三平台 `neovimInitVimPaths`；Windows 路径错则重跑 `install.cmd`/`install.sh`。
-
-24) **分屏 Tab + neo-tree toggle**（2026-06-04）：winbar 用 `winbuf.nvim`（`bufferline` `enabled=false`，`showtabline=0`）；`[b`/`]b`/`<leader>b` 关 buffer。neo-tree 勿 `nvim_win_close` toggle（E95）；`<leader>e`/`fe` 用 `execute({ toggle })`；`NEO_TREE_BUFFER_LEAVE` 清孤儿 buffer。
-
-25) **toggleterm cwd + neo-tree 会话**（2026-06-05）：Win Git Bash 仅 `<leader>/` 显式 `dir=getcwd()`（正斜杠）、`autochdir`、`on_open` 带引号 cd、`scripts/bash.cmd` 非 login + `$PWD` 锚定。会话：`lua/config/neo_tree_session.lua` 写 sidecar `*.neo-tree.json`；退出 `PersistenceSavePre` purge 后 `mks`；`PersistenceLoadPost` **purge session 空壳 buffer** 再 `focus`（`Neotree close` 无效）；无头 `NVIM_HEADLESS_VALIDATE=1`→`persistence.stop()`。插件文件头三行注释见 `README.md`。布局乱了用 `<leader>wb`（`wincmd =`；2026-08-01 起 `<leader>wr` 让位 LSP“移除工作区文件夹”，window_control 不再占用）。
-
-26) **CodeGraph 代码索引**（2026-08-01）：`codegraph init` 已建 `.codegraph/`（SQLite 本地索引，48 文件/418 节点/712 边）；增量 `codegraph sync`、全量 `codegraph index`、查询 `codegraph query|node <符号>`。`.codegraph/` 在根 `.gitignore` 第 138 行整体忽略（内层 `.gitignore` 只忽略内容不忽略自身，须根级条目）。
-
-27) **picker 统一 snacks + 插件瘦身**（2026-08-01）：telescope/fzf-native 移除，主 picker 为 `snacks.picker`（键位不变 `<leader>f*/g*/l*`；聚合源用 `picker.pick("源名")`，lsp workspace 用 `pick("lsp_symbols",{workspace=true})`；filetype 为 `snacks_picker_input/list`，hardtime 据此放行）。`Comment.nvim`（2024-06 停更）→ `mini.comment`（键位 gcc/gc/gbc 兼容）。LSP 安装/更新统一由 `mason-tool-installer` 管理（9 server 全部入 ensure_installed + auto_update；mason-lspconfig 只留 automatic_installation 兑底）。snacks picker 无 vim_options/planets 对应，`<leader>fv/fp` 已移除。
-
-# 问题 / 解法（install 与 Mason）
-
-| 现象 | 处理 |
-|------|------|
-| `install.sh` Mason 步骤慢或 `Neovim is exiting while packages are still installing` | 默认 `NVIM_SKIP_MASON=1`（deferred）；首次 `nvim` 自动装；勿在 headless 用 `MasonInstall`+`qa!` 与 tool-installer 竞态 |
-| headless 误用 `mason-registry.is_installing()` | 该 API 不存在；若需 install 内预同步用 `scripts/deps/mason_sync.lua` 逐包 `pkg:is_installed()` |
-| winget `msstore` 证书错误 | `platform_pkg.sh` 已加 `--source winget`；非致命 |
-| `npm install -g neovim` 失败 (Win) | 非致命；`init.lua` 仍可用 venv Python + Ruby gem host |
-| `~/.config/nvim.backup.*` 在父目录堆积 | install 步骤 9 备份；可手动删旧备份，保留最近 1～2 份 |
-| Lazy update 后 `mini.icons`/`mini.starter` 含 breaking commit | 2026-07-07 `feat(ALL)!: stop support Neovim 0.9`；须 Neovim >=0.10；本仓库 install 钉 >=0.11，当前无影响 |
-| `export XDG_CONFIG_HOME=""` 空值导出 | 使 `stdpath('config')` 退回相对路径 `nvim`，`vim.health` 误报 `Missing user config file: nvim/init.lua`；`headless_validate.sh`/`sync_mason.sh` 已改条件导出（仅非空时 export，2026-08-01） |
-
-# 已修复的历史问题（参考）
-
-- 键位冲突、conform 统一格式化、pyright/ruff 重复诊断、neodev→lazydev、dressing→Snacks 已治理
-- `<leader>wr` 曾被 LSP on_attach（buffer-local）静默覆盖 → window_control 删除该键，恢复布局用 `<leader>wb`（2026-08-01）
-- `wrap` 全局 true + 当前窗口 false → 新窗口意外换行 → 统一 `vim.o.wrap = false`（2026-08-01）
-- telescope/fzf-native/bufferline 移除、picker 统一 snacks、Comment→mini.comment、LSP 统一 tool-installer（见 #27）
-- 跨平台修复（2026-08-01）：Windows `shell` 三级回退（pwsh→powershell.exe→cmd.exe）；`run_with_timeout` 加 gtimeout/perl-alarm 兜底（macOS 无 GNU timeout）；`ideavimrc/install.sh` 与 `vscode_neovim_init.lua` 转 LF（原 CRLF 致 bash 语法错误）；`${BASH_REMATCH[1],,}` 改 tr 兼容 bash 3.2；WSL 代理解析统一先 resolv.conf 后 ip route
-- bufferline 全局 tab 无法分屏独立显示 → winbuf.nvim；`<leader>b` 曾误删 alternate buffer 已修正
-- neo-tree `<leader>e` E95：`nvim_win_close` 留孤儿 buffer → 原生 toggle + buffer leave 清理
-- toggleterm `<leader>/` + `Ctrl+Up/Down` 撑满屏：`window_control` 须识别 `buftype=terminal` 限高；`persist_size=false`；布局乱了 `<leader>wb`（`wincmd =`；`<leader>wr` 已让位 LSP 移除工作区文件夹，勿再用）
-- toggleterm Win cwd 落在 HOME：`terminal_workspace_dir` 正斜杠 + 显式 `dir` + `bash.cmd` 非 login（Git Bash 仅 Windows）
-- neo-tree 会话半恢复（空壳 buffer）：sidecar `*.neo-tree.json` + `purge_neo_tree_artifacts` + starter `S` 优先 sidecar；无头不写 session
+21) **git 更新与全量验证**（2026-08-01）：pull `6e0b4a7` 后 `ui_notice.lua`→`ui_noice.lua`（nvim-noice）；`NVIM_SKIP_LAZY_UPDATE=0 bash scripts/headless_validate.sh` 全量同步（Lazy update + Mason + LuaSnip jsregexp + checkhealth，约 5min）通过。lazy-lock 移除 `mini.comment` 条目属正常——comment.lua 仍引用该插件，Lazy 按需自动重装（实测 `mini.comment OK`）。`.gitignore` 新增本机忽略：`.wslconfig`、`scripts/probe_login.ps1`（内网设备凭据探测脚本，敏感勿入库）。
