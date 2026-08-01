@@ -58,11 +58,29 @@ run_nvim() {
     nvim --headless -u init.lua "$@"
 }
 
+# timeout/gtimeout/perl 是外部命令，无法直接执行 shell 函数 run_nvim；
+# 用 bash -c 包裹 + declare -f 传递函数体（Win Git Bash / WSL / Linux / macOS 通用），
+# 参数经 "$@" 传给子 bash，避免引号丢失。
+run_nvim_under_timeout() {
+    local seconds="$1"
+    shift
+    run_with_timeout "${seconds}" bash -c "$(declare -f run_nvim); run_nvim \"\$@\"" _ "$@"
+}
+
+# 幂等检查：jsregexp 产物是否已就位（stdpath 解析，跨平台路径兼容）。
+# 已编译则跳过 Lazy build —— WSL/Linux 无头下 Lazy! build LuaSnip 完成后
+# 退出时会 SIGSEGV（build 本身成功），避免每次全量同步都 core dump。
+luasnip_jsregexp_ready() {
+    run_nvim \
+      -c "lua local f=vim.fn.filereadable(vim.fn.stdpath('data')..'/lazy/LuaSnip/lua/luasnip-jsregexp.lua'); vim.cmd(f==1 and 'cquit 0' or 'cquit 1')" \
+      >/dev/null 2>&1
+}
+
 start_script "Headless Validation"
 
 if [[ "${NVIM_SKIP_LAZY_UPDATE:-1}" != "1" ]]; then
     log_info "=== Lazy update (+ Mason wait) ==="
-    run_with_timeout 180 run_nvim \
+    run_nvim_under_timeout 180 \
       -c "Lazy! update" \
       -c "sleep 90" \
       -c "qa!"
@@ -72,9 +90,13 @@ fi
 
 if [[ "${NVIM_SKIP_LAZY_UPDATE:-1}" != "1" ]] && command -v make >/dev/null 2>&1; then
     log_info "=== Lazy build LuaSnip (jsregexp) ==="
-    run_nvim \
-      -c "Lazy! build LuaSnip" \
-      -c "qa!" || log_warning "LuaSnip build skipped or failed (optional jsregexp)"
+    if luasnip_jsregexp_ready; then
+        log_info "jsregexp already installed; skip rebuild"
+    else
+        run_nvim \
+          -c "Lazy! build LuaSnip" \
+          -c "qa!" || log_warning "LuaSnip build skipped or failed (optional jsregexp)"
+    fi
 fi
 
 log_info "=== checkhealth (modules: ${CHECKHEALTH_MODULES}; timeout ${CHECKHEALTH_TIMEOUT}s) ==="
@@ -96,10 +118,11 @@ then
 fi
 
 log_info "=== grep validation (pragmatic) ==="
-# 严格：条目行 ERROR（luasnip 未安装时跳过 No healthcheck found）
-if grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"'; then
+# 严格：条目行 ERROR（luasnip 未安装时跳过 No healthcheck found；
+# vim.provider 的 PyPI 联网检查在无外网/代理受限/网络波动时必失败，属外部环境问题，白名单）
+if grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"|HTTP request failed'; then
     log_error "checkhealth contains ERROR"
-    grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"' || true
+    grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"|HTTP request failed' || true
     exit 1
 fi
 
@@ -127,6 +150,7 @@ while IFS= read -r line; do
         *"jsregexp"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
         *"Missing user config file: %USERPROFILE%"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
         *"No healthcheck found for \"luasnip\""*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
+        *"Could not contact PyPI"*|*"HTTP request failed"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
     esac
 done < <(grep -iE '^- WARNING|⚠|^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" || true)
 
