@@ -221,6 +221,54 @@ fnm_env_safe() {
     cd "${saved_wd}" 2>/dev/null || true
 }
 
+# 轻量探测 Neovim runtime 是否完整可用（不加载用户配置，无网络操作）。
+# 场景：apt 等包管理器安装中断（如 neovim-runtime 缺失/未配置）时 nvim --version
+# 正常，但 VIMRUNTIME 无效 → 启动报 E5113 module 'vim.uri' not found / E484 syntax.vim /
+# E5009 Invalid $VIMRUNTIME。返回 0 = runtime 正常；1 = 缺失/不可用。
+nvim_runtime_probe() {
+    command -v nvim >/dev/null 2>&1 || return 1
+    nvim --headless -u NONE \
+      -c "lua local f=vim.fn.filereadable(vim.env.VIMRUNTIME..'/syntax/syntax.vim'); vim.cmd(f==1 and 'cquit 0' or 'cquit 1')" \
+      >/dev/null 2>&1
+}
+
+# 打印当前 nvim 计算的 VIMRUNTIME 路径（供日志；仅在 probe 成功后调用）
+nvim_runtime_path() {
+    command -v nvim >/dev/null 2>&1 || return 1
+    nvim --headless -u NONE \
+      -c "lua io.stdout:write(vim.env.VIMRUNTIME or '')" \
+      -c "qa!" 2>/dev/null | tr -d '\r\n'
+}
+
+# 完整校验：runtime 缺失时输出分平台修复指引并返回 1
+verify_nvim_runtime() {
+    if ! command -v nvim >/dev/null 2>&1; then
+        log_info "nvim not in PATH; runtime check skipped"
+        return 1
+    fi
+    if nvim_runtime_probe; then
+        local rt=""
+        rt="$(nvim_runtime_path)"
+        log_success "Neovim runtime OK: ${rt:-unknown}"
+        return 0
+    fi
+
+    log_error "Neovim VIMRUNTIME invalid (runtime files missing)"
+    log_info "Symptoms: E5113 module 'vim.uri'/'vim.health' not found, E484 syntax.vim, E5009 Invalid \$VIMRUNTIME"
+    log_info "Common cause: package install interrupted (e.g. neovim-runtime not installed/configured)"
+    if is_wsl_platform || { [[ "${PLATFORM:-}" == "linux" ]] && command -v apt-get >/dev/null 2>&1; }; then
+        log_info "Fix (Debian/Ubuntu/WSL): sudo apt-get install -f"
+        log_info "  (auto-installs missing neovim-runtime and configures neovim; or: sudo apt-get install --reinstall neovim-runtime)"
+    elif [[ "${PLATFORM:-}" == "macos" ]]; then
+        log_info "Fix (macOS): brew reinstall neovim"
+    elif is_windows_platform; then
+        log_info "Fix (Windows): winget upgrade --id Neovim.Neovim  (or reinstall from https://github.com/neovim/neovim-releases/releases)"
+    else
+        log_info "Fix: reinstall Neovim (runtime bundled); see https://github.com/neovim/neovim-releases/releases"
+    fi
+    return 1
+}
+
 # Windows：清理 Win10 packer 残留（lazy checkhealth WARNING）
 cleanup_legacy_packer() {
     is_windows_platform || return 0

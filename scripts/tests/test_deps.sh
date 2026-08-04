@@ -49,6 +49,18 @@ done < <(nvim_mason_all_packages)
     failures=$((failures + 1))
 }
 
+log_info "=== nvim_runtime_probe ==="
+if command -v nvim >/dev/null 2>&1; then
+    if nvim_runtime_probe; then
+        log_success "nvim_runtime_probe OK ($(nvim_runtime_path))"
+    else
+        log_error "nvim_runtime_probe failed (VIMRUNTIME broken; run: sudo apt-get install -f / brew reinstall neovim)"
+        failures=$((failures + 1))
+    fi
+else
+    log_info "nvim not in PATH; runtime probe test skipped"
+fi
+
 log_info "=== syntax check deps ==="
 for f in "${DEPS_DIR}"/*.sh; do
     bash -n "${f}" || failures=$((failures + 1))

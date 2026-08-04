@@ -73,6 +73,12 @@ _install_or_upgrade_neovim_platform() {
                     pkg_install "" "neovim" "" "" 2>/dev/null || true
                 fi
                 pkg_upgrade "" "neovim" "" "Neovim.Neovim"
+                # 修复中断的 dpkg 状态（iU）并补装 neovim-runtime：
+                # neovim 二进制在但 VIMRUNTIME 文件缺失时 nvim 无法启动
+                if ! nvim_runtime_probe; then
+                    log_info "Neovim runtime missing; running 'apt-get install -f' to repair..."
+                    sudo apt-get install -f -y 2>/dev/null || true
+                fi
                 if ! is_nvim_version_ge_0_11; then
                     _install_neovim_linux_deb || _install_neovim_linux_tarball || return 1
                 fi
@@ -115,6 +121,24 @@ install_neovim_binary() {
 
     if command -v nvim >/dev/null 2>&1 && is_nvim_version_ge_0_11; then
         log_success "Neovim OK: $(nvim --version 2>&1 | head -n 1)"
+        # runtime 完整性：版本号满足但 VIMRUNTIME 缺失（安装中断）时无法启动，
+        # 尝试按平台自动修复，仍失败则给出指引
+        if ! nvim_runtime_probe; then
+            log_warning "Neovim binary present but VIMRUNTIME broken (runtime files missing)"
+            if [[ "${PKG_MANAGER:-}" == "apt" ]] && command -v apt-get >/dev/null 2>&1; then
+                log_info "Repairing: sudo apt-get install -f (installs missing neovim-runtime)..."
+                sudo apt-get install -f -y 2>/dev/null || true
+            elif [[ "${PKG_MANAGER:-}" == "brew" ]] && command -v brew >/dev/null 2>&1; then
+                log_info "Repairing: brew reinstall neovim..."
+                brew reinstall neovim 2>/dev/null || true
+            fi
+            if nvim_runtime_probe; then
+                log_success "Neovim runtime repaired: $(nvim --version 2>&1 | head -n 1)"
+            else
+                record_failed "neovim-runtime"
+                verify_nvim_runtime || true
+            fi
+        fi
         log_info "Attempting platform upgrade for latest stable..."
         _install_or_upgrade_neovim_platform || true
         if is_nvim_version_ge_0_11; then

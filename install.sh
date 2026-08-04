@@ -1388,6 +1388,11 @@ verify_installation() {
             log_warning "Neovim below 0.11.0: $(nvim --version 2>&1 | head -n 1)"
             errors=$((errors + 1))
         fi
+        # runtime 完整性：版本号正常但 VIMRUNTIME 缺失（apt 安装中断等）时
+        # 启动会报 E5113/E484/E5009；此处提前检出并给出修复指引
+        if ! verify_nvim_runtime; then
+            errors=$((errors + 1))
+        fi
     else
         log_warning "Neovim not found in PATH"
         errors=$((errors + 1))

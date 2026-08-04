@@ -78,6 +78,13 @@ luasnip_jsregexp_ready() {
 
 start_script "Headless Validation"
 
+# 前置检测：runtime 缺失（apt 安装中断等）时 checkhealth 必然超时/满屏 E5113，
+# 此处 fail fast 并给出修复指引，避免浪费时间与误导性报错
+if ! verify_nvim_runtime; then
+    log_error "Aborting headless validation: Neovim runtime is broken"
+    exit 1
+fi
+
 if [[ "${NVIM_SKIP_LAZY_UPDATE:-1}" != "1" ]]; then
     log_info "=== Lazy update (+ Mason wait) ==="
     run_nvim_under_timeout 180 \

@@ -1,6 +1,6 @@
 # Neovim Config — Agent Instructions
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-08-01T14:57:21Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-08-04T05:33:33Z. Edit PROJECT_MEMORY.md instead.
 
 2) **三入口安装**：根 `install.sh`/`install.cmd`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。第 18 步把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`（编辑本文件后重跑 `install.sh` 同步）。
 
@@ -41,3 +41,5 @@
 20) **picker 统一 snacks + 插件瘦身**（2026-08-01）：telescope/fzf-native/bufferline 移除，主 picker 为 `snacks.picker`（键位不变 `<leader>f*/g*/l*`；聚合源 `picker.pick("源名")`，lsp workspace `pick("lsp_symbols",{workspace=true})`；filetype `snacks_picker_input/list`，hardtime 据此放行）。`Comment.nvim`（2024-06 停更）→ `mini.comment`（gcc/gc/gbc 兼容）。snacks 无 vim_options/planets，`<leader>fv/fp` 已移除。
 
 21) **git 更新与全量验证**（2026-08-01）：pull `6e0b4a7` 后 `ui_notice.lua`→`ui_noice.lua`（nvim-noice）；`NVIM_SKIP_LAZY_UPDATE=0 bash scripts/headless_validate.sh` 全量同步（Lazy update + Mason + LuaSnip jsregexp + checkhealth，约 5min）通过。lazy-lock 移除 `mini.comment` 条目属正常——comment.lua 仍引用该插件，Lazy 按需自动重装（实测 `mini.comment OK`）。`.gitignore` 新增本机忽略：`.wslconfig`、`scripts/probe_login.ps1`（内网设备凭据探测脚本，敏感勿入库）。
+
+22) **VIMRUNTIME 完整性检测**（2026-08-04）：WSL apt 安装中断（`neovim` 状态 `iU`、`neovim-runtime` 未装）时 `nvim --version` 正常但启动报 E5113 `vim.uri`/`E484 syntax.vim`/`E5009 Invalid $VIMRUNTIME`。`scripts/common.sh` 新增 `nvim_runtime_probe`（`-u NONE` 查 `$VIMRUNTIME/syntax/syntax.vim`，不加载用户配置）、`nvim_runtime_path`、`verify_nvim_runtime`（分平台修复指引）；install.sh verify 阶段、headless_validate.sh 开头（fail-fast）、install_neovim.sh（apt 分支自动 `sudo apt-get install -f`）均接入；test_deps.sh 含 probe 测试。修复：`sudo apt-get install -f`。见 `TROUBLE_SHOOT.md`。

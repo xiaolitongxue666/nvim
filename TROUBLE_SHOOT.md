@@ -299,4 +299,45 @@ NVIM_CHECKHEALTH_TIMEOUT=180 ./scripts/headless_validate.sh   # 慢网络加大�
 | Mason sync 超时 | 默认已跳过 install 预同步；首次 `nvim` 自动装。需 install 内预装：`NVIM_SKIP_MASON=0 ./install.sh` |
 | uv/fnm 安装后仍 `command not found` | 将 `~/.local/bin` 加入 PATH 或重新打开终端 |
 | Neovim 仍 < 0.11 | 检查 `nvim --version`；Windows 可 `winget upgrade Neovim.Neovim`；Linux 见 script_tool `run_once_install-neovim` 回退 tarball |
+| 启动报 `E5113 module 'vim.uri' not found` / `E484 syntax.vim` / `E5009 Invalid $VIMRUNTIME` | nvim 二进制在但 **runtime 文件缺失**（apt 安装中断：`neovim` 状态 `iU`、`neovim-runtime` 未装）。修复：`sudo apt-get install -f`（自动补装并配置）；或 `sudo apt-get install --reinstall neovim-runtime`。验证：`dpkg -s neovim neovim-runtime \| grep -E '^(Package|Status)'` 均应 `install ok installed`。脚本已自动检测（`verify_nvim_runtime`），见下节 |
 | 外网下载失败 | 确认代理 `127.0.0.1:7890`（WSL 用宿主机 IP）；或 `USE_PROXY=0` 后手动配置镜像 |
+
+---
+
+## 问题：nvim 版本正常但 VIMRUNTIME 无效（apt 安装中断）
+
+### 现象
+
+`install.sh` 无头验收阶段满屏报错，`checkhealth` 超时/失败：
+
+```
+E5113: Lua chunk: vim/_init_packages.lua:0: module 'vim.uri' not found
+E484: Can't open file /usr/share/nvim/syntax/syntax.vim
+E5009: Invalid $VIMRUNTIME: /usr/share/nvim
+```
+
+但 `nvim --version` 正常（如 `NVIM v0.12.0-dev`），版本检查也能通过。
+
+### 环境
+
+WSL / Ubuntu（Debian 系 apt 安装 Neovim）。
+
+### 原因简述
+
+apt 安装 Neovim 时中断/未配置完成：
+
+- `dpkg -s neovim` → `Status: install ok unpacked`（`iU`，未 configured）
+- `dpkg -s neovim-runtime` → `Status: install ok not-installed`（**runtime 包未装**）
+- `/usr/share/nvim` 目录不存在 → nvim 的 `VIMRUNTIME` 指向空目录 → 加载 `init.lua` 时 `require('vim.uri')`、`syntax.vim` 等全部找不到
+
+关键：**版本号检查（`nvim --version`）不依赖 runtime 文件，所以之前脚本无法检出**。
+
+### 解决办法（脚本内已实现，2026-08-04）
+
+1. **修复系统**：`sudo apt-get install -f`（自动补装 `neovim-runtime` 并配置 `neovim`）；或 `sudo apt-get install --reinstall neovim-runtime`。
+2. **脚本自动检测**：
+   - `scripts/common.sh` 新增 `nvim_runtime_probe` / `nvim_runtime_path` / `verify_nvim_runtime`：以 `nvim --headless -u NONE` 检查 `$VIMRUNTIME/syntax/syntax.vim` 可读（不加载用户配置、无网络，毫秒级），失败时输出分平台修复指引（apt `-f` / `brew reinstall` / `winget upgrade`）。
+   - `install.sh` `verify_installation()`：版本检查后追加 runtime 检查，失败计入 errors。
+   - `scripts/headless_validate.sh`：开头 fail-fast 前置检测，runtime 损坏直接退出并给指引（不再 90s 超时后满屏报错）。
+   - `scripts/deps/install_neovim.sh`：apt 分支与已装分支自动跑 `sudo apt-get install -f` 修复；仍失败则 `record_failed` + 指引。
+3. **验证**：`dpkg -s neovim neovim-runtime | grep -E '^(Package|Status)'` 均为 `install ok installed`；或 `bash scripts/tests/test_deps.sh`（含 `nvim_runtime_probe` 测试）。
