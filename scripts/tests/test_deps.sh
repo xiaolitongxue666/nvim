@@ -13,6 +13,8 @@ source "${COMMON_LIB}"
 source "${DEPS_DIR}/manifest.sh"
 # shellcheck source=../deps/version.sh
 source "${DEPS_DIR}/version.sh"
+# shellcheck source=../deps/platform_pkg.sh
+source "${DEPS_DIR}/platform_pkg.sh"
 
 failures=0
 
@@ -60,6 +62,30 @@ if command -v nvim >/dev/null 2>&1; then
 else
     log_info "nvim not in PATH; runtime probe test skipped"
 fi
+
+log_info "=== brew HOMEBREW_NO_ASK (noninteractive upgrade) ==="
+_saved_pkg_manager="${PKG_MANAGER:-}"
+brew() {
+    case "${1:-}" in
+        list) return 0 ;;
+        upgrade|install)
+            if [[ -n "${HOMEBREW_NO_ASK:-}" ]]; then
+                echo "no_ask=1"
+            else
+                echo "no_ask=0"
+            fi
+            return 0
+            ;;
+        *) return 0 ;;
+    esac
+}
+PKG_MANAGER=brew
+upgrade_out="$(pkg_upgrade "ruby" "" "" "")"
+install_out="$(pkg_install "ruby" "" "" "")"
+unset -f brew
+PKG_MANAGER="${_saved_pkg_manager}"
+assert_eq "pkg_upgrade brew HOMEBREW_NO_ASK" "no_ask=1" "${upgrade_out}"
+assert_eq "pkg_install brew HOMEBREW_NO_ASK" "no_ask=1" "${install_out}"
 
 log_info "=== syntax check deps ==="
 for f in "${DEPS_DIR}"/*.sh; do

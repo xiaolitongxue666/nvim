@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 # 平台包管理器封装（apt/pacman/brew/winget；不走 HTTP 代理）
 
+# Homebrew 现默认 ask（Do you want to proceed? [y/n]）。官方 opt-out：HOMEBREW_NO_ASK
+# （man brew）；不用 CLI --yes，以免旧版 invalid option 被 || true 吞掉而跳过升级。
+# https://docs.brew.sh/Manpage
+brew_noconfirm() {
+    HOMEBREW_NO_ASK=1 brew "$@"
+}
+
 # 参数: brew_name apt_name pacman_name [winget_id]
 pkg_install() {
     local brew_name="${1:-}" apt_name="${2:-}" pacman_name="${3:-}" winget_id="${4:-}"
     case "${PKG_MANAGER:-}" in
         brew)
-            [[ -n "${brew_name}" ]] && brew install "${brew_name}"
+            [[ -n "${brew_name}" ]] && brew_noconfirm install "${brew_name}"
             ;;
         apt)
             [[ -n "${apt_name}" ]] && sudo apt-get install -y "${apt_name}"
@@ -40,7 +47,7 @@ pkg_upgrade() {
     case "${PKG_MANAGER:-}" in
         brew)
             if [[ -n "${brew_name}" ]] && brew list "${brew_name}" >/dev/null 2>&1; then
-                brew upgrade "${brew_name}" 2>/dev/null || true
+                brew_noconfirm upgrade "${brew_name}" 2>/dev/null || true
             fi
             ;;
         apt)

@@ -418,7 +418,7 @@ install_language_tools() {
 
             if [[ ${#brew_packages[@]} -gt 0 ]]; then
                 log_info "Installing packages via Homebrew: ${brew_packages[*]}"
-                if brew install "${brew_packages[@]}" 2>&1; then
+                if brew_noconfirm install "${brew_packages[@]}" 2>&1; then
                     log_success "Language tools installed successfully"
                 else
                     log_info "Some language tools could not be installed via Homebrew; you can run: brew install ${brew_packages[*]}"
@@ -546,7 +546,7 @@ install_lua() {
         fi
     elif [[ "${PLATFORM}" == "macos" ]] && command -v brew >/dev/null 2>&1; then
         log_info "Installing Lua via Homebrew"
-        if brew install lua >/dev/null 2>&1; then
+        if brew_noconfirm install lua >/dev/null 2>&1; then
             log_success "Lua installed successfully"
         else
             log_info "Could not install Lua via Homebrew; install manually if needed"

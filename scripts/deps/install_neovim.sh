@@ -50,7 +50,7 @@ _install_or_upgrade_neovim_platform() {
         macos)
             if [[ "${PKG_MANAGER}" == "brew" ]]; then
                 if command -v nvim >/dev/null 2>&1; then
-                    brew upgrade neovim 2>/dev/null || brew install neovim
+                    brew_noconfirm upgrade neovim 2>/dev/null || brew_noconfirm install neovim
                 else
                     pkg_install "neovim" "" "" ""
                 fi
@@ -130,7 +130,7 @@ install_neovim_binary() {
                 sudo apt-get install -f -y 2>/dev/null || true
             elif [[ "${PKG_MANAGER:-}" == "brew" ]] && command -v brew >/dev/null 2>&1; then
                 log_info "Repairing: brew reinstall neovim..."
-                brew reinstall neovim 2>/dev/null || true
+                brew_noconfirm reinstall neovim 2>/dev/null || true
             fi
             if nvim_runtime_probe; then
                 log_success "Neovim runtime repaired: $(nvim --version 2>&1 | head -n 1)"
