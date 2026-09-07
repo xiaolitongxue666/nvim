@@ -185,3 +185,13 @@
 - **Comment.nvim（2024-06 停更）→ mini.comment**（gcc/gc/gbc 兼容）。
 - **LSP 安装/更新统一 tool-installer**（9 server 入 ensure_installed + auto_update；mason-lspconfig 只留兑底），修复"只装不更新"缺口。
 - 51 个仓库 GitHub 状态核查（见 docs/plugin_github_audit.txt）：无 archived；toggleterm（2025-03）与 cmp_luasnip（2024-11）更新放缓，暂留。
+
+## 2026-09-07
+
+### 例行全量同步 + 记忆压缩（summary-memory）
+
+- **Lazy 全量同步**（`NVIM_SKIP_LAZY_UPDATE=0 bash scripts/headless_validate.sh`）：lazy-lock 更新 9 插件（nvim-lspconfig、neo-tree、mason-lspconfig、indent-blankline、nvim-autopairs、nvim-dap、nvim-web-devicons、schemastore、luvit-meta）；lualine/catppuccin/nui/nvim-dap-virtual-text 经 `git ls-remote` 核对本已最新。checkhealth 无 ERROR，jsregexp 已就绪跳过重建。
+- **瞬时网络**：Lazy update 个别 GitHub fetch 报 `LibreSSL SSL_connect: SSL_ERROR_SYSCALL`，非致命（跳过/复跑即可）——已并入 PROJECT_MEMORY #8。
+- **清理**：删除可再生 `docs/nvim_checkhealth_final.log`（gitignored）。
+- **记忆压缩**：PROJECT_MEMORY 22 → 19 条：合并选项单一来源+IdeaVim（新#1）、安装+自部署（新#2）、分屏/会话/neo-tree/toggleterm 窗口运维（新#15）；mini.comment 锁说明并入「picker 瘦身」（新#17）、gitignore 本地忽略并入「Windows 路径与 env」（新#6）；treesitter/#12/#16 微瘦身。
+- **冗余检测**：sha256 无重复文件；`docs/PROJECT_MEMORY_LOG.md` 为 install.sh 种子源，保留并追加本条目。
