@@ -195,3 +195,12 @@
 - **清理**：删除可再生 `docs/nvim_checkhealth_final.log`（gitignored）。
 - **记忆压缩**：PROJECT_MEMORY 22 → 19 条：合并选项单一来源+IdeaVim（新#1）、安装+自部署（新#2）、分屏/会话/neo-tree/toggleterm 窗口运维（新#15）；mini.comment 锁说明并入「picker 瘦身」（新#17）、gitignore 本地忽略并入「Windows 路径与 env」（新#6）；treesitter/#12/#16 微瘦身。
 - **冗余检测**：sha256 无重复文件；`docs/PROJECT_MEMORY_LOG.md` 为 install.sh 种子源，保留并追加本条目。
+
+## 2026-09-26
+
+### 安装前置收窄 + Mason 补装 LSP
+
+- **Intel macOS 卡死原因**：`brew upgrade uv` 无 x86_64 bottle，公式 `depends_on "rust" => :build` 开始源码编译 rustc；中断后的 `brew upgrade ruby` / `brew upgrade llvm` 同样拉 rust/llvm 源码。uv 官方仍支持 macOS x86_64（`uv-x86_64-apple-darwin`）；包管理器安装的 uv 不能 `uv self update`，回退 `https://astral.sh/uv/install.sh`（`UV_NO_MODIFY_PATH=1`）。
+- **安装隔离**：macOS uv/fnm 只走官方安装器；Linux pacman、Windows winget 各自独立。`brew_noconfirm` 增加 `HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1`。删除 Go、Ruby、Composer、Homebrew llvm、系统 Lua、flake8、pnpm。Rust 只走 rustup；C 编译器只检查已有 clang/gcc。`fd`/`rg` 缺失才装、不升级。venv 只留 pynvim；npm 只留 neovim 与 tree-sitter-cli。
+- **Mason**：`ensure_installed` 去掉 isort/mypy/taplo/shfmt；DAP 去掉未安装的 node-debug2。9 个 LSP 用无头 `MasonToolsInstallSync` 核对为已安装。勿 `MasonInstall`+`qa!`。
+- **脚本拆分**：`install.sh` 只编排；Python/Node/Rust/Windows 路径分别在 `scripts/deps/install_python.sh`、`install_node.sh`、`install_rust.sh`、`scripts/windows_config.sh`。

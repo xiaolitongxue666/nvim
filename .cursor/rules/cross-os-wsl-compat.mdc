@@ -13,4 +13,5 @@ alwaysApply: true
 - Avoid assumptions about `$APPDATA`, `%APPDATA%`, and `$XDG_CONFIG_HOME`; resolve from environment with fallback order.
 - Preserve LF in shell/Lua files and avoid introducing CRLF-only behavior.
 - Any new install/bootstrap behavior must be idempotent and non-destructive across repeated runs on all supported platforms.
+- Keep package-manager branches isolated. macOS uv/fnm/rustup use their official installers and must not call Homebrew. Linux pacman and Windows winget do not call each other. Homebrew calls set `HOMEBREW_NO_ASK=1` and `HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1` so a missing bottle does not source-build rustc or llvm.
 - Document platform-specific caveats in `README.md` or `TROUBLE_SHOOT.md` when introducing new OS-dependent behavior.

@@ -2,7 +2,7 @@
 
 基于 Lua 的 Neovim 配置，使用 [lazy.nvim](https://github.com/folke/lazy.nvim) 管理插件。独立 Git 仓库，支持 macOS、Linux、Windows、WSL。
 
-**要求**：Neovim **0.11.0+**、Git。`./install.sh` 会自动安装/升级 [uv](https://github.com/astral-sh/uv)、[fnm](https://github.com/Schniz/fnm)、Neovim 二进制及项目依赖（Python venv、npm 全局包、Mason LSP/工具）。
+**要求**：Neovim **0.11.0+**、Git。`./install.sh` 安装 [uv](https://github.com/astral-sh/uv)、[fnm](https://github.com/Schniz/fnm)（macOS 走官方安装器，不走 Homebrew）、Neovim、rustup，以及 Python venv（仅 pynvim）和 npm 全局包（`neovim`、`tree-sitter-cli`）。LSP、格式化与调试由 Neovim 内 Mason 安装。缺失的 `fd`、`ripgrep` 会补装。不再安装 Go、Ruby、Composer 或 Homebrew llvm。
 
 ## 安装与更新
 

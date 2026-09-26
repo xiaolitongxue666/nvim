@@ -1,26 +1,18 @@
 #!/usr/bin/env bash
 # 依赖清单（与 lua/plugins 中 Mason ensure_installed 对齐；变更时同步两处）
 
-# Python venv 包（install.sh setup_python_environment）
+# Python venv 包：仅 Neovim Python host。LSP/格式化/调试由 Mason 安装。
 NVIM_PYTHON_PACKAGES=(
     pynvim
-    pyright
-    ruff-lsp
-    debugpy
-    black
-    isort
-    flake8
-    mypy
 )
 
-# npm 全局包（install.sh setup_nodejs_environment）
+# npm 全局包（Neovim node host 与 tree-sitter CLI）
 NVIM_NPM_PACKAGES=(
     neovim
     tree-sitter-cli
-    pnpm
 )
 
-# Mason LSP（lua/plugins/lsp_server_manager_mason-lspconfig.lua）
+# Mason LSP（lua/plugins/lsp_server_nvim-lspconfig.lua）
 NVIM_MASON_LSP_PACKAGES=(
     lua_ls
     bashls
@@ -32,17 +24,12 @@ NVIM_MASON_LSP_PACKAGES=(
     marksman
 )
 
-# Mason 工具（lua/plugins/lsp_server_manager_mason.lua）
+# Mason 工具（conform / dap / ruff-lsp；与 lsp_server_manager_mason.lua 对齐）
 NVIM_MASON_TOOL_PACKAGES=(
-    pyright
     ruff-lsp
     black
-    isort
-    debugpy
-    mypy
-    taplo
     stylua
-    shfmt
+    debugpy
     codelldb
 )
 
@@ -53,11 +40,14 @@ NVIM_SYSTEM_PACKAGES=(
     tar
 )
 
-# 语言工具逻辑名（install_language_tools）
+# 搜索工具：neo-tree 使用 fd，spectre 使用 rg。缺失才安装，不升级。
+NVIM_SEARCH_TOOLS=(
+    fd
+    rg
+)
+
+# 语言工具：rustup 预编译工具链；C 编译器仅检查系统是否已有 clang/gcc。
 NVIM_LANGUAGE_TOOLS=(
-    go
-    ruby
-    composer
     rust
     c_compiler
 )

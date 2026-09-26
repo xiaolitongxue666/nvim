@@ -30,11 +30,8 @@ install_uv_if_missing() {
     log_info "Installing uv..."
     case "${PLATFORM}" in
         macos)
-            if [[ "${PKG_MANAGER}" == "brew" ]]; then
-                pkg_install "uv" "" "" "" || _install_uv_curl || record_failed "uv"
-            else
-                _install_uv_curl || record_failed "uv"
-            fi
+            # 官方预编译包。不走 Homebrew：Intel macOS 没有 uv bottle 时会从源码编译 rustc。
+            _install_uv_curl || record_failed "uv"
             ;;
         linux)
             if [[ "${PKG_MANAGER}" == "pacman" ]]; then
@@ -54,20 +51,31 @@ install_uv_if_missing() {
     _ensure_path_local_bin
 }
 
+# macOS 只更新 uv 自己。Homebrew 安装的 uv 会禁用 self update，此时改走官方安装脚本。
+_upgrade_uv_macos() {
+    _ensure_path_local_bin
+    if UV_NO_MODIFY_PATH=1 uv self update; then
+        return 0
+    fi
+    log_info "uv self update unavailable; installing official uv binary"
+    UV_NO_MODIFY_PATH=1 _install_uv_curl || log_warning "uv official installer failed"
+}
+
 upgrade_uv_if_present() {
     command -v uv >/dev/null 2>&1 || return 0
     case "${PLATFORM}" in
         macos)
-            [[ "${PKG_MANAGER}" == "brew" ]] && pkg_upgrade "uv" "" "" "astral-sh.uv"
+            _upgrade_uv_macos
             ;;
         linux)
             [[ "${PKG_MANAGER}" == "pacman" ]] && pkg_upgrade "" "" "uv" "astral-sh.uv"
+            uv self update 2>/dev/null || true
             ;;
         windows)
             pkg_upgrade "" "" "" "astral-sh.uv"
+            uv self update 2>/dev/null || true
             ;;
     esac
-    uv self update 2>/dev/null || true
 }
 
 install_fnm_if_missing() {
@@ -77,11 +85,8 @@ install_fnm_if_missing() {
     log_info "Installing fnm..."
     case "${PLATFORM}" in
         macos)
-            if [[ "${PKG_MANAGER}" == "brew" ]]; then
-                pkg_install "fnm" "" "" "" || _install_fnm_curl || record_failed "fnm"
-            else
-                _install_fnm_curl || record_failed "fnm"
-            fi
+            # 官方预编译包。不走 Homebrew。
+            _install_fnm_curl || record_failed "fnm"
             ;;
         linux)
             if [[ "${PKG_MANAGER}" == "pacman" ]]; then
@@ -101,20 +106,31 @@ install_fnm_if_missing() {
     _ensure_path_local_bin
 }
 
+# macOS 只更新 fnm 自己。不走 brew upgrade。
+_upgrade_fnm_macos() {
+    _ensure_path_local_bin
+    if fnm self-update; then
+        return 0
+    fi
+    log_info "fnm self-update unavailable; installing official fnm binary"
+    _install_fnm_curl || log_warning "fnm official installer failed"
+}
+
 upgrade_fnm_if_present() {
     command -v fnm >/dev/null 2>&1 || return 0
     case "${PLATFORM}" in
         macos)
-            [[ "${PKG_MANAGER}" == "brew" ]] && pkg_upgrade "fnm" "" "" "Schniz.fnm"
+            _upgrade_fnm_macos
             ;;
         linux)
             [[ "${PKG_MANAGER}" == "pacman" ]] && pkg_upgrade "" "" "fnm" "Schniz.fnm"
+            fnm self-update 2>/dev/null || true
             ;;
         windows)
             pkg_upgrade "" "" "" "Schniz.fnm"
+            fnm self-update 2>/dev/null || true
             ;;
     esac
-    fnm self-update 2>/dev/null || true
 }
 
 install_git_if_missing() {
@@ -175,23 +191,6 @@ ensure_prerequisites() {
         log_success "fnm: $(fnm --version 2>&1 | head -n 1)"
     else
         error_exit "fnm is not available after install attempt. Re-login or add fnm to PATH"
-    fi
-
-    # 可选 Lua
-    local lua_installed=0
-    if command -v lua >/dev/null 2>&1; then
-        lua_installed=1
-        log_success "Lua found: $(lua -v 2>&1 | head -n 1)"
-    elif [[ "${PLATFORM}" == "linux" ]] && [[ "${PKG_MANAGER}" == "pacman" ]]; then
-        if pacman -Qi lua >/dev/null 2>&1; then
-            lua_installed=1
-            log_success "Lua found via pacman"
-        fi
-    fi
-    if [[ ${lua_installed} -eq 0 ]]; then
-        log_info "Lua is not installed (optional for Neovim)"
-        record_failed "Lua"
-        install_lua 2>/dev/null || true
     fi
 
     warn_mixed_windows_path

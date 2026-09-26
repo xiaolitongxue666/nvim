@@ -58,6 +58,7 @@ grep -iE '^- ERROR|^- WARNING|❌|⚠' docs/nvim_checkhealth_final.log || echo "
 | Lazy 同步/钉版本 | `-c "Lazy! sync"` / `-c "Lazy! sync nvim-treesitter"` | 改 `branch`/`commit` 后必须 sync |
 | 健康检查落盘 | `-c "checkhealth" -c "w! path.log"` | 比 `redir` 更可靠 |
 | 等待插件就绪 | `-c "lua vim.wait(ms, fn)"` | lazy=false 插件也需等待 lazy 引导 |
+| 安装已配置 LSP | `Lazy! load mason.nvim mason-tool-installer.nvim` 然后 `MasonToolsInstallSync` 再 `qa!` | Neovim 内 Mason；不要 `MasonInstall` 后立刻 `qa!` |
 
 ## 环境前置
 

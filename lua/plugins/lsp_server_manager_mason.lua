@@ -77,9 +77,10 @@ return {
             },
             })
 
-            -- 自动安装最常用的工具（全部走 uv）
-            -- 注意：LSP 服务器由这里统一管理（含 auto_update 自动更新）——
-            -- 9 个已配置 server 全部在列：lua_ls/bashls/clangd/pyright/rust_analyzer/jsonls/yamlls/marksman + ruff-lsp
+            -- 由 mason-tool-installer 安装与更新（Neovim 内 Mason，不走 uv/brew）。
+            -- 无头补装用 :MasonToolsInstallSync，不要 MasonInstall 后立刻 qa!。
+            -- 9 个 LSP：lua_ls/bashls/clangd/pyright/rust_analyzer/jsonls/yamlls/marksman + ruff-lsp
+            -- 另有 conform/dap：black、stylua、debugpy、codelldb
             require("mason-tool-installer").setup({
                 ensure_installed = {
                     -- LSP 服务器（run_on_start + auto_update 自动安装与更新）
@@ -92,17 +93,10 @@ return {
                     "yamlls",
                     "marksman",
                     "ruff-lsp",     -- Ruff Python 代码检查器和格式化工具
-                    -- Python 工具
-                    "black",        -- Python 代码格式化工具
-                    "isort",        -- Python import 排序
+                    "black",        -- conform Python 格式化
+                    "stylua",       -- conform Lua 格式化
                     "debugpy",      -- Python 调试器
-                    "mypy",         -- Python 类型检查器
-                    -- 其他工具
-                    "taplo",        -- TOML 格式化工具
-                    "stylua",       -- Lua 代码格式化工具
-                    "shfmt",        -- Shell 脚本格式化工具
-                    -- DAP 调试器（C/C++/Rust，启动时自动安装）
-                    "codelldb",
+                    "codelldb",     -- C/C++/Rust 调试器
                 },
                 auto_update = true,
                 run_on_start = true,

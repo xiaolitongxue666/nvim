@@ -1,10 +1,10 @@
 # Neovim Config — Agent Instructions
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-09-07T13:56:12Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-09-26T14:52:48Z. Edit PROJECT_MEMORY.md instead.
 
 2) **三入口安装 + 自部署**：根 `install.sh`/`install.cmd`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。第 18 步把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`（编辑后重跑 `install.sh` 同步）。仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写三平台 `neovimInitVimPaths`；Windows 路径错重跑 `install.cmd`/`install.sh`。
 
-3) **依赖与 Mason**：install 自动装 git、uv、fnm、Neovim>=0.11、Python venv（`uv pip -U`）、npm 全局包；`scripts/deps/manifest.sh` 为清单 SSOT。Mason 默认不在 install 预同步（`NVIM_SKIP_MASON=1` deferred）；首次 nvim 由 `mason-tool-installer`（run_on_start）+ `mason-lspconfig`（automatic_installation）后台装；LSP 更新统一由 tool-installer 管理（9 server 全部 ensure_installed + auto_update）。勿 headless `MasonInstall`+`qa!` 与 tool-installer 竞态；无 `mason-registry.is_installing()` API，预同步用 `scripts/deps/mason_sync.lua` 逐包 `is_installed()`。
+3) **依赖与 Mason**（2026-09-26）：清单 SSOT 为 `scripts/deps/manifest.sh`。install 装 git/curl/tar、uv、fnm、Neovim>=0.11、rustup、venv 仅 `pynvim`、npm 仅 `neovim`+`tree-sitter-cli`；`fd`/`rg` 缺失才装、不升级。已删除 Go、Ruby、Composer、Homebrew llvm、系统 Lua、flake8、pnpm，以及 Mason 的 isort/mypy/taplo/shfmt 和未安装的 node-debug2。macOS 的 uv/fnm 只用官方安装器（`uv self update` / `fnm self-update`，失败再 curl，`UV_NO_MODIFY_PATH=1`），禁止 `brew upgrade`（Intel 无 bottle 会源码编译 rustc）。Linux pacman 与 Windows winget 各自独立。Rust 只走 rustup；C 编译器只检查已有 clang/gcc。Mason 默认 `NVIM_SKIP_MASON=1`；`ensure_installed` 为 9 个 LSP（lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman、ruff-lsp）加 black/stylua/debugpy/codelldb。无头补装用 `MasonToolsInstallSync`，勿 `MasonInstall`+`qa!`。预同步用 `scripts/deps/mason_sync.lua` 逐包 `is_installed()`。
 
 4) **终端启动链**：`init.lua` → `basic` → `keybindings` → `window_control` → `config.lazy` → `lua/plugins/*.lua`；尾部 `detect_python_host_from_uv` / `detect_node_host_from_fnm`。lazy 加载：`collect_plugin_specs` 手动 glob（Windows 反斜杠 modname 用 `^.+[\\/]lua[\\/]`）；单条 `{ "name", config=... }` 勿拆多 spec（否则 config 不执行）。
 
@@ -34,6 +34,6 @@
 
 17) **picker 统一 snacks + 插件瘦身**（2026-08-01）：telescope/fzf-native/bufferline 移除，主 picker 为 `snacks.picker`（键位不变 `<leader>f*/g*/l*`；聚合源 `picker.pick("源名")`，lsp workspace `pick("lsp_symbols",{workspace=true})`；filetype `snacks_picker_input/list`，hardtime 据此放行）。`Comment.nvim` → `mini.comment`（gcc/gc/gbc 兼容）。snacks 无 vim_options/planets，`<leader>fv/fp` 已移除。lazy-lock 无 `mini.comment` 条目属正常（comment.lua 仍引用，Lazy 按需重装）。
 
-18) **Homebrew 非交互**（2026-08-22）：Homebrew 现默认 `--ask`（`brew upgrade ruby/llvm` 会停在 y/n）。install 用 `brew_noconfirm`（`HOMEBREW_NO_ASK=1`，`scripts/deps/platform_pkg.sh`；man brew）；勿用 CLI `--yes`（旧版 invalid option 会被 `|| true` 吞掉而跳过升级）。
+18) **Homebrew 失败即停源码编译**（2026-08-22；2026-09-26）：`brew_noconfirm`（`scripts/deps/platform_pkg.sh`）设 `HOMEBREW_NO_ASK=1` 与 `HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1`。无 bottle 时失败继续，不编译 rustc/llvm。勿用 CLI `--yes`。uv/fnm/rust 不走 brew；brew 只用于 git/curl 与缺失时的 fd/ripgrep。
 
 19) **VIMRUNTIME 完整性检测**（2026-08-04）：WSL apt 安装中断（`neovim` 状态 `iU`、`neovim-runtime` 未装）时 `nvim --version` 正常但启动报 E5113 `vim.uri`/`E484 syntax.vim`/`E5009 Invalid $VIMRUNTIME`。`scripts/common.sh` 新增 `nvim_runtime_probe`（`-u NONE` 查 `$VIMRUNTIME/syntax/syntax.vim`，不加载用户配置）、`nvim_runtime_path`、`verify_nvim_runtime`（分平台修复指引）；install.sh verify 阶段、headless_validate.sh 开头（fail-fast）、install_neovim.sh（apt 分支自动 `sudo apt-get install -f`）均接入；test_deps.sh 含 probe 测试。修复：`sudo apt-get install -f`。见 `TROUBLE_SHOOT.md`。

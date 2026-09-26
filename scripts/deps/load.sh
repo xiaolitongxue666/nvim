@@ -17,5 +17,13 @@ source "${DEPS_DIR}/install_prereqs.sh"
 source "${DEPS_DIR}/install_neovim.sh"
 # shellcheck source=install_system_utils.sh
 source "${DEPS_DIR}/install_system_utils.sh"
+# shellcheck source=install_rust.sh
+source "${DEPS_DIR}/install_rust.sh"
+# shellcheck source=install_python.sh
+source "${DEPS_DIR}/install_python.sh"
+# shellcheck source=install_node.sh
+source "${DEPS_DIR}/install_node.sh"
+# shellcheck source=../windows_config.sh
+source "${DEPS_DIR}/../windows_config.sh"
 # shellcheck source=sync_mason.sh
 source "${DEPS_DIR}/sync_mason.sh"

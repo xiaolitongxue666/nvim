@@ -92,7 +92,7 @@
 | `yamlls`    | YAML       |
 | `marksman`  | Markdown   |
 
-自 2026-08-01 起，**全部 LSP 的安装与更新统一由 `mason-tool-installer` 接管**（`lua/plugins/lsp_server_manager_mason.lua` 的 `ensure_installed` 含 lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman、ruff-lsp，`run_on_start + auto_update=true`，全部走 uv）；`mason-lspconfig` 仅保留 `automatic_installation=true` 作为新 server 的兑底，不再维护重复清单。
+自 2026-08-01 起，**全部 LSP 的安装与更新由 `mason-tool-installer` 接管**（`lua/plugins/lsp_server_manager_mason.lua` 的 `ensure_installed`：lua_ls、bashls、clangd、pyright、rust_analyzer、jsonls、yamlls、marksman、ruff-lsp，以及 black、stylua、debugpy、codelldb；`run_on_start + auto_update=true`）。这些包由 Neovim 内 Mason 下载，不走 uv 或 Homebrew。无头补装用 `:MasonToolsInstallSync`，不要 `:MasonInstall` 后立刻 `qa!`。`mason-lspconfig` 仅保留 `automatic_installation=true` 作为新 server 的兑底。
 
 ---
 

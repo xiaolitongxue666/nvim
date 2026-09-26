@@ -5,7 +5,8 @@
 # （man brew）；不用 CLI --yes，以免旧版 invalid option 被 || true 吞掉而跳过升级。
 # https://docs.brew.sh/Manpage
 brew_noconfirm() {
-    HOMEBREW_NO_ASK=1 brew "$@"
+    # 没有 bottle 时失败并继续，不从源码编译（Intel macOS 上会拖出 rustc/llvm）。
+    HOMEBREW_NO_ASK=1 HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1 brew "$@"
 }
 
 # 参数: brew_name apt_name pacman_name [winget_id]
@@ -81,34 +82,3 @@ pkg_upgrade() {
     esac
 }
 
-# 语言工具升级（已安装时调用）
-upgrade_language_tool_packages() {
-    log_info "Upgrading language tools to latest available..."
-
-    case "${PLATFORM}" in
-        macos)
-            if [[ "${PKG_MANAGER}" == "brew" ]]; then
-                pkg_upgrade "go" "" "" ""
-                pkg_upgrade "ruby" "" "" ""
-                pkg_upgrade "composer" "" "" ""
-                pkg_upgrade "llvm" "" "" ""
-            fi
-            ;;
-        linux)
-            pkg_upgrade "" "golang-go" "go" "GoLang.Go"
-            pkg_upgrade "" "ruby" "ruby" ""
-            pkg_upgrade "" "composer" "composer" ""
-            pkg_upgrade "" "build-essential" "base-devel" ""
-            ;;
-        windows)
-            pkg_upgrade "" "" "" "GoLang.Go"
-            pkg_upgrade "" "" "" "Rustlang.Rustup"
-            pkg_upgrade "" "" "" "LLVM.LLVM"
-            ;;
-    esac
-
-    if is_rust_from_rustup && command -v rustup >/dev/null 2>&1; then
-        log_info "Updating Rust stable via rustup..."
-        rustup update stable 2>/dev/null || record_failed "rustup update"
-    fi
-}

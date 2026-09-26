@@ -302,29 +302,6 @@ return {
                 },
             }
             
-            -- Node.js 调试适配器配置
-            dap.adapters.node2 = {
-                type = 'executable',
-                command = 'node',
-                args = { vim.fn.stdpath("data") .. '/mason/packages/node-debug2-adapter/out/src/nodeDebug.js' },
-            }
-            
-            -- JavaScript/TypeScript 调试配置
-            dap.configurations.javascript = {
-                {
-                    name = "启动 Node.js",
-                    type = "node2",
-                    request = "launch",
-                    program = "${file}",
-                    cwd = vim.fn.getcwd(),
-                    sourceMaps = true,
-                    protocol = "inspector",
-                    console = "integratedTerminal",
-                },
-            }
-            
-            -- TypeScript 使用与 JavaScript 相同的配置
-            dap.configurations.typescript = dap.configurations.javascript
         end,
     },
 }

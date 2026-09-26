@@ -100,6 +100,9 @@ composer-setup.php
 composer.phar
 composer-installer.php
 
+# Language toolchains stay outside this repo (rustup uses ~/.cargo).
+.cargo/
+
 # Error directories (created by npm when APPDATA env var not set)
 %APPDATA%/
 \$\{APPDATA\}/
