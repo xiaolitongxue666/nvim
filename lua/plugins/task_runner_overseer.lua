@@ -93,8 +93,25 @@ return {
                     auto_scroll = true,
                     hidden = false,
                 },
-                -- 载入内置模板，后续可继续扩展
-                templates = { "builtin" },
+                -- 内置模板在「当前目录没有对应工程文件」时会让 :checkhealth 报 WARNING。
+                -- cargo / make / npm 关掉原模块，下面再用静默包装重新注册：没有工程文件时不报警，有文件时任务仍在。
+                disable_template_modules = {
+                    "overseer.template.cargo",
+                    "overseer.template.cargo-make",
+                    "overseer.template.composer",
+                    "overseer.template.deno",
+                    "overseer.template.devenv",
+                    "overseer.template.just",
+                    "overseer.template.make",
+                    "overseer.template.mage",
+                    "overseer.template.mise",
+                    "overseer.template.mix",
+                    "overseer.template.npm",
+                    "overseer.template.rake",
+                    "overseer.template.task",
+                    "overseer.template.tox",
+                    "overseer.template.vscode",
+                },
                 -- 任务列表窗口设置（底部滑出，保持简洁）
                 task_list = {
                     direction = "bottom",
@@ -104,14 +121,54 @@ return {
                 },
             })
 
-            -- 自定义模板：根据文件类型运行当前缓冲区
+            local function register_quiet_provider(provider_name, module_name, quiet_messages)
+                local template = require(module_name)
+                local original_generator = template.generator
+                local quiet = {}
+                for _, message in ipairs(quiet_messages) do
+                    quiet[message] = true
+                end
+                overseer.register_template({
+                    name = provider_name,
+                    cache_key = template.cache_key,
+                    generator = function(opts, callback)
+                        local delivered = false
+                        local function deliver(result)
+                            if delivered then
+                                return
+                            end
+                            delivered = true
+                            if type(result) == "string" and quiet[result] then
+                                callback({})
+                            else
+                                callback(result)
+                            end
+                        end
+                        local sync_result = original_generator(opts, deliver)
+                        if sync_result ~= nil then
+                            deliver(sync_result)
+                        end
+                    end,
+                })
+            end
+
+            register_quiet_provider("cargo", "overseer.template.cargo", { "No Cargo.toml file found" })
+            register_quiet_provider("make", "overseer.template.make", { "No Makefile found" })
+            register_quiet_provider("npm", "overseer.template.npm", { "No package.json file found" })
+
+            -- 自定义模板：根据文件类型运行当前缓冲区。
+            -- 条件放在任务上，不放在 provider 上。provider 条件失败会被 checkhealth 记成 WARNING。
             overseer.register_template({
                 name = "Run current file",
-                desc = "使用匹配的解释器/运行时执行当前缓冲区文件",
-                condition = {
-                    filetype = supported_filetypes,
-                },
-                builder = function()
+                generator = function()
+                    return {
+                        {
+                            name = "Run current file",
+                            desc = "使用匹配的解释器/运行时执行当前缓冲区文件",
+                            condition = {
+                                filetype = supported_filetypes,
+                            },
+                            builder = function()
                     local buffer_path = vim.api.nvim_buf_get_name(0)
                     if buffer_path == "" then
                         vim.notify("当前缓冲区没有文件路径，请先保存文件再运行", vim.log.levels.WARN, {
@@ -140,6 +197,9 @@ return {
                         cmd = command,
                         components = { "default" },
                         cwd = vim.fn.getcwd(),
+                    }
+                            end,
+                        },
                     }
                 end,
             })

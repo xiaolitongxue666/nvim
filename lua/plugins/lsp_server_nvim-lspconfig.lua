@@ -118,6 +118,8 @@ return {
                 },
                 -- C/C++ 语言服务器
                 clangd = {
+                    -- lspconfig 默认含 c.doxygen / cpp.doxygen，vim.filetype 不认识，checkhealth 会报警。
+                    filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
                     cmd = {
                         "clangd",
                         "--background-index",
@@ -147,7 +149,6 @@ return {
                                     'jsconfig.json',
                                     '.babelrc',
                                     '.prettierrc',
-                                    'composer.json',
                                 },
                             }) or {},
                             validate = { enable = true },
@@ -156,6 +157,8 @@ return {
                 },
                 -- YAML 语言服务器
                 yamlls = {
+                    -- 去掉 yaml.docker-compose / yaml.gitlab / yaml.helm-values（不是已注册 filetype）。
+                    filetypes = { "yaml" },
                     settings = {
                         yaml = {
                             schemaStore = {
@@ -178,7 +181,10 @@ return {
                     },
                 },
                 -- Markdown 语言服务器
-                marksman = {},
+                marksman = {
+                    -- 去掉 markdown.mdx（不是已注册 filetype）。
+                    filetypes = { "markdown" },
+                },
             },
         },
         -- 插件配置函数
@@ -296,6 +302,13 @@ return {
                 -- 这会扩展/覆盖默认配置，不会触发 __index 错误
                 local ok, err = pcall(function()
                     vim.lsp.config(server, final_config)
+                    -- vim.lsp.config 对 filetypes 做 tbl_deep_extend，短列表盖不住 lspconfig 里更长的默认值。
+                    if type(server_config) == "table" and server_config.filetypes then
+                        local resolved = vim.lsp.config[server]
+                        if resolved then
+                            resolved.filetypes = vim.deepcopy(server_config.filetypes)
+                        end
+                    end
                     -- 启用服务器（自动附加到匹配的文件类型）
                     vim.lsp.enable(server)
                 end)

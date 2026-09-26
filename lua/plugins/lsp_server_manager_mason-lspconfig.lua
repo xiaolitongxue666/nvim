@@ -18,6 +18,9 @@ return {
             -- 安装与更新统一由 mason-tool-installer 接管（见 lsp_server_manager_mason.lua），
             -- 此处仅保留“新 server 缺失时自动安装”的兑底，不重复声明清单
             automatic_installation = true,
+            -- 只启用 lsp_server_nvim-lspconfig.lua 里 vim.lsp.enable 的服务器。
+            -- 默认 true 会把已安装但未配置的包（buf、cmake、luau、taplo、stylua）也打开。
+            automatic_enable = false,
             -- 处理程序配置（使用新 API）
             -- lsp 启用与 on_attach 由 lsp_server_nvim-lspconfig.lua 统一处理
             handlers = {

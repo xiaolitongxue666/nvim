@@ -21,6 +21,24 @@ return {
         build = ":MasonUpdate", -- :MasonUpdate 更新注册表内容
         -- 插件配置函数（使用 config 而不是 opts，以便集成 mason-tool-installer）
         config = function()
+            -- mason 健康检查会探测整个注册表。java/javac/julia 不是本配置的语言，
+            -- 缺它们时改记为 info，避免 :checkhealth 出现 WARNING。
+            if vim.health and vim.health.warn and not vim.g.nvim_mason_optional_lang_health then
+                vim.g.nvim_mason_optional_lang_health = true
+                local report_warning = vim.health.warn
+                local optional_runtime = {
+                    ["java: not available"] = true,
+                    ["javac: not available"] = true,
+                    ["julia: not available"] = true,
+                }
+                vim.health.warn = function(message, ...)
+                    if type(message) == "string" and optional_runtime[message] then
+                        vim.health.info(message .. "（本配置不使用）")
+                        return
+                    end
+                    return report_warning(message, ...)
+                end
+            end
             require("mason").setup({
             -- 用户界面配置
             ui = {

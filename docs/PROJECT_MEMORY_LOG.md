@@ -202,5 +202,5 @@
 
 - **Intel macOS 卡死原因**：`brew upgrade uv` 无 x86_64 bottle，公式 `depends_on "rust" => :build` 开始源码编译 rustc；中断后的 `brew upgrade ruby` / `brew upgrade llvm` 同样拉 rust/llvm 源码。uv 官方仍支持 macOS x86_64（`uv-x86_64-apple-darwin`）；包管理器安装的 uv 不能 `uv self update`，回退 `https://astral.sh/uv/install.sh`（`UV_NO_MODIFY_PATH=1`）。
 - **安装隔离**：macOS uv/fnm 只走官方安装器；Linux pacman、Windows winget 各自独立。`brew_noconfirm` 增加 `HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1`。删除 Go、Ruby、Composer、Homebrew llvm、系统 Lua、flake8、pnpm。Rust 只走 rustup；C 编译器只检查已有 clang/gcc。`fd`/`rg` 缺失才装、不升级。venv 只留 pynvim；npm 只留 neovim 与 tree-sitter-cli。
-- **Mason**：`ensure_installed` 去掉 isort/mypy/taplo/shfmt；DAP 去掉未安装的 node-debug2。9 个 LSP 用无头 `MasonToolsInstallSync` 核对为已安装。勿 `MasonInstall`+`qa!`。
+- **Mason**：`ensure_installed` 去掉 isort/mypy/taplo/shfmt；DAP 去掉未安装的 node-debug2。9 个 LSP 用无头 `MasonToolsInstallSync` 核对为已安装。勿 `MasonInstall`+`qa!`。磁盘上清单外的包用 `MasonToolsClean` 卸掉（buf、cmake、luau、clang-format、node-debug2 等）。`automatic_enable=false`。
 - **脚本拆分**：`install.sh` 只编排；Python/Node/Rust/Windows 路径分别在 `scripts/deps/install_python.sh`、`install_node.sh`、`install_rust.sh`、`scripts/windows_config.sh`。
