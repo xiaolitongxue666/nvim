@@ -162,24 +162,14 @@ local function setup_proxy()
     end
 
     local proxy_port = tonumber(os.getenv("PROXY_PORT")) or DEFAULT_PROXY_PORT
-    local platform_label = is_wsl_platform() and "WSL" or "native"
-    local proxy_host, resolve_method = resolve_default_proxy_host()
-
-    proxy_log(string.format(
-        "Proxy setup: USE_PROXY=1 platform=%s host=%s port=%d (resolve=%s)",
-        platform_label,
-        proxy_host,
-        proxy_port,
-        resolve_method or "unknown"
-    ))
-    proxy_log(string.format("Proxy probe: %s:%d (timeout %ds)...", proxy_host, proxy_port, PROXY_PROBE_TIMEOUT_MS / 1000))
+    local proxy_host = resolve_default_proxy_host()
 
     if not proxy_port_reachable(proxy_host, proxy_port) then
         proxy_log(string.format(
             "Proxy %s:%d unreachable, skipping (set USE_PROXY=0 to silence)",
             proxy_host,
             proxy_port
-        ))
+        ), vim.log.levels.WARN)
         return
     end
 
@@ -190,7 +180,6 @@ local function setup_proxy()
 
     local auto_proxy_url = string.format("http://%s:%d", proxy_host, proxy_port)
     apply_proxy_url(auto_proxy_url, no_proxy_list)
-    proxy_log("Proxy enabled: " .. auto_proxy_url)
 end
 
 setup_proxy()

@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Project Memory
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-09-28T02:10:35Z. Full file: PROJECT_MEMORY.md
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-09-28T13:34:56Z. Full file: PROJECT_MEMORY.md
 
 2) **三入口安装 + 自部署**：根 `install.sh`/`install.cmd`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。第 18 步把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`（编辑后重跑 `install.sh` 同步）。仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写三平台 `neovimInitVimPaths`；Windows 路径错重跑 `install.cmd`/`install.sh`。
 
@@ -17,7 +17,7 @@ alwaysApply: true
 
 6) **Windows 路径与 env**：`scripts/common.sh` 路径互转；`setup_windows_config_redirect` 用 PowerShell Junction（勿 Git Bash mklink）；`~/.bashrc` 设 `XDG_CONFIG_HOME`；提交前 `settings.json` 勿含本机 `neovimInitVimPaths`；`ensure_windows_appdata_export` + `fnm_env_safe` 防误建 `%APPDATA%`；`cleanup_stray_appdata_in_dir`（backup 前、无头后）；`cleanup_legacy_packer`。**空 `XDG_CONFIG_HOME=""` 勿 export**（stdpath 退回相对路径 `nvim` 致 vim.health 误报 Missing user config file；脚本已条件导出）。无头还须 `ensure_windows_user_env` 后 **`unset XDG_DATA_HOME`**（Unix 风格如 `~/.local/share` 或 HOME 落在 `/home/*` 时，`stdpath('data')` 会写成 `C:\msys64\home\<user>\AppData\Local\nvim-data`，与 `%LOCALAPPDATA%\nvim-data` 双份；Mason/lazy 只认后者）。`.gitignore` 本机忽略 `.wslconfig`、`scripts/probe_login.ps1`。
 
-7) **跨平台代理**（2026-06-04；2026-08-01 更新）：`setup_default_proxy`（common.sh，install/headless 共用）；本机 `127.0.0.1:7890`、WSL 宿主机 IP、**VPS/native 按 `PROXY_PROBE_PORTS`（默认 `7890 17890 7897 10808 1080`）顺序探测，显式 `PROXY_PORT` 只测单端口（对齐 agent-config）**、`PROXY_PROBE_TIMEOUT` 2s 探测不可达跳过、`USE_PROXY=0` 关闭；`basic.lua` 第三层自动默认。
+7) **跨平台代理**（2026-06-04；2026-08-01 更新）：`setup_default_proxy`（common.sh，install/headless 共用）；本机 `127.0.0.1:7890`、WSL 宿主机 IP、**VPS/native 按 `PROXY_PROBE_PORTS`（默认 `7890 17890 7897 10808 1080`）顺序探测，显式 `PROXY_PORT` 只测单端口（对齐 agent-config）**、`PROXY_PROBE_TIMEOUT` 2s 探测不可达跳过、`USE_PROXY=0` 关闭；`basic.lua` 第三层自动默认。成功设上代理时不 `vim.notify`（避免 vscode-neovim messages 每次启动刷屏）；端口不可达才 `WARN`。
 
 8) **无头验收**：`bash scripts/headless_validate.sh`（install.sh 末尾默认调用）。Git Bash **必须** `env VAR=val`（`VAR=val cmd` 传不进子进程：`NVIM_SKIP_HEADLESS=1` / `NVIM_SKIP_LAZY_UPDATE=0` 会失效）。默认 `NVIM_SKIP_LAZY_UPDATE=1`（~20s），全量同步 `env NVIM_SKIP_LAZY_UPDATE=0`（Lazy+Mason 90s，约 5min）。`run_nvim` 设 `MSYS2_ARG_CONV_EXCL=*`；checkhealth 落盘用 `set buftype=` + `write! docs/nvim_checkhealth_final.log`（勿依赖 redir/w!）。务实 grep：fail 于 ERROR/❌ 与 packer 残留；白名单 Slow shell、terminfo、`Missing user config file`、luasnip jsregexp；见 `TROUBLE_SHOOT.md`。jsregexp 构建幂等检测（`luasnip_jsregexp_ready`）防 WSL/Linux 无头 build 后 SIGSEGV；GitHub fetch 偶发 `LibreSSL SSL_connect: SSL_ERROR_SYSCALL` 为瞬时错误非致命，复跑/`git ls-remote` 核对即可（2026-09）。
 

@@ -12,6 +12,10 @@
 - **Lazy**：补装 `winbuf.nvim`、`mini.comment`；清掉 `Comment.nvim`、`bufferline.nvim`、`telescope.nvim`。
 - **文档**：PROJECT_MEMORY #3/#6/#8/#14；`TROUBLE_SHOOT.md` Windows 三节；`headless-testing.mdc`。
 
+### basic.lua 代理成功路径不再通知
+
+- `lua/basic.lua` 的 `setup_proxy()` 仍探测并设置 `http_proxy`。成功时不再 `vim.notify`。端口不可达改为 `WARN`。`USE_PROXY=0` 与 WSL 解析失败的通知保留。
+
 ## 2026-07-09
 
 ### Lazy update + healthcheck（summary-memory）

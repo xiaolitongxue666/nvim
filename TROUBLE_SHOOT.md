@@ -222,7 +222,7 @@ Win10/Win11 共用 `PLATFORM=windows`，不区分版本；推荐同一套入口�
 |------|------|
 | 安装/更新 | 仓库根目录 `install.cmd` 或 Git Bash 下 `./install.sh` |
 | 无头验收 | `./scripts/headless_validate.sh`（`install.sh` 末尾默认调用；`env NVIM_SKIP_HEADLESS=1` 可跳过） |
-| 代理 | 默认启用（`scripts/common.sh` 的 `setup_default_proxy`）：本机 `127.0.0.1:7890`；WSL 为宿主机 IP `:7890`（`ip route` / `resolv.conf`）；2s 端口探测不可达则跳过。`env USE_PROXY=0` 关闭；`PROXY_HOST` / `PROXY_PORT` 可覆盖。Neovim 内见 `basic.lua` 第三层自动默认。 |
+| 代理 | 默认启用（`scripts/common.sh` 的 `setup_default_proxy`）：本机 `127.0.0.1:7890`；WSL 为宿主机 IP `:7890`（`ip route` / `resolv.conf`）；2s 端口探测不可达则跳过。`env USE_PROXY=0` 关闭；`PROXY_HOST` / `PROXY_PORT` 可覆盖。Neovim 内 `basic.lua` 同样设置环境变量；成功时不 `vim.notify`，端口不可达才 `WARN`。 |
 
 ### packer 残留（lazy checkhealth WARNING）
 
