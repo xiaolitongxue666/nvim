@@ -143,6 +143,9 @@ graphify-out/
 # PROJECT_MEMORY.md backups from summary-memory (keep local, do not commit)
 .project-memory-backups/
 
+# Unix XDG 落在仓库根（Git Bash 下 gh 等写 .local/state；正式目录在 $HOME/.local）
+.local/
+
 # Windows specific
 Thumbs.db
 ehthumbs.db
