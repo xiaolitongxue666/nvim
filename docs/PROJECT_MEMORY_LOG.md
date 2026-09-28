@@ -2,6 +2,16 @@
 
 按日期追加的变更与问题记录。权威摘要见根目录 [PROJECT_MEMORY.md](../PROJECT_MEMORY.md)。
 
+## 2026-09-28
+
+### Windows Git Bash 无头 + Mason 隔离（summary-memory）
+
+- **env 前缀**：Git Bash 下 `VAR=val cmd` 不进子进程；`NVIM_SKIP_HEADLESS` / `NVIM_SKIP_LAZY_UPDATE` 须 `env VAR=val`。
+- **data 双份**：未 `ensure_windows_user_env` 或 Unix 风格 `XDG_DATA_HOME` 时 `stdpath('data')` → `C:\msys64\home\...\nvim-data`；正式目录是 `%LOCALAPPDATA%\nvim-data`。无头前 `unset XDG_DATA_HOME`。
+- **Mason**：同时两个无头 nvim 会抢锁（pyright 停 staging）；Aborted 后先清残留进程。`get_package()` 须规范名。注册表无 `ruff-lsp`，现包 `ruff`。本机已装 13 包到 LOCALAPPDATA；清单外无残留。
+- **Lazy**：补装 `winbuf.nvim`、`mini.comment`；清掉 `Comment.nvim`、`bufferline.nvim`、`telescope.nvim`。
+- **文档**：PROJECT_MEMORY #3/#6/#8/#14；`TROUBLE_SHOOT.md` Windows 三节；`headless-testing.mdc`。
+
 ## 2026-07-09
 
 ### Lazy update + healthcheck（summary-memory）

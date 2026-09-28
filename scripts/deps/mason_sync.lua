@@ -1,5 +1,6 @@
 -- Headless Mason 预同步（由 sync_mason.sh 通过 :luafile 调用）
 -- 环境变量：NVIM_MASON_PKG_LIST（空格分隔包名）、NVIM_MASON_WAIT_MS（默认 600000）
+-- mason-registry.get_package() 要规范名（lua-language-server 不是 lua_ls；ruff 不是 ruff-lsp）
 
 local pkg_list = os.getenv("NVIM_MASON_PKG_LIST") or ""
 local packages = {}

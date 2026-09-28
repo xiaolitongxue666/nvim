@@ -221,7 +221,7 @@ Win10/Win11 共用 `PLATFORM=windows`，不区分版本；推荐同一套入口�
 | 步骤 | 命令 |
 |------|------|
 | 安装/更新 | 仓库根目录 `install.cmd` 或 Git Bash 下 `./install.sh` |
-| 无头验收 | `./scripts/headless_validate.sh`（`install.sh` 末尾默认调用；`NVIM_SKIP_HEADLESS=1` 可跳过） |
+| 无头验收 | `./scripts/headless_validate.sh`（`install.sh` 末尾默认调用；`env NVIM_SKIP_HEADLESS=1` 可跳过） |
 | 代理 | 默认启用（`scripts/common.sh` 的 `setup_default_proxy`）：本机 `127.0.0.1:7890`；WSL 为宿主机 IP `:7890`（`ip route` / `resolv.conf`）；2s 端口探测不可达则跳过。`env USE_PROXY=0` 关闭；`PROXY_HOST` / `PROXY_PORT` 可覆盖。Neovim 内见 `basic.lua` 第三层自动默认。 |
 
 ### packer 残留（lazy checkhealth WARNING）
@@ -231,6 +231,46 @@ Win10/Win11 共用 `PLATFORM=windows`，不区分版本；推荐同一套入口�
 ### `%USERPROFILE%` 未展开（vim.health WARNING）
 
 Git Bash / 无头模式下 Neovim 可能仍报告 `Missing user config file: %USERPROFILE%\.config\nvim/init.lua`（即使用 `-u init.lua` 且已设 `XDG_CONFIG_HOME`）。`ensure_windows_user_env` 会将 `USERPROFILE`/`XDG_CONFIG_HOME` 转为正斜杠 Windows 路径；`run_nvim` 设 `MSYS2_ARG_CONV_EXCL=*` 避免 MSYS 改写环境变量。交互式终端一般无此问题。
+
+### Git Bash：`VAR=val cmd` 传不进子进程
+
+**现象**：`NVIM_SKIP_HEADLESS=1 bash ./install.sh` 仍跑无头；`NVIM_SKIP_LAZY_UPDATE=0 bash ./scripts/headless_validate.sh` 仍跳过 Lazy update。
+
+**处理**：用 `env VAR=val`（项目约定）：
+
+```bash
+env NVIM_SKIP_HEADLESS=1 bash ./install.sh
+env NVIM_SKIP_LAZY_UPDATE=0 bash ./scripts/headless_validate.sh
+```
+
+### stdpath('data') 落到 msys home（与 LOCALAPPDATA 双份）
+
+**现象**：无头 `stdpath('data')` 为 `C:\msys64\home\<user>\AppData\Local\nvim-data`，Mason/lazy 与 `%LOCALAPPDATA%\nvim-data` 各装一份。
+
+**原因**：未跑 `ensure_windows_user_env`，或 shell 导出了 Unix 风格 `XDG_DATA_HOME`（如 `C:\Users\...\ .local\share`），或 `HOME` 落在 `/home/*`。
+
+**处理**：与 `headless_validate.sh` 对齐后再起 nvim：
+
+```bash
+source ./scripts/common.sh
+ensure_windows_user_env
+ensure_windows_appdata_export
+unset XDG_DATA_HOME
+```
+
+只认 `%LOCALAPPDATA%\nvim-data`。msys 那份 mason 可删，勿当正式安装目录。
+
+### Mason 无头双进程抢锁 / 包名
+
+**现象**：`pyright` 停在 `mason/staging`；`mason_sync.lua` 报 `timeout: N missing`，但 `packages/` 里已有 `lua-language-server` 等。
+
+**原因**：
+
+1. 工具层显示 Aborted 后 `nvim --headless` 仍在；再起第二个会抢 registry。
+2. `mason-registry.get_package()` 只要规范名（`lua-language-server`，不是 `lua_ls`）。
+3. 注册表已无 `ruff-lsp`，现包名 `ruff`。
+
+**处理**：先结束残留 `nvim.exe`，再只跑一个无头进程。补装用 `MasonToolsInstallSync`（tool-installer 经 mason-lspconfig 映射别名）或规范名 `p:install()`。勿 `MasonInstall` 后立刻 `qa!`。
 
 ### vim.provider：Python virtualenv ERROR（Win10 无头）
 
@@ -296,7 +336,7 @@ NVIM_CHECKHEALTH_TIMEOUT=180 ./scripts/headless_validate.sh   # 慢网络加大�
 |------|------|
 | WSL 内 `node`/`tree-sitter` 指向 `/mnt/c/...` | 在 WSL 内单独安装 fnm/npm，勿混用 Windows PATH；重跑 `./install.sh` |
 | `winget install/upgrade` 失败（无管理员） | 非致命；查看摘要 `Failed/skipped`；手动安装或忽略可选工具 |
-| Mason sync 超时 | 默认已跳过 install 预同步；首次 `nvim` 自动装。需 install 内预装：`NVIM_SKIP_MASON=0 ./install.sh`。已配置语言服务用无头 `MasonToolsInstallSync`，不要 `MasonInstall` 后立刻 `qa!` |
+| Mason sync 超时 | 默认已跳过 install 预同步；首次 `nvim` 自动装。需 install 内预装：`env NVIM_SKIP_MASON=0 ./install.sh`。已配置语言服务用无头 `MasonToolsInstallSync`，不要 `MasonInstall` 后立刻 `qa!`。Git Bash 用 `env`；同时只跑一个无头 nvim；`get_package()` 用规范名；`ruff-lsp` 现为 `ruff` |
 | macOS 安装卡在编译 rustc / llvm | Intel macOS 常无 uv、rust、ruby、llvm 的 bottle。uv/fnm 只走官方安装器；Rust 只走 rustup。`brew_noconfirm` 已设 `HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1`，无 bottle 时失败继续，不从源码编译 |
 | uv/fnm 安装后仍 `command not found` | 将 `~/.local/bin` 加入 PATH 或重新打开终端 |
 | Neovim 仍 < 0.11 | 检查 `nvim --version`；Windows 可 `winget upgrade Neovim.Neovim`；Linux 见 script_tool `run_once_install-neovim` 回退 tarball |

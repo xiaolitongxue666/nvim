@@ -13,17 +13,19 @@ Win10/Win11 与 Unix 共用 [scripts/headless_validate.sh](scripts/headless_vali
 cd ~/.config/nvim
 eval "$(fnm env --use-on-cd)"   # 无头前建议
 
-# 1) 安装/更新（末尾默认跑无头验收；慢网络可 NVIM_SKIP_HEADLESS=1 ./install.sh）
+# 1) 安装/更新（末尾默认跑无头验收；慢网络可 env NVIM_SKIP_HEADLESS=1 ./install.sh）
 ./install.sh
 # Windows 也可：install.cmd
+# Git Bash 必须 env VAR=val，VAR=val cmd 传不进子进程
 
 # 2) 单独重跑无头验收
 ./scripts/headless_validate.sh
+# 全量 Lazy：env NVIM_SKIP_LAZY_UPDATE=0 ./scripts/headless_validate.sh
 ```
 
-脚本内容：Lazy update（`NVIM_SKIP_LAZY_UPDATE=0` 启用，默认跳过以加速）→ 可选 `Lazy build LuaSnip` → checkhealth 落盘 → **务实 grep**。
+脚本内容：Lazy update（`env NVIM_SKIP_LAZY_UPDATE=0` 启用，默认跳过以加速）→ 可选 `Lazy build LuaSnip` → checkhealth 落盘 → **务实 grep**。
 
-Windows 无头前自动：`ensure_windows_user_env`（展开 USERPROFILE/XDG）、`setup_default_proxy`（本机/WSL 7890、2s 探测，`env USE_PROXY=0` 关闭）。
+Windows 无头前自动：`ensure_windows_user_env`（展开 USERPROFILE/XDG）、`unset XDG_DATA_HOME`（避免 stdpath data 落到 msys home）、`setup_default_proxy`（本机/WSL 7890、2s 探测，`env USE_PROXY=0` 关闭）。同时只跑一个无头 nvim 装 Mason。
 
 ## 务实 vs 严格 grep
 
