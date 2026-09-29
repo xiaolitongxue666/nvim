@@ -85,6 +85,7 @@ fabric.properties
 
 # Neovim configuration specific
 # Temporary files and logs
+logs/
 *.log
 nvim_checkhealth.log
 *.tmp

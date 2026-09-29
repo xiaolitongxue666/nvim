@@ -2,6 +2,20 @@
 
 按日期追加的变更与问题记录。权威摘要见根目录 [PROJECT_MEMORY.md](../PROJECT_MEMORY.md)。
 
+## 2026-09-29
+
+### Practical Vim 键位对照 + summary-memory
+
+- 权威笔记：https://github.com/iampkuhz/Practival-Vim （技巧 1–121）。全文对照 `docs/PRACTICAL_VIM.md`；短规则 PROJECT_MEMORY #21，经 `sync_project_memory_to_dir` 写入 `AGENTS.md` / `CLAUDE.md` / `.cursor/rules/project-memory.mdc`（不单独建 Cursor `.mdc`）。
+- 改键：左 `j`、下 `k`、上 `i`、右 `l`；插入 `h`/`H`；词 `J`/`L`；行尾 `E`。`S`/`Q`/`R` 为保存/退出/重载。宏 `q` `@` `@@` 与 `.` 未改；批量替换 `<leader>sr`。
+- 清理：空 `logs/`、空 `.nvimlog`、可再生 `graphify-out/`。保留 `docs/nvim_checkhealth_final.log`、`.project-memory-backups/` 最近 2 份。sha256 无重复 tracked `.md`。`~/.config/nvim.backup.*` 在仓库外，未删。
+- `.gitignore` 增 `logs/`。
+
+### 候选插件 codecompanion.nvim
+
+- 记录 [olimorris/codecompanion.nvim](https://github.com/olimorris/codecompanion.nvim) 为未来候选（Chat / inline / ACP / MCP）。规格与 `lazy-lock.json` 未纳入。
+- 文档：README「候选（未接入）」、`docs/INVENTORY.md`、PROJECT_MEMORY #20。
+
 ## 2026-09-28
 
 ### Windows Git Bash 无头 + Mason 隔离（summary-memory）

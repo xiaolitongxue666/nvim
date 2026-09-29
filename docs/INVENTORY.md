@@ -11,6 +11,7 @@
 | `CLAUDE.md` / `AGENTS.md` | install.sh 从 PROJECT_MEMORY 生成的 Agent 入口 | 保留（自动生成） |
 | `TROUBLE_SHOOT.md` | Windows / Mason / install.sh 排错 | 保留 |
 | `docs/LSP_VIEW_AND_MANAGE.md` | LSP / Mason 操作 | 保留 |
+| `docs/PRACTICAL_VIM.md` | Practical Vim 技巧 1–121 与本配置键位对照 | 保留 |
 | `docs/PROJECT_MEMORY_LOG.md` | 按日期追加的项目记忆日志 | 保留 |
 | `docs/plugin_github_audit.txt` | 当前启用插件 GitHub 状态核查原始数据 | 保留 |
 | `ideavimrc/README.md` | IdeaVim 子项目 | 保留（独立） |
@@ -49,6 +50,12 @@
 - 移除：`nvim-telescope/telescope.nvim`、`telescope-fzf-native.nvim`（→ snacks.picker）、`akinsho/bufferline.nvim`（死配置）、`numToStr/Comment.nvim`（停更）
 - 新增：`echasnovski/mini.comment`；`finder_snacks-picker.lua`（snacks picker 键位）
 - LSP 安装/更新统一由 `mason-tool-installer` 管理（见 `docs/LSP_VIEW_AND_MANAGE.md`）
+
+## 候选插件（未纳入规格）
+
+| 仓库 | 记录日期 | 说明 |
+|------|----------|------|
+| [olimorris/codecompanion.nvim](https://github.com/olimorris/codecompanion.nvim) | 2026-09-29 | 未来候选。见 README「候选（未接入）」。不计入上方 36 个规格文件，也不进入 `lazy-lock.json`。 |
 
 ## 已删除 / 不再引用的项
 

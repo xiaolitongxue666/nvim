@@ -50,6 +50,7 @@ Windows 可用根目录及各子目录下的 `install.cmd`（调用 Git Bash 执
 | 文档 | 内容 |
 |------|------|
 | [docs/LSP_VIEW_AND_MANAGE.md](docs/LSP_VIEW_AND_MANAGE.md) | LSP 查看、Mason、键位、排错 |
+| [docs/PRACTICAL_VIM.md](docs/PRACTICAL_VIM.md) | Practical Vim 技巧 1–121 与本配置键位对照 |
 | [TROUBLE_SHOOT.md](TROUBLE_SHOOT.md) | Windows 路径、install.sh、Mason |
 | [docs/INVENTORY.md](docs/INVENTORY.md) | 文件/脚本/插件清单（当前基线） |
 | [PROJECT_MEMORY.md](PROJECT_MEMORY.md) | 项目记忆（install.sh 同步到各 Agent 配置） |
@@ -173,6 +174,14 @@ Leader 为 `<Space>`。光标：`i/k/j/l` 对应上/下/左/右（与 Vim 默认
 - `nvim-telescope/telescope.nvim` + `telescope-fzf-native.nvim` → 使用 `folke/snacks.nvim`（picker，2026-08-01）
 - `numToStr/Comment.nvim` → 使用 `echasnovski/mini.comment`（2026-08-01）
 - `akinsho/bufferline.nvim` → 使用 `e-sigs/winbuf.nvim`（2026-08-01 移除死配置）
+
+### 候选（未接入）
+
+记录日期：2026-09-29。下列仓库只作未来评估，未写入 `lua/plugins/` 或 `lazy-lock.json`。
+
+| 仓库 | 状态 | 说明 |
+|------|------|------|
+| [olimorris/codecompanion.nvim](https://github.com/olimorris/codecompanion.nvim) | **未来候选** | Neovim 内 LLM / Agent 编程助手：Chat、inline 变换、ACP、MCP；适配 Anthropic、OpenAI、Gemini、Copilot 等，也可接 Claude Code、Codex 一类 CLI agent。文档：[codecompanion.olimorris.dev](https://codecompanion.olimorris.dev)。上游示例依赖 `nvim-lua/plenary.nvim` 与 `nvim-treesitter`。接入前与现有 `NickvanDyke/opencode.nvim`（`lua/plugins/code_ai_opencode.lua`）评估重叠。 |
 
 ## 配置冲突与治理
 

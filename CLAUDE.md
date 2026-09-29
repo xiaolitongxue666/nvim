@@ -1,6 +1,6 @@
 # Neovim Config — Claude Project Context
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-09-28T13:34:56Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-09-29T03:10:00Z. Edit PROJECT_MEMORY.md instead.
 
 2) **三入口安装 + 自部署**：根 `install.sh`/`install.cmd`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。第 18 步把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`（编辑后重跑 `install.sh` 同步）。仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写三平台 `neovimInitVimPaths`；Windows 路径错重跑 `install.cmd`/`install.sh`。
 
@@ -37,3 +37,7 @@
 18) **Homebrew 失败即停源码编译**（2026-08-22；2026-09-26）：`brew_noconfirm`（`scripts/deps/platform_pkg.sh`）设 `HOMEBREW_NO_ASK=1` 与 `HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1`。无 bottle 时失败继续，不编译 rustc/llvm。勿用 CLI `--yes`。uv/fnm/rust 不走 brew；brew 只用于 git/curl 与缺失时的 fd/ripgrep。
 
 19) **VIMRUNTIME 完整性检测**（2026-08-04）：WSL apt 安装中断（`neovim` 状态 `iU`、`neovim-runtime` 未装）时 `nvim --version` 正常但启动报 E5113 `vim.uri`/`E484 syntax.vim`/`E5009 Invalid $VIMRUNTIME`。`scripts/common.sh` 新增 `nvim_runtime_probe`（`-u NONE` 查 `$VIMRUNTIME/syntax/syntax.vim`，不加载用户配置）、`nvim_runtime_path`、`verify_nvim_runtime`（分平台修复指引）；install.sh verify 阶段、headless_validate.sh 开头（fail-fast）、install_neovim.sh（apt 分支自动 `sudo apt-get install -f`）均接入；test_deps.sh 含 probe 测试。修复：`sudo apt-get install -f`。见 `TROUBLE_SHOOT.md`。
+
+20) **候选插件 codecompanion.nvim**（2026-09-29）：[olimorris/codecompanion.nvim](https://github.com/olimorris/codecompanion.nvim) 记为未来候选（Neovim 内 Chat / inline / ACP / MCP；文档 https://codecompanion.olimorris.dev）。仅文档记录，未加入 `lua/plugins/` 与 `lazy-lock.json`。现有 AI 入口仍是 `lua/plugins/code_ai_opencode.lua`。接入前评估与 opencode 的重叠，以及 plenary / nvim-treesitter 依赖。见 README「候选（未接入）」。
+
+21) **Practical Vim 键位对照**（2026-09-29）：笔记权威来源 https://github.com/iampkuhz/Practival-Vim （技巧 1–121）。与本配置的对照在 `docs/PRACTICAL_VIM.md`。向用户演示 Vim 操作时先换成本配置键位：左 `j`、下 `k`、上 `i`、右 `l`；插入 `h`、行首插入 `H`、上一词 `J`、下一词 `L`、行尾 `E`。`S` 保存、`Q` 退出、`R` 重载配置，不再是书上的整行替换、Ex 模式、替换模式。宏 `q` / `@` / `@@` 与 `.` 未改；批量替换界面是 `<leader>sr`。终端与 vscode-neovim 共用这套移动键。
