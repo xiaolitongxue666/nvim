@@ -1,6 +1,6 @@
 # Neovim Config — Claude Project Context
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-10-09T15:20:51Z. Edit PROJECT_MEMORY.md instead.
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-10-12T04:22:19Z. Edit PROJECT_MEMORY.md instead.
 
 2) **三入口安装 + 自部署**：根 `install.sh`/`install.cmd`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。第 18 步把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`（编辑后重跑 `install.sh` 同步）。仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写三平台 `neovimInitVimPaths`；Windows 路径错重跑 `install.cmd`/`install.sh`。
 

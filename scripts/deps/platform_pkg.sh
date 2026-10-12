@@ -9,6 +9,43 @@ brew_noconfirm() {
     HOMEBREW_NO_ASK=1 HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1 brew "$@"
 }
 
+# winget 下载大安装包时可能停在 0 字节。限时结束进程树，避免挡住后续步骤。
+# 包管理器不走 HTTP 代理（本文件约定）；GitHub/curl 仍由 install.sh 的代理负责。
+_pkg_winget() {
+    local secs="${WINGET_TIMEOUT_SECS:-90}"
+    local pid waited=0 win_pid=""
+    if declare -F log_info >/dev/null 2>&1; then
+        log_info "winget $* (timeout=${secs}s)"
+    fi
+    env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+        -u ALL_PROXY -u all_proxy \
+        winget "$@" &
+    pid=$!
+    while kill -0 "$pid" 2>/dev/null; do
+        if [[ "$waited" -ge "$secs" ]]; then
+            if declare -F log_warning >/dev/null 2>&1; then
+                log_warning "winget timed out after ${secs}s; continuing."
+            fi
+            if [[ -r "/proc/${pid}/winpid" ]]; then
+                win_pid="$(tr -d '[:space:]' < "/proc/${pid}/winpid" 2>/dev/null || true)"
+            fi
+            if [[ -n "$win_pid" ]] && command -v taskkill.exe >/dev/null 2>&1; then
+                taskkill.exe //F //T //PID "$win_pid" >/dev/null 2>&1 || true
+            fi
+            kill -9 "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            return 0
+        fi
+        if [[ "$waited" -gt 0 && $((waited % 15)) -eq 0 ]] && declare -F log_info >/dev/null 2>&1; then
+            log_info "winget still running (${waited}s/${secs}s)..."
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+    wait "$pid" 2>/dev/null || true
+    return 0
+}
+
 # 参数: brew_name apt_name pacman_name [winget_id]
 pkg_install() {
     local brew_name="${1:-}" apt_name="${2:-}" pacman_name="${3:-}" winget_id="${4:-}"
@@ -33,9 +70,9 @@ pkg_install() {
             [[ -n "${apt_name}" ]] && sudo yum install -y "${apt_name}"
             ;;
         winget)
-            [[ -n "${winget_id}" ]] && winget install --id "${winget_id}" -e \
+            [[ -n "${winget_id}" ]] && _pkg_winget install --id "${winget_id}" -e \
                 --source winget \
-                --accept-package-agreements --accept-source-agreements 2>/dev/null
+                --accept-package-agreements --accept-source-agreements
             ;;
         *)
             return 1
@@ -74,9 +111,9 @@ pkg_upgrade() {
             ;;
         winget)
             if [[ -n "${winget_id}" ]]; then
-                winget upgrade --id "${winget_id}" -e \
+                _pkg_winget upgrade --id "${winget_id}" -e \
                     --source winget \
-                    --accept-package-agreements --accept-source-agreements 2>/dev/null || true
+                    --accept-package-agreements --accept-source-agreements || true
             fi
             ;;
     esac

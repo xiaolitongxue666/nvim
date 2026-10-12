@@ -1,6 +1,35 @@
 #!/usr/bin/env bash
 # fnm、Node LTS、neovim host、tree-sitter CLI
 
+# fnm install 走代理拉 Node 包，连接停住时不能一直占着安装流程。
+_fnm_install_lts_bounded() {
+    local secs="${FNM_INSTALL_TIMEOUT_SECS:-90}"
+    local pid waited=0 win_pid=""
+    log_info "fnm install lts (timeout=${secs}s)..."
+    fnm install lts/* &
+    pid=$!
+    while kill -0 "$pid" 2>/dev/null; do
+        if [[ "$waited" -ge "$secs" ]]; then
+            log_warning "fnm install timed out after ${secs}s."
+            if [[ -r "/proc/${pid}/winpid" ]]; then
+                win_pid="$(tr -d '[:space:]' < "/proc/${pid}/winpid" 2>/dev/null || true)"
+            fi
+            if [[ -n "$win_pid" ]] && command -v taskkill.exe >/dev/null 2>&1; then
+                taskkill.exe //F //T //PID "$win_pid" >/dev/null 2>&1 || true
+            fi
+            kill -9 "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            return 1
+        fi
+        if [[ "$waited" -gt 0 && $((waited % 15)) -eq 0 ]]; then
+            log_info "fnm install still running (${waited}s/${secs}s)..."
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+    wait "$pid"
+}
+
 # 设置 Node.js 环境（使用 fnm 管理）
 setup_nodejs_environment() {
     log_info "Setting up Node.js environment with fnm..."
@@ -41,9 +70,9 @@ setup_nodejs_environment() {
         }
     fi
 
-    # 确保 Node.js LTS 为最新（fnm 幂等）
+    # 确保 Node.js LTS 为最新（fnm 幂等）。下载停住时限时结束，已有 node 则继续。
     log_info "Ensuring Node.js LTS via fnm..."
-    if fnm install lts/* 2>&1; then
+    if _fnm_install_lts_bounded; then
         fnm use lts/* || {
             local installed_lts
             installed_lts=$(fnm list 2>/dev/null | grep -i "lts" | head -n 1 | awk '{print $1}' || echo "")

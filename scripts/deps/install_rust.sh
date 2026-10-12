@@ -1,6 +1,35 @@
 #!/usr/bin/env bash
 # Rust 只走 rustup 预编译包。C 编译器只检查系统是否已有 clang/gcc。
 
+# rustup update 走代理下载工具链，连接停住时不能一直占着安装流程。
+_rustup_update_bounded() {
+    local secs="${RUSTUP_UPDATE_TIMEOUT_SECS:-120}"
+    local pid waited=0 win_pid=""
+    log_info "rustup update stable (timeout=${secs}s)..."
+    rustup update stable &
+    pid=$!
+    while kill -0 "$pid" 2>/dev/null; do
+        if [[ "$waited" -ge "$secs" ]]; then
+            log_warning "rustup update timed out after ${secs}s; continuing."
+            if [[ -r "/proc/${pid}/winpid" ]]; then
+                win_pid="$(tr -d '[:space:]' < "/proc/${pid}/winpid" 2>/dev/null || true)"
+            fi
+            if [[ -n "$win_pid" ]] && command -v taskkill.exe >/dev/null 2>&1; then
+                taskkill.exe //F //T //PID "$win_pid" >/dev/null 2>&1 || true
+            fi
+            kill -9 "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            return 1
+        fi
+        if [[ "$waited" -gt 0 && $((waited % 20)) -eq 0 ]]; then
+            log_info "rustup update still running (${waited}s/${secs}s)..."
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+    wait "$pid"
+}
+
 install_rust_official() {
     log_info "Installing Rust (official rustup, latest stable)..."
     if ! command -v curl >/dev/null 2>&1; then
@@ -36,7 +65,7 @@ ensure_rust_and_c_compiler() {
             log_success "Cargo already installed (rustup)"
         fi
         log_info "Updating Rust stable via rustup..."
-        rustup update stable 2>/dev/null || record_failed "rustup update"
+        _rustup_update_bounded || record_failed "rustup update"
     else
         if command -v rustc >/dev/null 2>&1 || command -v cargo >/dev/null 2>&1; then
             log_info "Non-rustup Rust found; installing official rustup for latest stable"
