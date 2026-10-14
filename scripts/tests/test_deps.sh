@@ -359,6 +359,18 @@ for f in "${DEPS_DIR}"/*.sh; do
 done
 bash -n "${NVIM_ROOT}/install.sh" || failures=$((failures + 1))
 bash -n "${NVIM_ROOT}/scripts/windows_config.sh" || failures=$((failures + 1))
+bash -n "${NVIM_ROOT}/scripts/headless_validate.sh" || failures=$((failures + 1))
+
+log_info "=== headless checkhealth ignores dumb-terminal graphics protocol ==="
+headless_ignore="$(sed -n "s/^HEADLESS_ERROR_IGNORE='\\(.*\\)'/\\1/p" "${NVIM_ROOT}/scripts/headless_validate.sh")"
+headless_fixture="$(mktemp)"
+cat > "${headless_fixture}" <<'EOF'
+- ❌ ERROR Graphics protocol: not supported by this terminal.
+- ❌ ERROR something else broke
+EOF
+graphics_left="$(grep -iE '^- ERROR|^- ❌ ERROR' "${headless_fixture}" | grep -viE "${headless_ignore}" || true)"
+rm -f "${headless_fixture}"
+assert_eq "headless keeps real ERROR" "- ❌ ERROR something else broke" "${graphics_left}"
 
 if [[ ${failures} -gt 0 ]]; then
     log_error "test_deps: ${failures} failure(s)"

@@ -305,6 +305,7 @@ NVIM_CHECKHEALTH_TIMEOUT=180 ./scripts/headless_validate.sh   # 慢网络加大�
 
 - `vim.health`：`Slow shell invocation`（计时异常）
 - `vim.health`：terminfo `key_backspace` / `key_dc` 未找到
+- `vim.health`：`Graphics protocol: not supported by this terminal`（Neovim 0.13 在无头 dumb 终端写成 ERROR；交互式 `:checkhealth` 仍会显示）
 - `vim.health`：`Missing user config file: %USERPROFILE%`（无头误报；配置已通过 `-u init.lua` 加载）
 - `luasnip`：jsregexp（Windows 无 make 时可选）
 

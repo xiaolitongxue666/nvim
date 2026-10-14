@@ -41,6 +41,7 @@ grep -iE '^- ERROR|❌' docs/nvim_checkhealth_final.log
 - `Slow shell invocation`
 - terminfo `key_backspace` / `key_dc`
 - luasnip jsregexp（Windows 无 make 时）
+- `Graphics protocol: not supported by this terminal`（无头 dumb 终端；Neovim 0.13 写成 ERROR）
 
 **严格口径**（全模块零 WARNING）：
 

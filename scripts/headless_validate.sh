@@ -12,6 +12,8 @@ CHECKHEALTH_LOG="docs/nvim_checkhealth_final.log"
 # 核心模块验收（跳过 snacks：VeryLazy + 无头 dumb 终端易挂起/误报）
 CHECKHEALTH_MODULES="lazy luasnip nvim-treesitter vim.provider vim.lsp vim.health vim.treesitter vim.deprecated"
 CHECKHEALTH_TIMEOUT="${NVIM_CHECKHEALTH_TIMEOUT:-90}"
+# 无头 dumb 终端没有图形协议。Neovim 0.13 的 vim.health 会把这件事写成 ERROR。
+HEADLESS_ERROR_IGNORE='No healthcheck found for "luasnip"|HTTP request failed|Graphics protocol: not supported by this terminal'
 
 ensure_windows_user_env
 setup_headless_proxy
@@ -127,9 +129,9 @@ fi
 log_info "=== grep validation (pragmatic) ==="
 # 严格：条目行 ERROR（luasnip 未安装时跳过 No healthcheck found；
 # vim.provider 的 PyPI 联网检查在无外网/代理受限/网络波动时必失败，属外部环境问题，白名单）
-if grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"|HTTP request failed'; then
+if grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE "${HEADLESS_ERROR_IGNORE}"; then
     log_error "checkhealth contains ERROR"
-    grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE 'No healthcheck found for "luasnip"|HTTP request failed' || true
+    grep -iE '^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" | grep -viE "${HEADLESS_ERROR_IGNORE}" || true
     exit 1
 fi
 
@@ -158,6 +160,7 @@ while IFS= read -r line; do
         *"Missing user config file: %USERPROFILE%"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
         *"No healthcheck found for \"luasnip\""*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
         *"Could not contact PyPI"*|*"HTTP request failed"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
+        *"Graphics protocol: not supported by this terminal"*) WHITELIST_LINES=$((WHITELIST_LINES + 1)) ;;
     esac
 done < <(grep -iE '^- WARNING|⚠|^- ERROR|^- ❌ ERROR' "${CHECKHEALTH_LOG}" || true)
 
