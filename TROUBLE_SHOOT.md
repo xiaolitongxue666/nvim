@@ -338,7 +338,7 @@ NVIM_CHECKHEALTH_TIMEOUT=180 ./scripts/headless_validate.sh   # 慢网络加大�
 | `winget install/upgrade` 失败（无管理员） | 非致命；查看摘要 `Failed/skipped`；手动安装或忽略可选工具 |
 | Mason sync 超时 | 默认已跳过 install 预同步；首次 `nvim` 自动装。需 install 内预装：`env NVIM_SKIP_MASON=0 ./install.sh`。已配置语言服务用无头 `MasonToolsInstallSync`，不要 `MasonInstall` 后立刻 `qa!`。Git Bash 用 `env`；同时只跑一个无头 nvim；`get_package()` 用规范名；`ruff-lsp` 现为 `ruff` |
 | macOS 安装卡在编译 rustc / llvm | Intel macOS 常无 uv、rust、ruby、llvm 的 bottle。uv/fnm 只走官方安装器；Rust 只走 rustup。`brew_noconfirm` 已设 `HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK=1`，无 bottle 时失败继续，不从源码编译 |
-| uv/fnm 安装后仍 `command not found` | 将 `~/.local/bin` 加入 PATH 或重新打开终端 |
+| uv/fnm 安装后仍 `command not found` | uv 在 `~/.local/bin`。fnm 官方包在 `~/.local/share/fnm`，安装器只改探测到的 shell rc；当前 shell 把该目录加入 PATH，或重新打开终端 |
 | Neovim 仍 < 0.11 | 检查 `nvim --version`；Windows 可 `winget upgrade Neovim.Neovim`；Linux 见 script_tool `run_once_install-neovim` 回退 tarball |
 | 启动报 `E5113 module 'vim.uri' not found` / `E484 syntax.vim` / `E5009 Invalid $VIMRUNTIME` | nvim 二进制在但 **runtime 文件缺失**（apt 安装中断：`neovim` 状态 `iU`、`neovim-runtime` 未装）。修复：`sudo apt-get install -f`（自动补装并配置）；或 `sudo apt-get install --reinstall neovim-runtime`。验证：`dpkg -s neovim neovim-runtime \| grep -E '^(Package|Status)'` 均应 `install ok installed`。脚本已自动检测（`verify_nvim_runtime`），见下节 |
 | 外网下载失败 | 确认代理 `127.0.0.1:7890`（WSL 用宿主机 IP）；或 `USE_PROXY=0` 后手动配置镜像 |

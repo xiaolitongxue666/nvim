@@ -247,6 +247,63 @@ assert_eq "windows fnm upgrade uses winget only" "PKG_UPGRADE::::Schniz.fnm
 FNM:self-update" "${windows_fnm_out}"
 unset -f fnm pkg_upgrade
 
+log_info "=== fnm binary under ~/.local/share/fnm is visible in the current shell ==="
+fnm_offpath_out="$(
+    fake_home="$(mktemp -d)"
+    mkdir -p "${fake_home}/.local/share/fnm"
+    printf '#!/bin/sh\nprintf "fnm 1.39.0\\n"\n' > "${fake_home}/.local/share/fnm/fnm"
+    chmod +x "${fake_home}/.local/share/fnm/fnm"
+    HOME="${fake_home}"
+    PATH="/usr/bin:/bin"
+    hash -r
+    curl() { echo "SHOULD_NOT_CURL"; return 1; }
+    PLATFORM="linux"
+    PKG_MANAGER="apt"
+    install_fnm_if_missing
+    command -v fnm
+    fnm --version
+    rm -rf "${fake_home}"
+)"
+if [[ "${fnm_offpath_out}" == *SHOULD_NOT_CURL* ]]; then
+    log_error "FAIL: existing fnm binary triggered a reinstall: ${fnm_offpath_out}"
+    failures=$((failures + 1))
+else
+    log_success "PASS: existing fnm binary skips reinstall"
+fi
+if [[ "${fnm_offpath_out}" == *fnm\ 1.39.0* ]]; then
+    log_success "PASS: off-PATH fnm becomes visible"
+else
+    log_error "FAIL: off-PATH fnm still hidden: ${fnm_offpath_out}"
+    failures=$((failures + 1))
+fi
+
+fnm_after_install_out="$(
+    fake_home="$(mktemp -d)"
+    HOME="${fake_home}"
+    PATH="/usr/bin:/bin"
+    hash -r
+    curl() {
+        mkdir -p "${HOME}/.local/share/fnm"
+        printf '#!/bin/sh\nprintf "fnm 1.39.0\\n"\n' > "${HOME}/.local/share/fnm/fnm"
+        chmod +x "${HOME}/.local/share/fnm/fnm"
+        return 0
+    }
+    PLATFORM="linux"
+    PKG_MANAGER="apt"
+    install_fnm_if_missing
+    command -v fnm
+    rm -rf "${fake_home}"
+)"
+case "${fnm_after_install_out}" in
+    *"/.local/share/fnm/fnm"*)
+        log_success "PASS: installer result is on PATH"
+        ;;
+    *)
+        log_error "FAIL: installer result still off PATH: ${fnm_after_install_out}"
+        failures=$((failures + 1))
+        ;;
+esac
+
 log_info "=== rustup update does not invoke brew ==="
 rust_out="$(
     fake_root="$(mktemp -d)"

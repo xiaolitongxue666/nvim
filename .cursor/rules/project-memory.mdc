@@ -29,7 +29,7 @@ alwaysApply: true
 
 12) **Windows MinGW + LuaSnip jsregexp**：`basic.lua` 动态探测 `MINGW_PREFIX`/`ProgramData`/`NVIM_MINGW_PATHS`，仅无 `gcc` 时 prepend PATH；jsregexp：Windows 可选 `Lazy build LuaSnip`（需 make/MinGW），失败仅 WARNING。
 
-13) **WSL**：`/proc/version` 含 Microsoft 时提示 `fnm env` 与 Linux 侧 tree-sitter-cli；代理默认宿主机 `:7890`（`resolve_default_proxy_host` 先 resolv.conf 后 ip route，mirrored 网络回落 127.0.0.1）。
+13) **WSL**：`/proc/version` 含 Microsoft 时提示 `fnm env` 与 Linux 侧 tree-sitter-cli；代理默认宿主机 `:7890`（`resolve_default_proxy_host` 先 resolv.conf 后 ip route，mirrored 网络回落 127.0.0.1）。官方 fnm 安装器把二进制放在 `~/.local/share/fnm`，只改它探测到的 shell rc（root 常见 zsh）；`install_prereqs.sh` 在当前 shell 把该目录加入 PATH，避免装完仍报 command not found。
 
 14) **安装排错合集**：CRLF shebang 用 `sed -i 's/\r$//'`；vscode `install.sh` JSONC 行首 `//` 须剥离；Git Bash 用 `env VAR=val`（见 #8）；Windows npm 或需 `NODE_PATH`；**msys 与 `%USERPROFILE%\.config\nvim` 双副本**、**msys 与 `%LOCALAPPDATA%\nvim-data` 双 data** 时重跑 `install.sh` 或按 #6 清 env；winget `msstore` 证书错误已加 `--source winget`；`npm -g neovim` 失败可忽略（venv Python host）；`~/.config/nvim.backup.*` 堆积可手动删，留 1～2 份。
 

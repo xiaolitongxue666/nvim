@@ -5,6 +5,20 @@ _ensure_path_local_bin() {
     export PATH="${HOME}/.local/bin:${HOME}/.cargo/bin:${PATH}"
 }
 
+# 官方安装器把二进制放在 ~/.local/share/fnm，并且只改它探测到的 shell rc
+# （WSL root 常见是 zsh）。安装进程退出后，当前 shell 的 PATH 不会变。
+_ensure_path_fnm() {
+    local fnm_dir="${HOME}/.local/share/fnm"
+    _ensure_path_local_bin
+    if [[ -x "${fnm_dir}/fnm" ]]; then
+        case ":${PATH}:" in
+            *":${fnm_dir}:"*) ;;
+            *) export PATH="${fnm_dir}:${PATH}" ;;
+        esac
+        hash -r
+    fi
+}
+
 _install_uv_curl() {
     if ! command -v curl >/dev/null 2>&1; then
         log_warning "curl not found; cannot install uv via official script"
@@ -20,7 +34,7 @@ _install_fnm_curl() {
         return 1
     fi
     curl -fsSL https://fnm.vercel.app/install | bash || return 1
-    _ensure_path_local_bin
+    _ensure_path_fnm
 }
 
 install_uv_if_missing() {
@@ -79,6 +93,7 @@ upgrade_uv_if_present() {
 }
 
 install_fnm_if_missing() {
+    _ensure_path_fnm
     if command -v fnm >/dev/null 2>&1; then
         return 0
     fi
@@ -103,12 +118,12 @@ install_fnm_if_missing() {
             fi
             ;;
     esac
-    _ensure_path_local_bin
+    _ensure_path_fnm
 }
 
 # macOS 只更新 fnm 自己。不走 brew upgrade。
 _upgrade_fnm_macos() {
-    _ensure_path_local_bin
+    _ensure_path_fnm
     if fnm self-update; then
         return 0
     fi
@@ -117,6 +132,7 @@ _upgrade_fnm_macos() {
 }
 
 upgrade_fnm_if_present() {
+    _ensure_path_fnm
     command -v fnm >/dev/null 2>&1 || return 0
     case "${PLATFORM}" in
         macos)
