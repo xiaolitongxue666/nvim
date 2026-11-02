@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Project Memory
 
-> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-10-12T04:22:19Z. Full file: PROJECT_MEMORY.md
+> Auto-synced from PROJECT_MEMORY.md by install.sh at 2026-11-02T03:22:51Z. Full file: PROJECT_MEMORY.md
 
 2) **三入口安装 + 自部署**：根 `install.sh`/`install.cmd`（18 步）→ 终端 nvim；`vscode_neovim/install.sh` → Cursor/VS Code；`ideavimrc/install.sh` → IdeaVim。第 18 步把本文件同步到 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules/project-memory.mdc`（编辑后重跑 `install.sh` 同步）。仓库即 `~/.config/nvim` 时 `is_same_directory` 跳过 `deploy_config`；mac 写三平台 `neovimInitVimPaths`；Windows 路径错重跑 `install.cmd`/`install.sh`。
 
@@ -46,3 +46,5 @@ alwaysApply: true
 20) **候选插件 codecompanion.nvim**（2026-09-29）：[olimorris/codecompanion.nvim](https://github.com/olimorris/codecompanion.nvim) 记为未来候选（Neovim 内 Chat / inline / ACP / MCP；文档 https://codecompanion.olimorris.dev）。仅文档记录，未加入 `lua/plugins/` 与 `lazy-lock.json`。现有 AI 入口仍是 `lua/plugins/code_ai_opencode.lua`。接入前评估与 opencode 的重叠，以及 plenary / nvim-treesitter 依赖。见 README「候选（未接入）」。
 
 21) **Practical Vim 键位对照**（2026-09-29）：笔记权威来源 https://github.com/iampkuhz/Practival-Vim （技巧 1–121）。与本配置的对照在 `docs/PRACTICAL_VIM.md`。向用户演示 Vim 操作时先换成本配置键位：左 `j`、下 `k`、上 `i`、右 `l`；插入 `h`、行首插入 `H`、上一词 `J`、下一词 `L`、行尾 `E`。`S` 保存、`Q` 退出、`R` 重载配置，不再是书上的整行替换、Ex 模式、替换模式。宏 `q` / `@` / `@@` 与 `.` 未改；批量替换界面是 `<leader>sr`。终端与 vscode-neovim 共用这套移动键。
+
+22) **多 OS 隔离与 Windows 脚本**（2026-11-02）：Win10、Win11、Linux、macOS、WSL 都能跑，状态不共享。WSL 不读 `/mnt/c` 的 node/uv，也不改 Windows 包。`_node_belongs_to_this_environment` 拒绝 `/mnt/c`、`/mnt/host`、`/mnt/wslg` 上的 node。Windows 只 `fnm use default`，不 `fnm install`、不改 lts-latest。`prefer_windows_winget_uv` 只在 Windows 把 WinGet uv 放到 PATH 前面，不读 `/mnt/c`。Win10 与 Win11 共用 Git Bash；能用 bash 完成的不新增 PowerShell。`scripts/bash.cmd` 是 Windows 上调用 bash 的入口。规则 `.cursor/rules/cross-os-wsl-compat.mdc`。

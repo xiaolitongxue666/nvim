@@ -3,6 +3,10 @@
 
 # 设置 Python 环境（使用 uv 管理）
 setup_python_environment() {
+    # Windows 当前进程改用 winget 的 uv，避免 PATH 上更早的 Chocolatey 副本创建 venv。
+    if declare -F prefer_windows_winget_uv >/dev/null 2>&1; then
+        prefer_windows_winget_uv
+    fi
     log_info "Setting up Python environment with uv..."
 
     # 检查是否使用系统级安装

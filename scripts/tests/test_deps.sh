@@ -175,9 +175,68 @@ UV_SELF_UPDATE" "${linux_upgrade_out}"
 
 PLATFORM="windows"
 PKG_MANAGER="winget"
-windows_upgrade_out="$(upgrade_uv_if_present)"
-assert_eq "windows uv upgrade uses winget only" "PKG_UPGRADE::::astral-sh.uv
-UV_SELF_UPDATE" "${windows_upgrade_out}"
+windows_upgrade_out="$(
+    unset -f uv
+    tmp="$(mktemp -d)"
+    choco="${tmp}/chocolatey/bin"
+    pkgdir="${tmp}/Microsoft/WinGet/Packages/astral-sh.uv_fixture"
+    mkdir -p "${choco}" "${pkgdir}" "${tmp}/empty-local"
+    cat > "${choco}/uv" <<'EOF'
+#!/bin/sh
+printf 'choco-uv %s\n' "$*"
+EOF
+    cat > "${pkgdir}/uv" <<'EOF'
+#!/bin/sh
+if [ "$1" = "self" ]; then
+    printf 'UV_SELF_UPDATE\n'
+fi
+printf 'winget-uv %s\n' "$*"
+EOF
+    chmod +x "${choco}/uv" "${pkgdir}/uv"
+    HOME="${tmp}/home"
+    LOCALAPPDATA="${tmp}"
+    PATH="${choco}:/usr/bin:/bin"
+    hash -r
+    upgrade_uv_if_present
+    rm -rf "${tmp}"
+)"
+if [[ "${windows_upgrade_out}" == *"PKG_UPGRADE::::astral-sh.uv"* ]]; then
+    log_success "PASS: windows uv upgrade still calls winget"
+else
+    log_error "FAIL: windows uv upgrade missing winget pkg_upgrade: ${windows_upgrade_out}"
+    failures=$((failures + 1))
+fi
+if [[ "${windows_upgrade_out}" == *"UV_SELF_UPDATE"* || "${windows_upgrade_out}" == *"choco-uv"* ]]; then
+    log_error "FAIL: windows winget/chocolatey uv ran self update: ${windows_upgrade_out}"
+    failures=$((failures + 1))
+else
+    log_success "PASS: windows winget uv upgrade skips self update"
+fi
+windows_official_out="$(
+    unset -f uv
+    tmp="$(mktemp -d)"
+    mkdir -p "${tmp}/home/.local/bin" "${tmp}/empty-local"
+    cat > "${tmp}/home/.local/bin/uv" <<'EOF'
+#!/bin/sh
+if [ "$1" = "self" ] && [ "$2" = "update" ]; then
+    printf 'UV_SELF_UPDATE\n'
+fi
+exit 0
+EOF
+    chmod +x "${tmp}/home/.local/bin/uv"
+    HOME="${tmp}/home"
+    LOCALAPPDATA="${tmp}/empty-local"
+    PATH="${HOME}/.local/bin:/usr/bin:/bin"
+    hash -r
+    upgrade_uv_if_present
+    rm -rf "${tmp}"
+)"
+if [[ "${windows_official_out}" == *"PKG_UPGRADE::::astral-sh.uv"* && "${windows_official_out}" == *"UV_SELF_UPDATE"* ]]; then
+    log_success "PASS: windows official uv still self-updates"
+else
+    log_error "FAIL: windows official uv self update: ${windows_official_out}"
+    failures=$((failures + 1))
+fi
 unset -f uv pkg_upgrade
 # shellcheck source=../deps/platform_pkg.sh
 source "${DEPS_DIR}/platform_pkg.sh"
@@ -352,6 +411,303 @@ fi
 
 PLATFORM="${_saved_platform}"
 PKG_MANAGER="${_saved_pkg_manager_uv}"
+
+log_info "=== winget exit code, git upgrade, and WinGet uv path ==="
+# shellcheck source=../deps/platform_pkg.sh
+source "${DEPS_DIR}/platform_pkg.sh"
+# shellcheck source=../deps/install_prereqs.sh
+source "${DEPS_DIR}/install_prereqs.sh"
+# shellcheck source=../deps/install_system_utils.sh
+source "${DEPS_DIR}/install_system_utils.sh"
+# shellcheck source=../deps/install_python.sh
+source "${DEPS_DIR}/install_python.sh"
+# shellcheck source=../deps/install_node.sh
+source "${DEPS_DIR}/install_node.sh"
+if ! declare -F record_failed >/dev/null 2>&1; then
+    record_failed() { printf 'RECORD_FAILED %s\n' "$*"; }
+fi
+
+_saved_platform_fix="${PLATFORM:-}"
+_saved_pkg_fix="${PKG_MANAGER:-}"
+_saved_path_fix="${PATH}"
+_saved_appdata_fix="${APPDATA:-}"
+_saved_localappdata_fix="${LOCALAPPDATA:-}"
+_saved_fnm_dir_fix="${FNM_DIR:-}"
+
+winget_fake="$(mktemp -d)"
+cat > "${winget_fake}/winget" <<'EOF'
+#!/bin/sh
+printf 'ran\n' > "${WINGET_MARKER}"
+exit 1
+EOF
+chmod +x "${winget_fake}/winget"
+WINGET_MARKER="${winget_fake}/ran"
+export WINGET_MARKER
+hash -r
+winget_status=0
+PATH="${winget_fake}:/usr/bin:/bin" _pkg_winget upgrade --id Git.Git -e || winget_status=$?
+if [[ "${winget_status}" -ne 0 && -f "${WINGET_MARKER}" ]]; then
+    log_success "PASS: fake winget exit 1 makes _pkg_winget return non-zero"
+else
+    log_error "FAIL: _pkg_winget swallowed winget failure (status=${winget_status})"
+    failures=$((failures + 1))
+fi
+rm -rf "${winget_fake}"
+unset WINGET_MARKER
+
+winget_slow="$(mktemp -d)"
+cat > "${winget_slow}/winget" <<'EOF'
+#!/bin/sh
+sleep 30
+exit 0
+EOF
+chmod +x "${winget_slow}/winget"
+hash -r
+slow_status=0
+WINGET_TIMEOUT_SECS=1 PATH="${winget_slow}:/usr/bin:/bin" _pkg_winget upgrade --id Git.Git -e || slow_status=$?
+if [[ "${slow_status}" -ne 0 ]]; then
+    log_success "PASS: winget timeout is non-zero"
+else
+    log_error "FAIL: winget timeout returned 0"
+    failures=$((failures + 1))
+fi
+rm -rf "${winget_slow}"
+
+git_fake="$(mktemp -d)"
+mkdir -p "${git_fake}/bin"
+cat > "${git_fake}/bin/git" <<'EOF'
+#!/bin/sh
+printf 'git version 2.0.0\n'
+EOF
+cat > "${git_fake}/bin/winget" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >> "${WINGET_CALL_LOG}"
+exit 1
+EOF
+chmod +x "${git_fake}/bin/git" "${git_fake}/bin/winget"
+WINGET_CALL_LOG="${git_fake}/calls"
+export WINGET_CALL_LOG
+: > "${WINGET_CALL_LOG}"
+hash -r
+PLATFORM="windows"
+PKG_MANAGER="winget"
+git_upgrade_failed=0
+upgrade_out="$(
+    PATH="${git_fake}/bin:/usr/bin:/bin"
+    hash -r
+    upgrade_git_if_present
+)"
+utils_out="$(
+    PATH="${git_fake}/bin:/usr/bin:/bin"
+    hash -r
+    install_system_utils
+)"
+winget_calls="$(grep -c . "${WINGET_CALL_LOG}" || true)"
+if printf '%s\n' "${upgrade_out}" | grep -F '[SUCCESS]' >/dev/null; then
+    log_error "FAIL: failed git upgrade logged SUCCESS: ${upgrade_out}"
+    failures=$((failures + 1))
+else
+    log_success "PASS: failed git upgrade does not log SUCCESS"
+fi
+if printf '%s\n' "${utils_out}" | grep -F '[SUCCESS] git' >/dev/null; then
+    log_error "FAIL: install_system_utils logged git SUCCESS after failed upgrade: ${utils_out}"
+    failures=$((failures + 1))
+else
+    log_success "PASS: install_system_utils does not log git SUCCESS when upgrade failed"
+fi
+if [[ "${winget_calls}" -eq 1 ]] && grep -F 'Git.Git' "${WINGET_CALL_LOG}" >/dev/null; then
+    log_success "PASS: Git.Git upgrade runs once when git already exists"
+else
+    log_error "FAIL: Git.Git upgrade count=${winget_calls} log=$(cat "${WINGET_CALL_LOG}")"
+    failures=$((failures + 1))
+fi
+rm -rf "${git_fake}"
+unset WINGET_CALL_LOG
+
+uv_fake="$(mktemp -d)"
+mkdir -p "${uv_fake}/chocolatey/bin" \
+    "${uv_fake}/Microsoft/WinGet/Packages/astral-sh.uv_fixture" \
+    "${uv_fake}/Microsoft/WinGet/Links" \
+    "${uv_fake}/home/.config/nvim/venv/nvim-python/Scripts"
+printf 'kept\n' > "${uv_fake}/home/.config/nvim/venv/nvim-python/MARKER"
+printf 'true\n' > "${uv_fake}/home/.config/nvim/venv/nvim-python/Scripts/activate"
+UV_CALL_LOG="${uv_fake}/uv-calls"
+export UV_CALL_LOG
+: > "${UV_CALL_LOG}"
+cat > "${uv_fake}/chocolatey/bin/uv" <<'EOF'
+#!/bin/sh
+printf 'CHOCO %s\n' "$*" >> "${UV_CALL_LOG}"
+exit 0
+EOF
+cat > "${uv_fake}/Microsoft/WinGet/Packages/astral-sh.uv_fixture/uv" <<'EOF'
+#!/bin/sh
+printf 'PKG %s\n' "$*" >> "${UV_CALL_LOG}"
+exit 0
+EOF
+cat > "${uv_fake}/Microsoft/WinGet/Links/uv" <<'EOF'
+#!/bin/sh
+printf 'LINK %s\n' "$*" >> "${UV_CALL_LOG}"
+exit 0
+EOF
+chmod +x "${uv_fake}/chocolatey/bin/uv" \
+    "${uv_fake}/Microsoft/WinGet/Packages/astral-sh.uv_fixture/uv" \
+    "${uv_fake}/Microsoft/WinGet/Links/uv"
+uv_resolve_out="$(
+    unset -f uv
+    HOME="${uv_fake}/home"
+    LOCALAPPDATA="${uv_fake}"
+    PLATFORM="windows"
+    PKG_MANAGER="winget"
+    USE_SYSTEM_NVIM_VENV=0
+    PATH="${uv_fake}/chocolatey/bin:/usr/bin:/bin"
+    hash -r
+    prefer_windows_winget_uv
+    command -v uv
+    setup_python_environment
+)"
+if [[ "${uv_resolve_out}" == *"astral-sh.uv_fixture"* && "${uv_resolve_out}" != *"chocolatey"* ]]; then
+    log_success "PASS: Windows resolves WinGet uv ahead of Chocolatey"
+else
+    log_error "FAIL: uv resolution: ${uv_resolve_out}"
+    failures=$((failures + 1))
+fi
+if [[ -f "${uv_fake}/home/.config/nvim/venv/nvim-python/MARKER" ]] \
+    && ! grep -E '^PKG venv([[:space:]]|$)' "${UV_CALL_LOG}" >/dev/null \
+    && ! grep -F 'CHOCO' "${UV_CALL_LOG}" >/dev/null \
+    && ! grep -F 'LINK' "${UV_CALL_LOG}" >/dev/null; then
+    log_success "PASS: existing venv/nvim-python is not recreated"
+else
+    log_error "FAIL: venv recreate check marker=$(cat "${uv_fake}/home/.config/nvim/venv/nvim-python/MARKER" 2>/dev/null || echo missing) calls=$(cat "${UV_CALL_LOG}")"
+    failures=$((failures + 1))
+fi
+linux_uv_out="$(
+    unset -f uv
+    HOME="${uv_fake}/home"
+    LOCALAPPDATA="${uv_fake}"
+    PLATFORM="linux"
+    PATH="${uv_fake}/chocolatey/bin:/usr/bin:/bin"
+    hash -r
+    : > "${UV_CALL_LOG}"
+    prefer_windows_winget_uv
+    command -v uv
+    uv --version
+)"
+if [[ "${linux_uv_out}" == *"chocolatey"* && "${linux_uv_out}" != *"astral-sh.uv"* && "${linux_uv_out}" != *"WinGet"* ]]; then
+    log_success "PASS: non-Windows does not prepend WinGet uv"
+else
+    log_error "FAIL: non-Windows uv path: ${linux_uv_out}"
+    failures=$((failures + 1))
+fi
+if grep -F 'CHOCO' "${UV_CALL_LOG}" >/dev/null && ! grep -E 'PKG|LINK' "${UV_CALL_LOG}" >/dev/null; then
+    log_success "PASS: non-Windows uv command stays on the non-WinGet binary"
+else
+    log_error "FAIL: non-Windows uv calls: $(cat "${UV_CALL_LOG}")"
+    failures=$((failures + 1))
+fi
+mnt_uv_out="$(
+    unset -f uv
+    PLATFORM="windows"
+    LOCALAPPDATA="/mnt/c/Users/example/AppData/Local"
+    PATH="${uv_fake}/chocolatey/bin:/usr/bin:/bin"
+    hash -r
+    : > "${UV_CALL_LOG}"
+    prefer_windows_winget_uv
+    command -v uv
+)"
+if [[ "${mnt_uv_out}" == *"chocolatey"* && "${mnt_uv_out}" != *"/mnt/c/"* ]]; then
+    log_success "PASS: Windows uv lookup skips /mnt/c WinGet paths"
+else
+    log_error "FAIL: /mnt/c uv lookup: ${mnt_uv_out}"
+    failures=$((failures + 1))
+fi
+rm -rf "${uv_fake}"
+unset UV_CALL_LOG
+
+appdata_ready="$(
+    PLATFORM="windows"
+    APPDATA="/tmp/example-roaming"
+    unset FNM_DIR
+    cmd() { printf 'CMD_SHOULD_NOT_RUN\n'; }
+    _windows_prepare_fnm_dir
+    printf 'APPDATA=%s\nFNM_DIR=%s\n' "${APPDATA}" "${FNM_DIR:-}"
+)"
+assert_eq "already-expanded APPDATA is kept" "APPDATA=/tmp/example-roaming
+FNM_DIR=/tmp/example-roaming/fnm" "${appdata_ready}"
+appdata_literal="$(
+    PLATFORM="windows"
+    APPDATA='%APPDATA%'
+    unset FNM_DIR
+    cmd() { printf '%s\n' 'C:/Users/example/AppData/Roaming'; }
+    _windows_prepare_fnm_dir
+    printf 'APPDATA=%s\nFNM_DIR=%s\n' "${APPDATA}" "${FNM_DIR:-}"
+)"
+assert_eq "literal APPDATA expands via cmd" "APPDATA=C:/Users/example/AppData/Roaming
+FNM_DIR=C:/Users/example/AppData/Roaming/fnm" "${appdata_literal}"
+
+if _node_version_satisfies_nvim_policy "v22.19.0" \
+    && _node_version_satisfies_nvim_policy "v22.22.3" \
+    && _node_version_satisfies_nvim_policy "v24.0.0" \
+    && _node_version_satisfies_nvim_policy "v26.13.0" \
+    && ! _node_version_satisfies_nvim_policy "v22.18.9" \
+    && ! _node_version_satisfies_nvim_policy "v23.1.0" \
+    && ! _node_version_satisfies_nvim_policy "v18.20.0"; then
+    log_success "PASS: node policy is ^22.19.0 || >=24"
+else
+    log_error "FAIL: node version policy"
+    failures=$((failures + 1))
+fi
+if grep -F 'fnm install lts' "${DEPS_DIR}/install_node.sh" >/dev/null; then
+    log_error "FAIL: install_node.sh still runs fnm install lts"
+    failures=$((failures + 1))
+else
+    log_success "PASS: install_node.sh does not run fnm install lts"
+fi
+if grep -F '22.22.3' "${DEPS_DIR}/install_node.sh" >/dev/null; then
+    log_error "FAIL: install_node.sh hardcodes 22.22.3"
+    failures=$((failures + 1))
+else
+    log_success "PASS: install_node.sh does not hardcode 22.22.3"
+fi
+non_win_node="$(declare -f _ensure_node_non_windows)"
+if [[ "${non_win_node}" == *"AppData"* || "${non_win_node}" == *"WinGet"* || "${non_win_node}" == *"/mnt/c"* || "${non_win_node}" == *"lts/"* ]]; then
+    log_error "FAIL: non-Windows node install references Windows paths"
+    failures=$((failures + 1))
+else
+    log_success "PASS: non-Windows node install has no Windows fnm paths"
+fi
+if grep -E 'WinGet|/mnt/c' "${DEPS_DIR}/install_python.sh" >/dev/null; then
+    log_error "FAIL: install_python.sh references WinGet paths"
+    failures=$((failures + 1))
+else
+    log_success "PASS: install_python.sh does not reference WinGet paths"
+fi
+macos_uv_fn="$(declare -f _upgrade_uv_macos)"
+if [[ "${macos_uv_fn}" == *"WinGet"* || "${macos_uv_fn}" == *"/mnt/c"* || "${macos_uv_fn}" == *"brew "* ]]; then
+    log_error "FAIL: macOS uv upgrade references WinGet or brew: ${macos_uv_fn}"
+    failures=$((failures + 1))
+else
+    log_success "PASS: macOS uv upgrade stays on the official updater"
+fi
+
+PLATFORM="${_saved_platform_fix}"
+PKG_MANAGER="${_saved_pkg_fix}"
+PATH="${_saved_path_fix}"
+if [[ -n "${_saved_appdata_fix}" ]]; then
+    APPDATA="${_saved_appdata_fix}"
+else
+    unset APPDATA
+fi
+if [[ -n "${_saved_localappdata_fix}" ]]; then
+    LOCALAPPDATA="${_saved_localappdata_fix}"
+else
+    unset LOCALAPPDATA
+fi
+if [[ -n "${_saved_fnm_dir_fix}" ]]; then
+    FNM_DIR="${_saved_fnm_dir_fix}"
+else
+    unset FNM_DIR
+fi
+hash -r
 
 log_info "=== syntax check deps ==="
 for f in "${DEPS_DIR}"/*.sh; do

@@ -13,7 +13,7 @@ brew_noconfirm() {
 # 包管理器不走 HTTP 代理（本文件约定）；GitHub/curl 仍由 install.sh 的代理负责。
 _pkg_winget() {
     local secs="${WINGET_TIMEOUT_SECS:-90}"
-    local pid waited=0 win_pid=""
+    local pid waited=0 win_pid="" status=0
     if declare -F log_info >/dev/null 2>&1; then
         log_info "winget $* (timeout=${secs}s)"
     fi
@@ -24,7 +24,7 @@ _pkg_winget() {
     while kill -0 "$pid" 2>/dev/null; do
         if [[ "$waited" -ge "$secs" ]]; then
             if declare -F log_warning >/dev/null 2>&1; then
-                log_warning "winget timed out after ${secs}s; continuing."
+                log_warning "winget timed out after ${secs}s."
             fi
             if [[ -r "/proc/${pid}/winpid" ]]; then
                 win_pid="$(tr -d '[:space:]' < "/proc/${pid}/winpid" 2>/dev/null || true)"
@@ -34,7 +34,7 @@ _pkg_winget() {
             fi
             kill -9 "$pid" 2>/dev/null || true
             wait "$pid" 2>/dev/null || true
-            return 0
+            return 1
         fi
         if [[ "$waited" -gt 0 && $((waited % 15)) -eq 0 ]] && declare -F log_info >/dev/null 2>&1; then
             log_info "winget still running (${waited}s/${secs}s)..."
@@ -42,8 +42,8 @@ _pkg_winget() {
         sleep 1
         waited=$((waited + 1))
     done
-    wait "$pid" 2>/dev/null || true
-    return 0
+    wait "$pid" || status=$?
+    return "${status}"
 }
 
 # 参数: brew_name apt_name pacman_name [winget_id]
@@ -113,7 +113,7 @@ pkg_upgrade() {
             if [[ -n "${winget_id}" ]]; then
                 _pkg_winget upgrade --id "${winget_id}" -e \
                     --source winget \
-                    --accept-package-agreements --accept-source-agreements || true
+                    --accept-package-agreements --accept-source-agreements
             fi
             ;;
     esac

@@ -159,3 +159,11 @@ desktop.ini
 # Local network probe scripts (sensitive, machine-specific)
 scripts/probe_login.ps1
 
+# 与 script_tool_and_config、agent-config 对齐（git-smart-commit 门禁同款）
+.claude-mem/
+temp_args.json
+ERROR.md
+%SystemDrive%/
+%USERPROFILE%/
+*.jsonl
+

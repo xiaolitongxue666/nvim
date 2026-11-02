@@ -19,6 +19,105 @@ _ensure_path_fnm() {
     fi
 }
 
+# 去掉首尾空白与 CR，供 cmd 展开结果使用。
+_trim_cmd_value() {
+    local val="${1:-}"
+    val="${val//[$'\r\n']}"
+    val="${val#"${val%%[![:space:]]*}"}"
+    val="${val%"${val##*[![:space:]]}"}"
+    printf '%s\n' "${val}"
+}
+
+# 在目录树中找 uv 可执行文件（优先 uv.exe）。stdout 为路径；找不到则返回 1。
+_find_uv_binary_under() {
+    local root="${1:-}"
+    local depth="${2:-0}"
+    local child="" found=""
+    [[ -n "${root}" && -d "${root}" ]] || return 1
+    [[ "${depth}" -gt 4 ]] && return 1
+    if [[ -f "${root}/uv.exe" ]]; then
+        printf '%s\n' "${root}/uv.exe"
+        return 0
+    fi
+    if [[ -f "${root}/uv" ]]; then
+        printf '%s\n' "${root}/uv"
+        return 0
+    fi
+    for child in "${root}"/*; do
+        [[ -e "${child}" ]] || continue
+        if [[ -d "${child}" ]]; then
+            found="$(_find_uv_binary_under "${child}" "$((depth + 1))" || true)"
+            if [[ -n "${found}" ]]; then
+                printf '%s\n' "${found}"
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+# Windows（Win10 与 Win11）：当前进程把 WinGet uv 放到 PATH 前面。
+# 优先 Packages/astral-sh.uv_*，否则 WinGet/Links。不读 /mnt/c，不改 bashrc，不改 WSL。
+prefer_windows_winget_uv() {
+    [[ "${PLATFORM:-}" == "windows" ]] || return 0
+    local localappdata="${LOCALAPPDATA:-}"
+    if [[ -z "${localappdata}" || "${localappdata}" == *"%"* ]]; then
+        if command -v cmd >/dev/null 2>&1; then
+            localappdata="$(MSYS2_ARG_CONV_EXCL='*' cmd //c echo %LOCALAPPDATA% 2>/dev/null | tr -d '\r\n' || true)"
+            localappdata="$(_trim_cmd_value "${localappdata}")"
+        fi
+    fi
+    [[ -n "${localappdata}" && "${localappdata}" != *"%"* ]] || return 0
+    case "${localappdata}" in
+        /mnt/*) return 0 ;;
+    esac
+    local base=""
+    base="$(windows_path_to_unix "${localappdata}")"
+    case "${base}" in
+        /mnt/*) return 0 ;;
+    esac
+    local packages="${base}/Microsoft/WinGet/Packages"
+    local links="${base}/Microsoft/WinGet/Links"
+    local pkg_dir="" uv_bin="" uv_dir=""
+    for pkg_dir in "${packages}"/astral-sh.uv_*; do
+        [[ -d "${pkg_dir}" ]] || continue
+        uv_bin="$(_find_uv_binary_under "${pkg_dir}" || true)"
+        [[ -n "${uv_bin}" ]] && break
+    done
+    if [[ -z "${uv_bin}" ]]; then
+        if [[ -f "${links}/uv.exe" ]]; then
+            uv_bin="${links}/uv.exe"
+        elif [[ -f "${links}/uv" ]]; then
+            uv_bin="${links}/uv"
+        fi
+    fi
+    [[ -n "${uv_bin}" ]] || return 0
+    uv_dir="$(dirname "${uv_bin}")"
+    case "${uv_dir}" in
+        /mnt/*) return 0 ;;
+    esac
+    if [[ -d "${uv_dir}" ]]; then
+        uv_dir="$(cd "${uv_dir}" && pwd)"
+    fi
+    case "${uv_dir}" in
+        /mnt/*) return 0 ;;
+    esac
+    export PATH="${uv_dir}:${PATH}"
+    hash -r
+    log_info "Using WinGet uv: ${uv_dir}"
+}
+
+# Chocolatey 或 WinGet 安装的 uv 不能 self update（包管理器持有该副本）。
+_uv_path_is_package_managed() {
+    local uv_path=""
+    uv_path="$(command -v uv 2>/dev/null || true)"
+    [[ -n "${uv_path}" ]] || return 1
+    case "${uv_path}" in
+        *[Cc]hocolatey*|*[Ww]in[Gg]et*) return 0 ;;
+    esac
+    return 1
+}
+
 _install_uv_curl() {
     if ! command -v curl >/dev/null 2>&1; then
         log_warning "curl not found; cannot install uv via official script"
@@ -86,7 +185,12 @@ upgrade_uv_if_present() {
             uv self update 2>/dev/null || true
             ;;
         windows)
-            pkg_upgrade "" "" "" "astral-sh.uv"
+            pkg_upgrade "" "" "" "astral-sh.uv" || true
+            prefer_windows_winget_uv
+            if _uv_path_is_package_managed; then
+                log_info "Skipping uv self update for Chocolatey or WinGet copy"
+                return 0
+            fi
             uv self update 2>/dev/null || true
             ;;
     esac
@@ -143,7 +247,7 @@ upgrade_fnm_if_present() {
             fnm self-update 2>/dev/null || true
             ;;
         windows)
-            pkg_upgrade "" "" "" "Schniz.fnm"
+            pkg_upgrade "" "" "" "Schniz.fnm" || true
             fnm self-update 2>/dev/null || true
             ;;
     esac
@@ -168,6 +272,7 @@ install_git_if_missing() {
 }
 
 upgrade_git_if_present() {
+    git_upgrade_failed=0
     command -v git >/dev/null 2>&1 || return 0
     case "${PLATFORM}" in
         macos)
@@ -177,7 +282,16 @@ upgrade_git_if_present() {
             pkg_upgrade "" "git" "git" ""
             ;;
         windows)
-            pkg_upgrade "" "" "" "Git.Git"
+            local upgrade_status=0
+            pkg_upgrade "" "" "" "Git.Git" || upgrade_status=$?
+            if [[ "${upgrade_status}" -ne 0 ]]; then
+                if command -v git >/dev/null 2>&1; then
+                    log_warning "Git.Git upgrade failed (exit ${upgrade_status}); keeping existing git on PATH"
+                    git_upgrade_failed=1
+                    return 0
+                fi
+                return "${upgrade_status}"
+            fi
             ;;
     esac
 }
@@ -187,14 +301,15 @@ ensure_prerequisites() {
 
     install_git_if_missing
     upgrade_git_if_present
-    if command -v git >/dev/null 2>&1; then
+    if [[ "${git_upgrade_failed:-0}" -eq 0 ]] && command -v git >/dev/null 2>&1; then
         log_success "git: $(git --version 2>&1 | head -n 1)"
-    else
+    elif ! command -v git >/dev/null 2>&1; then
         log_warning "git not available"
     fi
 
     install_uv_if_missing
     upgrade_uv_if_present
+    prefer_windows_winget_uv
     if command -v uv >/dev/null 2>&1; then
         log_success "uv: $(uv --version 2>&1 | head -n 1)"
     else

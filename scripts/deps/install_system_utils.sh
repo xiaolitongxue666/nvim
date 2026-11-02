@@ -24,6 +24,9 @@ install_system_utils() {
             log_info "Installing ${pkg}..."
             pkg_install "${brew_name}" "${apt_name}" "${pacman_name}" "${winget_id}" \
                 || record_failed "${pkg}"
+        elif [[ "${pkg}" == "git" && "${PLATFORM}" == "windows" ]]; then
+            # ensure_prerequisites 已处理 Git.Git；这里再升级会在 bash 占用文件时第二次失败。
+            log_info "git already present; skipping Git.Git upgrade"
         else
             log_success "${pkg} found: $(command -v "${pkg}")"
             pkg_upgrade "${brew_name}" "${apt_name}" "${pacman_name}" "${winget_id}" || true
