@@ -644,14 +644,15 @@ appdata_literal="$(
 assert_eq "literal APPDATA expands via cmd" "APPDATA=C:/Users/example/AppData/Roaming
 FNM_DIR=C:/Users/example/AppData/Roaming/fnm" "${appdata_literal}"
 
-if _node_version_satisfies_nvim_policy "v22.19.0" \
-    && _node_version_satisfies_nvim_policy "v22.22.3" \
-    && _node_version_satisfies_nvim_policy "v24.0.0" \
+if _node_version_satisfies_nvim_policy "v24.9.0" \
+    && _node_version_satisfies_nvim_policy "v24.11.1" \
     && _node_version_satisfies_nvim_policy "v26.13.0" \
-    && ! _node_version_satisfies_nvim_policy "v22.18.9" \
+    && ! _node_version_satisfies_nvim_policy "v22.22.3" \
+    && ! _node_version_satisfies_nvim_policy "v24.0.0" \
+    && ! _node_version_satisfies_nvim_policy "v24.8.0" \
     && ! _node_version_satisfies_nvim_policy "v23.1.0" \
     && ! _node_version_satisfies_nvim_policy "v18.20.0"; then
-    log_success "PASS: node policy is ^22.19.0 || >=24"
+    log_success "PASS: node policy is >=24.9.0"
 else
     log_error "FAIL: node version policy"
     failures=$((failures + 1))
@@ -667,6 +668,13 @@ if grep -F '22.22.3' "${DEPS_DIR}/install_node.sh" >/dev/null; then
     failures=$((failures + 1))
 else
     log_success "PASS: install_node.sh does not hardcode 22.22.3"
+fi
+win_node="$(declare -f _ensure_node_windows)"
+if [[ "${win_node}" == *"fnm install"* || "${win_node}" == *"fnm alias"* || "${win_node}" == *'fnm default "'* ]]; then
+    log_error "FAIL: Windows node setup installs or changes the fnm alias"
+    failures=$((failures + 1))
+else
+    log_success "PASS: Windows node setup only uses the existing fnm default"
 fi
 non_win_node="$(declare -f _ensure_node_non_windows)"
 if [[ "${non_win_node}" == *"AppData"* || "${non_win_node}" == *"WinGet"* || "${non_win_node}" == *"/mnt/c"* || "${non_win_node}" == *"lts/"* ]]; then

@@ -6,6 +6,7 @@ alwaysApply: true
 # Cross-OS + WSL Compatibility
 
 - Windows（Win10 与 Win11）、Linux、macOS、WSL 都能跑。各环境 `$HOME`、fnm、npm、Neovim data 独立。
+- Node 24 且 `>=24.9` 由当前环境的 script_tool `deploy.sh` 写入。本仓 Windows 只 `fnm use default`，不 `fnm install`、不改 alias。顺序是 script_tool `deploy.sh`、本仓 `./install.sh`、agent-config `scripts/install-tools.sh`。
 - WSL 不读 `/mnt/c`、`/mnt/host` 上的 node、uv、nvim-data，也不改 Windows 包。`:7890` 只是网络出口。
 - Win10 与 Win11 共用 Git Bash。能用 bash 完成的安装、检测、测试，用 bash，不新增 PowerShell。`scripts/bash.cmd` 是 Windows 上调用 bash 的入口。
 - Prefer portable path handling and avoid hardcoded home paths.

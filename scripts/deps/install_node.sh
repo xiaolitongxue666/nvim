@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # fnm、Node、neovim host、tree-sitter CLI
-# Windows 只用已展开的 Roaming fnm 里的 default，不跟随 lts 通配符安装。
-# 其它平台保持 ^22.19.0 || >=24（23 无效）；没有可用版本时安装 major 22，不跟随 LTS 26。
+# 跑在 script_tool deploy.sh 之后、agent-config install-tools.sh 之前。
+# Windows 只用已展开的 fnm default，不安装、不改 alias。
+# 合格线是 >=24.9.0（23 无效）。非 Windows 没有合格版本时才 fnm install 24。
 
 # 有限时的 fnm install。超时结束子进程，不 taskkill bash.exe。
 _fnm_install_bounded() {
-    local version_spec="${1:-22}"
+    local version_spec="${1:-24}"
     local secs="${FNM_INSTALL_TIMEOUT_SECS:-90}"
     local pid waited=0 win_pid="" status=0
     log_info "fnm install ${version_spec} (timeout=${secs}s)..."
@@ -34,7 +35,7 @@ _fnm_install_bounded() {
     return "${status}"
 }
 
-# ^22.19.0 || >=24。major 23 无效。
+# >=24.9.0。major 23 无效。24.0–24.8 不够。
 _node_version_satisfies_nvim_policy() {
     local raw="${1:-}"
     local major="" minor="" patch=""
@@ -52,11 +53,14 @@ _node_version_satisfies_nvim_policy() {
     if [[ "${major}" -eq 23 ]]; then
         return 1
     fi
-    if [[ "${major}" -ge 24 ]]; then
+    if [[ "${major}" -gt 24 ]]; then
         return 0
     fi
-    if [[ "${major}" -eq 22 ]]; then
-        if [[ "${minor}" -gt 19 || "${minor}" -eq 19 ]]; then
+    if [[ "${major}" -eq 24 ]]; then
+        if [[ "${minor}" -gt 9 ]]; then
+            return 0
+        fi
+        if [[ "${minor}" -eq 9 && "${patch}" -ge 0 ]]; then
             return 0
         fi
     fi
@@ -134,24 +138,61 @@ _init_fnm_env() {
     eval "$(fnm env --use-on-cd)"
 }
 
-# Windows：fnm use default。Win10 与 Win11 同一分支。不安装、不改 default / lts-latest alias，不读 WSL 的 fnm。
-_ensure_node_windows() {
-    log_info "Using the existing fnm default Node.js"
-    if fnm use default; then
-        log_success "Node.js default ready: $(node --version 2>/dev/null || echo unknown)"
-        return 0
-    fi
-    log_error "fnm use default failed"
-    exit 1
+# 读 $HOME/.node-version。没有文件则空。
+_node_version_file_value() {
+    local home="${HOME:-}"
+    [[ -n "${home}" && -f "${home}/.node-version" ]] || return 0
+    tr -d '\r\n' < "${home}/.node-version" | sed 's/^v//'
 }
 
-# 非 Windows：已有符合策略的 node 则保留；否则用已有 default（含已经是 26 的 default）；都没有则 fnm install 22。
+# 非 Windows：版本文件缺失或低于 24.9 时写成这次的版本，并 fnm default。已合格则不覆盖。
+_node_record_pin_if_needed() {
+    local ver="${1:-}"
+    local home="${HOME:-}"
+    local recorded=""
+    ver="${ver#v}"
+    _node_version_satisfies_nvim_policy "${ver}" || return 1
+    case "${home}" in
+        ""|/mnt/*)
+            log_error "Refusing to write .node-version under ${home:-<empty>}"
+            return 1
+            ;;
+    esac
+    recorded="$(_node_version_file_value)"
+    if _node_version_satisfies_nvim_policy "${recorded}"; then
+        log_info "Keeping ${home}/.node-version at ${recorded}"
+        return 0
+    fi
+    printf '%s\n' "${ver}" > "${home}/.node-version"
+    if ! fnm default "${ver}"; then
+        fnm alias default "${ver}" || true
+    fi
+    log_info "Recorded Node.js ${ver} for this environment"
+}
+
+# Windows：fnm use default。Win10 与 Win11 同一分支。不安装、不改 alias，不读 WSL 的 fnm。
+_ensure_node_windows() {
+    local current_version=""
+    log_info "Using the existing fnm default Node.js"
+    if ! fnm use default; then
+        log_error "fnm use default failed"
+        exit 1
+    fi
+    current_version="$(node --version 2>/dev/null || true)"
+    if ! _node_version_satisfies_nvim_policy "${current_version}"; then
+        log_error "fnm default Node.js ${current_version:-missing} is below 24.9.0. Re-run script_tool deploy.sh in this Windows environment."
+        exit 1
+    fi
+    log_success "Node.js default ready: ${current_version}"
+}
+
+# 非 Windows：已有 >=24.9 则保留。没有则 fnm install 24。拒绝 /mnt 上的 Windows node。
 _ensure_node_non_windows() {
-    local current_version="" default_version=""
+    local current_version="" default_version="" installed=""
     if _node_belongs_to_this_environment; then
         current_version="$(node --version 2>/dev/null || true)"
         if _node_version_satisfies_nvim_policy "${current_version}"; then
-            log_info "Node.js ${current_version} already satisfies ^22.19.0 || >=24; skipping install"
+            log_info "Node.js ${current_version} already satisfies >=24.9.0; skipping install"
             return 0
         fi
     fi
@@ -165,20 +206,29 @@ _ensure_node_non_windows() {
         log_error "fnm use default failed"
         exit 1
     fi
-    log_info "Installing Node.js 22 via fnm"
-    if _fnm_install_bounded "22"; then
-        if ! fnm use 22; then
-            log_error "Failed to activate Node.js 22"
+    log_info "Installing Node.js 24 via fnm"
+    if _fnm_install_bounded "24"; then
+        installed="$(fnm list 2>/dev/null | grep -oE 'v?24\.[0-9]+\.[0-9]+' | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1 || true)"
+        [[ -n "${installed}" ]] || installed="24"
+        if ! fnm use "${installed}"; then
+            log_error "Failed to activate Node.js ${installed}"
             exit 1
         fi
-        log_success "Node.js 22 ready: $(node --version 2>/dev/null || echo unknown)"
+        current_version="$(node --version 2>/dev/null || true)"
+        if ! _node_version_satisfies_nvim_policy "${current_version}"; then
+            log_error "Installed Node.js ${current_version:-missing} is below 24.9.0"
+            exit 1
+        fi
+        _node_record_pin_if_needed "${current_version#v}" || true
+        log_success "Node.js ${current_version} ready"
         return 0
     fi
-    if _node_belongs_to_this_environment && command -v node >/dev/null 2>&1; then
-        log_warning "fnm install 22 failed; using existing node: $(node --version 2>&1)"
+    if _node_belongs_to_this_environment && command -v node >/dev/null 2>&1 \
+        && _node_version_satisfies_nvim_policy "$(node --version 2>/dev/null || true)"; then
+        log_warning "fnm install 24 failed; using existing node: $(node --version 2>&1)"
         return 0
     fi
-    log_error "Failed to install Node.js 22"
+    log_error "Failed to install Node.js 24"
     exit 1
 }
 

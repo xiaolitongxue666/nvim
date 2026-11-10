@@ -2,7 +2,7 @@
 
 基于 Lua 的 Neovim 配置，使用 [lazy.nvim](https://github.com/folke/lazy.nvim) 管理插件。独立 Git 仓库，支持 macOS、Linux、Windows（Win10 与 Win11）、WSL。各环境的 `$HOME`、fnm、uv 互不共用；WSL 不使用 `/mnt/c` 上的 node 或 uv。Windows 安装走 Git Bash。
 
-**要求**：Neovim **0.11.0+**、Git。`./install.sh` 安装 [uv](https://github.com/astral-sh/uv)、[fnm](https://github.com/Schniz/fnm)（macOS 走官方安装器，不走 Homebrew）、Neovim、rustup，以及 Python venv（仅 pynvim）和 npm 全局包（`neovim`、`tree-sitter-cli`）。LSP、格式化与调试由 Neovim 内 Mason 安装。缺失的 `fd`、`ripgrep` 会补装。不再安装 Go、Ruby、Composer 或 Homebrew llvm。
+**要求**：Neovim **0.11.0+**、Git、当前环境的 Node 24 且 `>=24.9`。这条 Node 由 script_tool 的 `deploy.sh` 写入 fnm default；本仓不改 default。Windows 只 `fnm use default`。`./install.sh` 安装 [uv](https://github.com/astral-sh/uv)、[fnm](https://github.com/Schniz/fnm)（macOS 走官方安装器，不走 Homebrew）、Neovim、rustup，以及 Python venv（仅 pynvim）和 npm 全局包（`neovim`、`tree-sitter-cli`，跟当前 fnm Node 的 prefix）。装完后再跑 agent-config 的 `scripts/install-tools.sh`。LSP、格式化与调试由 Neovim 内 Mason 安装。缺失的 `fd`、`ripgrep` 会补装。不再安装 Go、Ruby、Composer 或 Homebrew llvm。
 
 ## 安装与更新
 
